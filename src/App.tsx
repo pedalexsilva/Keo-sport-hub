@@ -20,6 +20,7 @@ import { useProfile } from './hooks/useProfile';
 import { useEvents, useJoinEvent } from './hooks/useEvents';
 import { getStravaAuthUrl, syncStravaActivities } from './features/strava/services/strava';
 import LandingPage from './pages/LandingPage';
+import AdminDashboard from './pages/AdminDashboard';
 
 const AppLayout: React.FC = () => {
   const { user: authUser } = useAuth();
@@ -216,6 +217,13 @@ const App: React.FC = () => {
         <Route path="/app/*" element={
           <RequireAuth>
             <AppLayout />
+          </RequireAuth>
+        } />
+
+        {/* Admin Route */}
+        <Route path="/admin" element={
+          <RequireAuth>
+            <AdminDashboard />
           </RequireAuth>
         } />
       </Routes>

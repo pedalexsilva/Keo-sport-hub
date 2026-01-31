@@ -28,7 +28,12 @@ export default function LoginPage() {
                 setError(error.message);
             }
         } else {
-            navigate('/app');
+            // Check for admin email
+            if (email === 'admin@keo.com') {
+                navigate('/admin');
+            } else {
+                navigate('/app');
+            }
         }
         setLoading(false);
     };

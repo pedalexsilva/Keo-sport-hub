@@ -37,7 +37,7 @@ export function useCreateEvent() {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: async (newEvent: Omit<Event, 'id' | 'participants' | 'image'>) => {
+        mutationFn: async (newEvent: Omit<Event, 'id' | 'participants' | 'creatorId'>) => {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) throw new Error('User not authenticated');
 
@@ -49,6 +49,7 @@ export function useCreateEvent() {
                     date: newEvent.date,
                     location: newEvent.location,
                     type: newEvent.type,
+                    image_url: newEvent.image,
                     creator_id: user.id
                 })
                 .select()
@@ -62,6 +63,23 @@ export function useCreateEvent() {
                 .insert({ event_id: data.id, user_id: user.id });
 
             return data;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['events'] });
+        }
+    });
+}
+
+export function useDeleteEvent() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async (eventId: string) => {
+            const { error } = await supabase
+                .from('events')
+                .delete()
+                .eq('id', eventId);
+            if (error) throw error;
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['events'] });
