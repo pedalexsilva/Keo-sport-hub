@@ -29,7 +29,16 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick, userPoints, userAvatar }) 
           <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-red-500"></span>
         </button>
         <div className="h-8 w-8 rounded-full bg-blue-100 border border-blue-200 flex items-center justify-center overflow-hidden">
-          <img src={userAvatar} alt="User" className="h-full w-full object-cover" />
+          <img
+            src={userAvatar || `https://ui-avatars.com/api/?name=User&background=random`}
+            alt="User"
+            className="h-full w-full object-cover"
+            onError={(e) => {
+              const target = e.target as HTMLImageElement;
+              target.onerror = null;
+              target.src = 'https://ui-avatars.com/api/?name=User&background=random';
+            }}
+          />
         </div>
       </div>
     </header>

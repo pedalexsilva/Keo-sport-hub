@@ -25,7 +25,7 @@ export function useEvents() {
                 date: e.date,
                 location: e.location,
                 type: e.type as ActivityType,
-                image: e.image_url || `https://picsum.photos/400/200?random=${e.id}`, // Placeholder if null
+                image: e.image_url || `https://placehold.co/600x400/e2e8f0/1e293b?text=${encodeURIComponent(e.title || 'Event')}`, // Placeholder if null
                 creatorId: e.creator_id,
                 participants: e.event_participants.map((p: any) => p.user_id)
             }));

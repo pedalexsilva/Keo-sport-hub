@@ -7,12 +7,14 @@ export default function LoginPage() {
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [message, setMessage] = useState<string | null>(null);
     const navigate = useNavigate();
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
         setError(null);
+        setMessage(null);
 
         const { error } = await supabase.auth.signInWithPassword({
             email,
@@ -20,24 +22,55 @@ export default function LoginPage() {
         });
 
         if (error) {
-            setError(error.message);
+            if (error.message === 'Invalid login credentials') {
+                setError('Email ou palavra-passe incorretos.');
+            } else {
+                setError(error.message);
+            }
         } else {
-            navigate('/');
+            navigate('/app');
         }
         setLoading(false);
     };
 
     const handleSignUp = async () => {
+        // Client-side validation
+        if (password.length < 6) {
+            setError("Password must be at least 6 characters long.");
+            return;
+        }
+
         setLoading(true);
         setError(null);
-        const { error } = await supabase.auth.signUp({
+        setMessage(null);
+
+        const { data, error } = await supabase.auth.signUp({
             email,
             password,
+            // Setup metadata for the profile trigger (will use defaults if empty, but good practice)
+            options: {
+                data: {
+                    full_name: email.split('@')[0], // Default name from email
+                }
+            }
         });
+
         if (error) {
             setError(error.message);
+        } else if (data.session) {
+            navigate('/app');
         } else {
-            setError('Check your email for the confirmation link!');
+            // Try explicit sign in if no session returned immediately
+            const { error: signInError } = await supabase.auth.signInWithPassword({
+                email,
+                password,
+            });
+
+            if (!signInError) {
+                navigate('/app');
+            } else {
+                setMessage('Account created! Please sign in.');
+            }
         }
         setLoading(false);
     }
@@ -78,7 +111,11 @@ export default function LoginPage() {
                     </div>
 
                     {error && (
-                        <div className="text-red-500 text-sm text-center">{error}</div>
+                        <div className="text-red-500 text-sm text-center bg-red-50 p-2 rounded">{error}</div>
+                    )}
+
+                    {message && (
+                        <div className="text-green-600 text-sm text-center bg-green-50 p-2 rounded">{message}</div>
                     )}
 
                     <div>
@@ -92,7 +129,7 @@ export default function LoginPage() {
                         <button
                             type="button"
                             onClick={handleSignUp}
-                            disabled={loading}
+                            disabled={loading || !email || !password}
                             className="mt-2 group relative flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-indigo-600 ring-1 ring-inset ring-indigo-300 hover:bg-gray-50 disabled:opacity-50"
                         >
                             Create Account

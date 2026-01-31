@@ -37,7 +37,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ currentUser }) => {
         {rankedUsers.slice(0, 3).map((u) => (
           <div key={u.user_id} className={`relative flex flex-col items-center rounded-xl p-6 shadow-sm border ${u.rank === 1 ? 'bg-yellow-50 border-yellow-200 order-2 lg:order-2 scale-105 z-10' : 'bg-white border-gray-100 lg:order-1'}`}>
             <div className={`mb-4 flex items-center justify-center h-16 w-16 rounded-full border-4 ${u.rank === 1 ? 'border-yellow-400' : u.rank === 2 ? 'border-gray-300' : 'border-amber-600'}`}>
-              <img src={u.avatar_url || 'https://via.placeholder.com/150'} alt={u.full_name} className="h-full w-full rounded-full object-cover" />
+              <img src={u.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(u.full_name || 'User')}&background=random`} alt={u.full_name} className="h-full w-full rounded-full object-cover" />
             </div>
             <div className="mb-1">{getRankIcon(u.rank)}</div>
             <h3 className="text-lg font-bold text-gray-900">{u.full_name || 'Anonymous'}</h3>
@@ -68,7 +68,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ currentUser }) => {
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
-                      <img className="h-8 w-8 rounded-full object-cover" src={u.avatar_url || 'https://via.placeholder.com/150'} alt="" />
+                      <img className="h-8 w-8 rounded-full object-cover" src={u.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(u.full_name || 'User')}&background=random`} alt="" />
                       <div className="font-medium text-gray-900">
                         {u.full_name || 'Anonymous'}
                         {u.user_id === currentUser.id && <span className="ml-2 rounded bg-blue-100 px-2 py-0.5 text-xs text-blue-800">Você</span>}

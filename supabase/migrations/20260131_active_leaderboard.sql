@@ -1,5 +1,5 @@
 -- Create Activities Table
-create table activities (
+create table if not exists activities (
   id text primary key, -- Using text to support Strava IDs
   user_id uuid references auth.users not null,
   type text not null,
@@ -18,10 +18,12 @@ create table activities (
 -- RLS
 alter table activities enable row level security;
 
-create policy "Users can view own activities"
+drop policy if exists "Activities are viewable by everyone" on activities;
+create policy "Activities are viewable by everyone"
   on activities for select
-  using ( auth.uid() = user_id );
+  using ( true );
 
+drop policy if exists "Users can insert own activities" on activities;
 create policy "Users can insert own activities"
   on activities for insert
   with check ( auth.uid() = user_id );

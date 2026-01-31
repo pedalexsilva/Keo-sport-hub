@@ -34,7 +34,7 @@ export function useProfile(userId?: string) {
             return {
                 id: profile.id,
                 name: profile.full_name || profile.username || 'Atléta',
-                avatar: profile.avatar_url || 'https://via.placeholder.com/150',
+                avatar: profile.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.full_name || profile.username || 'User')}&background=random`,
                 isConnectedToStrava: !!profile.strava_access_token,
                 totalPoints,
                 rank: 0, // Calculated separately or in leaderboard view
