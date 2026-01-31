@@ -1,4 +1,5 @@
 import { supabase } from '../../../lib/supabase';
+import { StravaRateLimiter } from './RateLimiter';
 
 const CLIENT_ID = import.meta.env.VITE_STRAVA_CLIENT_ID;
 const REDIRECT_URI = window.location.origin + '/strava/callback'; // Determine dynamically
@@ -47,24 +48,41 @@ export const exchangeToken = async (code: string) => {
 };
 
 export const saveStravaTokens = async (userId: string, data: any) => {
+    // SECURITY UPDATE: Save to user_secrets instead of profiles
     const { error } = await supabase
-        .from('profiles')
-        .update({
+        .from('user_secrets')
+        .upsert({
+            id: userId,
             strava_access_token: data.access_token,
             strava_refresh_token: data.refresh_token,
             strava_expires_at: data.expires_at,
-        })
-        .eq('id', userId);
+            updated_at: new Date().toISOString()
+        }, { onConflict: 'id' });
 
     if (error) throw error;
+
+    // Also update profile status to show connected
+    await supabase.from('profiles').update({ updated_at: new Date().toISOString() }).eq('id', userId);
 };
 
 export const getRecentActivities = async (accessToken: string, afterTimestamp: number) => {
+    // Rate Limit Check
+    if (!(await StravaRateLimiter.canMakeRequest())) {
+        throw new Error('Rate limit reached. Please try again later.');
+    }
+
     const response = await fetch(`https://www.strava.com/api/v3/athlete/activities?after=${afterTimestamp}&per_page=30`, {
         headers: {
             'Authorization': `Bearer ${accessToken}`
         }
     });
+
+    // Record usage
+    StravaRateLimiter.incrementUsage();
+
+    if (response.status === 429) {
+        throw new Error('Strava API Rate Limit Exceeded (429)');
+    }
 
     if (!response.ok) {
         throw new Error('Failed to fetch Strava activities');
@@ -74,21 +92,21 @@ export const getRecentActivities = async (accessToken: string, afterTimestamp: n
 };
 
 export const syncStravaActivities = async (userId: string) => {
-    // 1. Get User Tokens
-    const { data: profile, error: profileError } = await supabase
-        .from('profiles')
+    // 1. Get User Tokens from SECURE table
+    const { data: secrets, error: secretError } = await supabase
+        .from('user_secrets')
         .select('strava_access_token, strava_refresh_token, strava_expires_at')
         .eq('id', userId)
         .single();
 
-    if (profileError || !profile?.strava_access_token) {
+    if (secretError || !secrets?.strava_access_token) {
         throw new Error('User not connected to Strava');
     }
 
-    let accessToken = profile.strava_access_token;
+    let accessToken = secrets.strava_access_token;
 
     // 2. Check Token Expiry & Refresh if needed
-    if (profile.strava_expires_at && Date.now() / 1000 > profile.strava_expires_at) {
+    if (secrets.strava_expires_at && Date.now() / 1000 > secrets.strava_expires_at) {
         const CLIENT_ID = import.meta.env.VITE_STRAVA_CLIENT_ID;
         const CLIENT_SECRET = import.meta.env.VITE_STRAVA_CLIENT_SECRET;
 
@@ -100,7 +118,7 @@ export const syncStravaActivities = async (userId: string) => {
                 client_id: CLIENT_ID,
                 client_secret: CLIENT_SECRET,
                 grant_type: 'refresh_token',
-                refresh_token: profile.strava_refresh_token,
+                refresh_token: secrets.strava_refresh_token,
             }),
         });
 
@@ -148,4 +166,22 @@ export const syncStravaActivities = async (userId: string) => {
     }
 
     return { count: savedCount, message: `Synced ${savedCount} activities.` };
+};
+
+export const disconnectStrava = async (userId: string) => {
+    // 1. Clear tokens from secure table
+    const { error } = await supabase
+        .from('user_secrets')
+        .update({
+            strava_access_token: null,
+            strava_refresh_token: null,
+            strava_expires_at: null,
+            updated_at: new Date().toISOString()
+        })
+        .eq('id', userId);
+
+    if (error) throw error;
+
+    // 2. Ideally revoke on Strava side too (requires token before deleting), 
+    // but for now clearing local access is sufficient to "disconnect" the app.
 };

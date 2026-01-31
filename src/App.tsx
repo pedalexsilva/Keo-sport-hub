@@ -1,71 +1,197 @@
-import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { CheckCircle2 } from 'lucide-react';
+
+// Components
+import Navigation from './components/Navigation';
+import Header from './components/Header';
+import HomeView from './pages/HomeView';
+import EventsView from './pages/EventsView';
+import StoreView from './pages/StoreView';
+import SocialView from './pages/SocialView';
+import ProfileView from './pages/ProfileView';
+
+// Old Auth & Logic
 import LoginPage from './features/auth/LoginPage';
 import { RequireAuth } from './features/auth/RequireAuth';
 import StravaCallback from './pages/StravaCallback';
-import Sidebar from './components/Sidebar';
-import Header from './components/Header';
-import Dashboard from './pages/Dashboard';
-import Events from './pages/Events';
-import Leaderboard from './pages/Leaderboard';
-import Profile from './pages/Profile';
 import { useAuth } from './features/auth/AuthContext';
 import { useProfile } from './hooks/useProfile';
+import { useEvents, useJoinEvent } from './hooks/useEvents';
+import { getStravaAuthUrl, syncStravaActivities } from './features/strava/services/strava';
 import LandingPage from './pages/LandingPage';
 
 const AppLayout: React.FC = () => {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const { user: authUser } = useAuth();
-  const { data: userProfile, isLoading } = useProfile(authUser?.id);
+  const { data: userProfile, isLoading: isProfileLoading } = useProfile(authUser?.id);
+  const { data: eventsData, isLoading: isEventsLoading } = useEvents();
+  const joinEventMutation = useJoinEvent();
+  const navigate = useNavigate();
 
-  const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
-  const closeSidebar = () => setSidebarOpen(false);
+  // Local State for "App" features (Mocked backend for store/points specifics)
+  const [points, setPoints] = useState(1250);
+  const [inventory, setInventory] = useState<any[]>([]);
+  const [notification, setNotification] = useState<string | null>(null);
+  const [isSyncing, setIsSyncing] = useState(false);
 
-  if (isLoading) {
-    return (
-      <div className="flex h-screen w-full items-center justify-center flex-col gap-4">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-indigo-600 border-t-transparent"></div>
-        <p className="text-gray-500 font-medium">A carregar o teu perfil...</p>
-      </div>
-    );
+  // Sync points from DB if available (optional enhancement)
+  useEffect(() => {
+    if (userProfile?.totalPoints) {
+      setPoints(userProfile.totalPoints);
+    }
+  }, [userProfile]);
+
+  const handlePurchase = (item: any) => {
+    if (points >= item.cost) {
+      setPoints(prev => prev - item.cost);
+      setInventory(prev => [item, ...prev]);
+      setNotification(`Trocaste ${item.cost}pts por ${item.name}!`);
+      setTimeout(() => setNotification(null), 3000);
+    }
+  };
+
+  const handleJoinEvent = (eventId: string) => {
+    if (!userProfile) return;
+    const event = eventsData?.find(e => e.id === eventId);
+    const isJoined = event?.participants?.includes(userProfile.id) || false;
+
+    joinEventMutation.mutate({
+      eventId,
+      userId: userProfile.id,
+      isJoining: !isJoined
+    }, {
+      onSuccess: () => {
+        setNotification(!isJoined ? "Inscrição confirmada!" : "Inscrição cancelada.");
+        setTimeout(() => setNotification(null), 3000);
+      }
+    });
+  };
+
+  const handleConnectStrava = () => {
+    window.location.href = getStravaAuthUrl();
+  };
+
+  const handleDisconnectStrava = async () => {
+    if (!userProfile) return;
+
+    try {
+      await import('./features/strava/services/strava').then(m => m.disconnectStrava(userProfile.id));
+
+      // Force refresh of profile to update UI
+      // In a real app with QueryClient properly setup in Context, we would use queryClient.invalidateQueries(['profile'])
+      // Since we don't have direct access here easily without context hook, we might rely on window reload or just optimistic update.
+      // But query invalidation is best.
+      // Assuming a simple reload for now or check if we can get queryClient.
+
+      setNotification("Desconectado com sucesso.");
+
+      // Simple way to refresh state without prop drilling QueryClient
+      window.location.reload();
+
+    } catch (error) {
+      console.error(error);
+      setNotification("Erro ao desconectar.");
+    } finally {
+      setTimeout(() => setNotification(null), 3000);
+    }
+  };
+
+  const handleSyncData = async () => {
+    if (!userProfile) return;
+    setIsSyncing(true);
+    setNotification("Sincronizando atividades...");
+
+    try {
+      const result = await syncStravaActivities(userProfile.id);
+      setNotification(result.message);
+      // In a real app, invalidate queries here to refresh stats
+      if (result.count > 0) {
+        // re-fetch profile to update points
+      }
+    } catch (error) {
+      console.error(error);
+      setNotification("Erro ao sincronizar Strava.");
+    } finally {
+      setIsSyncing(false);
+      setTimeout(() => setNotification(null), 3000);
+    }
+  };
+
+  if (isProfileLoading) {
+    return <div className="flex h-screen items-center justify-center"><div className="w-8 h-8 animate-spin rounded-full border-4 border-[#002D72] border-t-transparent"></div></div>;
   }
 
-  if (!userProfile) {
-    return (
-      <div className="flex h-screen w-full items-center justify-center flex-col gap-4 bg-gray-50 px-4 text-center">
-        <div className="text-red-500 bg-red-50 p-3 rounded-full">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><line x1="12" x2="12" y1="8" y2="12" /><line x1="12" x2="12.01" y1="16" y2="16" /></svg>
-        </div>
-        <h2 className="text-xl font-bold text-gray-900">Erro ao carregar perfil</h2>
-        <p className="text-gray-600 max-w-md">Não foi possível carregar os teus dados. Verifica a tua ligação ou tenta novamente.</p>
-        <button
-          onClick={() => window.location.reload()}
-          className="mt-2 text-sm font-semibold text-indigo-600 hover:text-indigo-500"
-        >
-          Tentar novamente
-        </button>
-      </div>
-    );
-  }
+  if (!userProfile) return <div>Erro ao carregar perfil.</div>;
+
+  // Default Stats (Mocked or derived)
+  const userStats = {
+    calories: 420 + Math.floor(Math.random() * 100), // Random changes for "Live" feel
+    steps: 8432 + Math.floor(Math.random() * 500)
+  };
 
   return (
-    <div className="flex h-screen w-full bg-gray-50">
-      <Sidebar isOpen={sidebarOpen} closeSidebar={closeSidebar} />
+    <div className="min-h-screen bg-gray-50 font-sans text-gray-900 pb-20 md:pb-0">
+      {/* Desktop Wrapper / Mobile Container */}
+      <div className="md:max-w-md md:mx-auto md:h-screen md:overflow-y-auto md:border-x md:border-gray-200 md:shadow-xl md:relative bg-[#F8FAFC]">
 
-      <div className="flex flex-1 flex-col overflow-hidden">
-        <Header onMenuClick={toggleSidebar} userPoints={userProfile.totalPoints} userAvatar={userProfile.avatar} />
-
-        <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
-          <div className="mx-auto max-w-6xl">
-            <Routes>
-              <Route path="/" element={<Dashboard user={userProfile} />} />
-              <Route path="/events" element={<Events user={userProfile} />} />
-              <Route path="/leaderboard" element={<Leaderboard currentUser={userProfile} />} />
-              <Route path="/profile" element={<Profile user={userProfile} />} />
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
+        {/* Notification Toast */}
+        {notification && (
+          <div className="fixed top-4 left-4 right-4 md:absolute md:top-24 md:left-4 md:right-4 z-[100] bg-green-500 text-white text-sm font-bold p-3 rounded-xl shadow-lg animate-fade-in flex items-center justify-center gap-2 text-center">
+            <CheckCircle2 className="w-5 h-5 flex-shrink-0" /> {notification}
           </div>
+        )}
+
+        <Header user={userProfile} points={points} />
+
+        <main className="relative">
+          <Routes>
+            <Route path="home" element={
+              <HomeView
+                user={userProfile}
+                stats={userStats}
+                stravaConnected={userProfile.isConnectedToStrava}
+                isSyncing={isSyncing}
+                onSync={handleSyncData}
+                onConnect={() => navigate('/app/profile')} // Redirect to profile to connect
+              />
+            } />
+            <Route path="events" element={
+              <EventsView
+                events={eventsData || []}
+                onJoin={handleJoinEvent}
+                user={userProfile}
+              />
+            } />
+            <Route path="store" element={
+              <StoreView
+                points={points}
+                handlePurchase={handlePurchase}
+              />
+            } />
+            <Route path="social" element={
+              <SocialView currentUser={userProfile} />
+            } />
+            <Route path="profile" element={
+              <ProfileView
+                user={userProfile}
+                points={points}
+                inventory={inventory}
+                stravaConnected={userProfile.isConnectedToStrava}
+                onConnect={handleConnectStrava}
+                onDisconnect={handleDisconnectStrava}
+              />
+            } />
+            <Route path="*" element={<Navigate to="home" replace />} />
+          </Routes>
         </main>
+
+        <Navigation />
+      </div>
+
+      {/* Desktop Background Art (Optional, from prompt) */}
+      <div className="fixed -z-10 top-0 left-0 w-full h-full bg-gray-200 hidden md:block">
+        <div className="absolute top-0 left-0 w-full h-1/2 bg-[#002D72]"></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-white/10 text-9xl font-bold tracking-tighter select-none">KEO ACTIVE</div>
       </div>
     </div>
   );

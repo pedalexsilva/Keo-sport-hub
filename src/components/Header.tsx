@@ -1,48 +1,53 @@
 import React from 'react';
-import { Trophy, Bell, Menu } from 'lucide-react';
+import { MapPin, Bell, Zap } from 'lucide-react';
+import { User } from '../types';
 
 interface HeaderProps {
-  onMenuClick: () => void;
-  userPoints: number;
-  userAvatar: string;
+  user: {
+    name: string;
+    location?: string;
+  };
+  points: number;
 }
 
-const Header: React.FC<HeaderProps> = ({ onMenuClick, userPoints, userAvatar }) => {
-  return (
-    <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between border-b border-gray-200 bg-white px-4 md:px-6">
-      <div className="flex items-center gap-4">
-        <button onClick={onMenuClick} className="md:hidden p-2 hover:bg-gray-100 rounded-md">
-          <Menu className="h-6 w-6 text-gray-600" />
-        </button>
-        <div className="flex items-center gap-2 font-bold text-xl text-blue-700">
-          <Trophy className="h-6 w-6" />
-          <span>Keo Sports</span>
-        </div>
-      </div>
+const Header: React.FC<HeaderProps> = ({ user, points }) => (
+  <div className="pt-12 pb-6 px-6 bg-[#002D72] text-white rounded-b-[2rem] shadow-lg relative overflow-hidden transition-all duration-300">
+    <div className="absolute top-0 right-0 w-32 h-32 bg-[#009CDE] rounded-full opacity-20 -mr-10 -mt-10 blur-xl"></div>
+    <div className="absolute bottom-0 left-0 w-24 h-24 bg-purple-500 rounded-full opacity-20 -ml-10 -mb-10 blur-xl"></div>
 
-      <div className="flex items-center gap-4">
-        <div className="hidden sm:flex items-center gap-2 bg-yellow-50 px-3 py-1 rounded-full border border-yellow-200">
-          <span className="text-yellow-600 font-bold">★ {userPoints} pts</span>
-        </div>
-        <button className="relative p-2 text-gray-500 hover:bg-gray-100 rounded-full">
-          <Bell className="h-5 w-5" />
-          <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-red-500"></span>
-        </button>
-        <div className="h-8 w-8 rounded-full bg-blue-100 border border-blue-200 flex items-center justify-center overflow-hidden">
-          <img
-            src={userAvatar || `https://ui-avatars.com/api/?name=User&background=random`}
-            alt="User"
-            className="h-full w-full object-cover"
-            onError={(e) => {
-              const target = e.target as HTMLImageElement;
-              target.onerror = null;
-              target.src = 'https://ui-avatars.com/api/?name=User&background=random';
-            }}
-          />
+    <div className="relative z-10 flex justify-between items-start mb-6">
+      <div>
+        <p className="text-blue-200 text-sm font-medium">Olá, {user.name}</p>
+        <div className="flex items-center gap-2">
+          <MapPin className="w-3 h-3 text-blue-300" />
+          <span className="text-xs text-blue-300">{user.location || 'Porto Office'}</span>
         </div>
       </div>
-    </header>
-  );
-};
+      <div className="flex gap-3">
+        <button className="p-2 bg-white/10 rounded-full hover:bg-white/20 transition backdrop-blur-sm relative cursor-pointer">
+          <Bell className="w-5 h-5 text-white" />
+          <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border border-[#002D72]"></span>
+        </button>
+      </div>
+    </div>
+
+    <div key={points} className="relative z-10 bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10 flex items-center justify-between">
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-[#009CDE] to-blue-400 flex items-center justify-center shadow-lg">
+          <Zap className="w-5 h-5 text-white fill-white" />
+        </div>
+        <div>
+          <p className="text-xs text-blue-100">Saldo Atual</p>
+          <p className="font-bold text-white text-lg">{points.toLocaleString()} <span className="text-xs font-normal">pts</span></p>
+        </div>
+      </div>
+      <div className="text-right">
+        <button className="bg-white text-[#002D72] px-3 py-1 rounded-full text-xs font-bold hover:bg-blue-50 transition cursor-pointer">
+          + Ganhar
+        </button>
+      </div>
+    </div>
+  </div>
+);
 
 export default Header;
