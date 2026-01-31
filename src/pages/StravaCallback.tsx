@@ -29,7 +29,7 @@ export default function StravaCallback() {
                 const data = await exchangeToken(code);
                 await saveStravaTokens(user.id, data);
                 setStatus('Success! Redirecting...');
-                setTimeout(() => navigate('/profile'), 1500);
+                setTimeout(() => navigate('/app/profile'), 1500);
             } catch (e) {
                 console.error(e);
                 setStatus('Failed to connect Strava. Please check console.');

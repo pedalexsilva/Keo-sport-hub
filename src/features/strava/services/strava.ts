@@ -20,6 +20,10 @@ export const exchangeToken = async (code: string) => {
     // For now, client-side exchange (Risk: Secret exposed in build).
     const CLIENT_SECRET = import.meta.env.VITE_STRAVA_CLIENT_SECRET;
 
+    if (!CLIENT_SECRET) {
+        throw new Error('Missing VITE_STRAVA_CLIENT_SECRET. Please check your .env file.');
+    }
+
     const response = await fetch('https://www.strava.com/oauth/token', {
         method: 'POST',
         headers: {
@@ -30,6 +34,7 @@ export const exchangeToken = async (code: string) => {
             client_secret: CLIENT_SECRET,
             code,
             grant_type: 'authorization_code',
+            redirect_uri: REDIRECT_URI,
         }),
     });
 
