@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { User, ActivityType } from '../types';
 import Button from '../components/Button';
-import { Camera, Edit2, Save, X, Medal, Clock, Map, Zap, CheckCircle, Calendar, Activity } from 'lucide-react';
+import { Camera, Edit2, Save, X, Medal, Clock, Map, Zap, CheckCircle, Calendar, Activity, RefreshCw } from 'lucide-react';
 import { ConnectStravaButton } from '../features/strava/components/ConnectStravaButton';
+import { syncStravaActivities } from '../features/strava/services/strava';
 
 interface ProfileProps {
   user: User;
@@ -24,6 +25,27 @@ const Profile: React.FC<ProfileProps> = ({ user, updateUser }) => {
   const cancelEdit = () => {
     setFormData({ name: user.name, avatar: user.avatar });
     setIsEditing(false);
+  };
+
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncMsg, setSyncMsg] = useState('');
+
+  const handleSync = async () => {
+    setIsSyncing(true);
+    setSyncMsg('');
+    try {
+      const result = await syncStravaActivities(user.id);
+      setSyncMsg(result.message || 'Sincronização concluída!');
+      // Refresh user data after 2 seconds to show new activities
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
+    } catch (error) {
+      console.error(error);
+      setSyncMsg('Erro ao sincronizar.');
+    } finally {
+      setIsSyncing(false);
+    }
   };
 
   // Stats Calculations
@@ -91,6 +113,17 @@ const Profile: React.FC<ProfileProps> = ({ user, updateUser }) => {
                     <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${user.isConnectedToStrava ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
                       {user.isConnectedToStrava ? 'Conectado ao Strava' : 'Strava Não Conectado'}
                     </span>
+                    {user.isConnectedToStrava && (
+                      <button
+                        onClick={handleSync}
+                        disabled={isSyncing}
+                        className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-md hover:bg-blue-100 disabled:opacity-50 transition-colors"
+                      >
+                        <RefreshCw size={12} className={isSyncing ? 'animate-spin' : ''} />
+                        {isSyncing ? 'Sincronizando...' : 'Sincronizar (7 dias)'}
+                      </button>
+                    )}
+                    {syncMsg && <span className="text-xs text-blue-600 font-medium animate-pulse">{syncMsg}</span>}
                     <span className="text-gray-400 text-sm">• Membro desde 2023</span>
                   </div>
                 </div>
