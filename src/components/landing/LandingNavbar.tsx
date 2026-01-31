@@ -47,7 +47,8 @@ const LandingNavbar: React.FC = () => {
                             Login
                         </Link>
                         {/* Official Logo Right */}
-                        <img src="/keo-logo.jpg" alt="KEO Logo" className="h-20 w-auto" />
+                        {/* Official Logo Right - Hidden on Mobile */}
+                        <img src="/keo-logo.jpg" alt="KEO Logo" className="hidden md:block h-20 w-auto" />
                     </div>
 
                     {/* Mobile menu button (Only visible on small screens) */}

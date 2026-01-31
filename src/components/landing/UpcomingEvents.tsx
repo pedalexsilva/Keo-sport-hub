@@ -58,7 +58,7 @@ const UpcomingEvents: React.FC = () => {
                         <div className="p-6">
                             <span className="text-xs font-bold text-gray-400 uppercase">Online / Presencial</span>
                             <h3 className="text-xl font-bold text-gray-900 mt-2 mb-2">Mindfulness & Yoga</h3>
-                            <p class="text-gray-600 text-sm mb-4">Sessões semanais para descomprimir e melhorar o foco. Abertas a todos os departamentos.</p>
+                            <p className="text-gray-600 text-sm mb-4">Sessões semanais para descomprimir e melhorar o foco. Abertas a todos os departamentos.</p>
                             <a href="#" className="inline-flex items-center text-[#002D72] font-semibold hover:text-[#009CDE]">
                                 Ver detalhes <ArrowRight className="ml-2 w-4 h-4" />
                             </a>

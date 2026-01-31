@@ -30,9 +30,14 @@ export default function StravaCallback() {
                 await saveStravaTokens(user.id, data);
                 setStatus('Success! Redirecting...');
                 setTimeout(() => navigate('/app/profile'), 1500);
-            } catch (e) {
-                console.error(e);
-                setStatus('Failed to connect Strava. Please check console.');
+            } catch (e: any) {
+                console.error('Strava connection error:', e);
+                // Check for specific Supabase error regarding missing table
+                if (e?.message?.includes('relation "user_secrets" does not exist')) {
+                    setStatus('Error: Database table missing. Please run the migration script.');
+                } else {
+                    setStatus(`Failed to connect: ${e?.message || 'Unknown error'}`);
+                }
             }
         };
 
