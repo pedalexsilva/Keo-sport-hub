@@ -32,7 +32,14 @@ export default function StravaCallback() {
                 setTimeout(() => navigate('/app/profile'), 1500);
             } catch (e: any) {
                 console.error('Strava connection error:', e);
-                setStatus(`Failed to connect: ${e?.message || 'Unknown error'}`);
+                const msg = e?.message || 'Unknown error';
+                setStatus(`Failed to connect: ${msg}`);
+
+                // If token invalid, force logout might be needed, or just warn
+                if (msg.includes('Invalid Refresh Token') || msg.includes('Not Found')) {
+                    setStatus('Session expired. Please log in again.');
+                    setTimeout(() => navigate('/login'), 2000);
+                }
             }
         };
 

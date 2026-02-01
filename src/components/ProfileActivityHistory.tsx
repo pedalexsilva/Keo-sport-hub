@@ -8,7 +8,21 @@ const MOCK_ACTIVITIES = [
     { id: 3, type: 'Run', distance: '8.0 km', duration: '45m', date: '12 Out', location: 'Gaia' },
 ];
 
-const ProfileActivityHistory: React.FC = () => {
+interface ProfileActivityHistoryProps {
+    activities: any[];
+}
+
+const ProfileActivityHistory: React.FC<ProfileActivityHistoryProps> = ({ activities }) => {
+    const displayActivities = activities && activities.length > 0 ? activities.slice(0, 5) : [];
+
+    if (!activities || activities.length === 0) {
+        return (
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 text-center text-gray-400">
+                <p>Nenhuma atividade recente.</p>
+            </div>
+        );
+    }
+
     return (
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
@@ -16,24 +30,30 @@ const ProfileActivityHistory: React.FC = () => {
                 Histórico Recente
             </h3>
             <div className="space-y-4">
-                {MOCK_ACTIVITIES.map((activity) => (
+                {displayActivities.map((activity) => (
                     <div key={activity.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition">
                         <div className="flex items-center gap-4">
                             <div className="bg-white p-2 rounded-lg text-[#FC4C02]">
                                 <Activity className="w-5 h-5" />
                             </div>
                             <div>
-                                <p className="font-bold text-gray-800">{activity.type}</p>
+                                <p className="font-bold text-gray-800">{activity.title || activity.type}</p>
                                 <div className="flex items-center gap-2 text-xs text-gray-500">
-                                    <span className="flex items-center gap-0.5"><Calendar className="w-3 h-3" /> {activity.date}</span>
-                                    <span className="flex items-center gap-0.5"><Clock className="w-3 h-3" /> {activity.duration}</span>
+                                    <span className="flex items-center gap-0.5">
+                                        <Calendar className="w-3 h-3" />
+                                        {new Date(activity.date).toLocaleDateString('pt-PT')}
+                                    </span>
+                                    <span className="flex items-center gap-0.5">
+                                        <Clock className="w-3 h-3" />
+                                        {activity.duration} min
+                                    </span>
                                 </div>
                             </div>
                         </div>
                         <div className="text-right">
-                            <p className="font-bold text-[#002D72]">{activity.distance}</p>
+                            <p className="font-bold text-[#002D72]">{typeof activity.distance === 'number' ? activity.distance.toFixed(1) : activity.distance} km</p>
                             <p className="text-xs text-gray-400 flex items-center justify-end gap-1">
-                                <MapPin className="w-3 h-3" /> {activity.location}
+                                <MapPin className="w-3 h-3" /> {activity.type}
                             </p>
                         </div>
                     </div>

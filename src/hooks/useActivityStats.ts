@@ -13,8 +13,8 @@ export function useActivityStats(userId: string | undefined) {
             if (!userId) return { distance: 0, calories: 0 };
 
             const { data, error } = await supabase
-                .from('activities')
-                .select('distance, calories')
+                .from('workout_metrics')
+                .select('distance_meters, calories')
                 .eq('user_id', userId);
 
             if (error) {
@@ -23,7 +23,7 @@ export function useActivityStats(userId: string | undefined) {
             }
 
             const stats = data.reduce((acc, curr) => ({
-                distance: acc.distance + (curr.distance || 0),
+                distance: acc.distance + (curr.distance_meters || 0),
                 calories: acc.calories + (curr.calories || 0)
             }), { distance: 0, calories: 0 });
 

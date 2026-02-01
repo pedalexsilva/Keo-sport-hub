@@ -87,23 +87,51 @@ const ProfileView: React.FC<ProfileViewProps> = ({ user, points, inventory, stra
                     <ChevronRight className="w-4 h-4 text-gray-400" />
                 </div>
 
-                <div className="p-4 border-b border-gray-50 flex items-center justify-between cursor-pointer hover:bg-gray-50 transition">
+                <div
+                    className="p-4 flex items-center justify-between cursor-pointer hover:bg-gray-50 transition"
+                    onClick={() => { }} // Placeholder for now, or link to settings page
+                >
                     <div className="flex items-center gap-3">
                         <div className="bg-gray-50 p-2 rounded-lg text-gray-600"><Settings className="w-5 h-5" /></div>
                         <span className="font-bold text-gray-700">Definições</span>
                     </div>
                     <ChevronRight className="w-4 h-4 text-gray-400" />
                 </div>
+            </div>
 
-                <div
-                    className="p-4 flex items-center justify-between cursor-pointer hover:bg-red-50 transition"
-                    onClick={onDisconnect}
-                >
+            {/* Connected Apps Section */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-6 p-6">
+                <div className="flex items-center justify-between mb-4">
+                    <h3 className="font-bold text-[#002D72]">Aplicações Conectadas</h3>
+                    <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">INTEGRAÇÕES</span>
+                </div>
+
+                <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <div className="bg-red-50 p-2 rounded-lg text-red-600"><LogOut className="w-5 h-5" /></div>
-                        <span className="font-bold text-red-600">Terminar Sessão</span>
+                        <div className="bg-[#FC4C02] p-2 rounded-xl text-white">
+                            <Activity className="w-6 h-6" />
+                        </div>
+                        <div>
+                            <p className="font-bold text-gray-800">Strava</p>
+                            {stravaConnected ? (
+                                <p className="text-xs font-bold text-green-500 flex items-center gap-1">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+                                    Conectado
+                                </p>
+                            ) : (
+                                <p className="text-xs text-gray-400">Não conectado</p>
+                            )}
+                        </div>
                     </div>
-                    <ChevronRight className="w-4 h-4 text-red-300" />
+
+                    {stravaConnected && (
+                        <button
+                            onClick={onDisconnect}
+                            className="px-3 py-1.5 rounded-lg border border-red-100 text-red-500 text-xs font-bold hover:bg-red-50 transition"
+                        >
+                            Desconectar
+                        </button>
+                    )}
                 </div>
             </div>
 

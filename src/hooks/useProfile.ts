@@ -17,39 +17,42 @@ export function useProfile(userId?: string) {
 
             if (profileError) throw profileError;
 
-            // Fetch Secrets for connection status
-            // Note: We only need to know if a token exists, not the token itself (though RLS allows it).
-            // This is secure because the user can only see their own secrets.
-            const { data: secrets } = await supabase
-                .from('user_secrets')
-                .select('strava_access_token')
-                .eq('id', userId)
+            // Fetch Connection Status (device_connections)
+            const { data: connection } = await supabase
+                .from('device_connections')
+                .select('is_active')
+                .eq('user_id', userId)
+                .eq('platform', 'strava')
                 .single();
 
-            // Fetch Activities Summary (or simplified view)
-            // For MVP we fetch all activities for the user to calc stats client side
-            // In prod we would use the 'leaderboard' view or DB functions
+            // Fetch Activities Summary from workout_metrics
             const { data: activities, error: activityError } = await supabase
-                .from('activities')
+                .from('workout_metrics')
                 .select('*')
                 .eq('user_id', userId)
-                .order('date', { ascending: false });
+                .order('start_time', { ascending: false });
 
             if (activityError) throw activityError;
 
             // Map to User type
-            const totalPoints = activities?.reduce((sum, act) => sum + act.points, 0) || 0;
+            const totalPoints = activities?.reduce((sum, act) => sum + (act.points || 0), 0) || 0;
 
             return {
                 id: profile.id,
-                name: profile.full_name || profile.username || 'Atléta',
+                name: profile.full_name || profile.username || 'Atleta',
                 avatar: profile.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.full_name || profile.username || 'User')}&background=random`,
-                isConnectedToStrava: !!secrets?.strava_access_token,
+                isConnectedToStrava: connection?.is_active || false,
                 totalPoints,
                 rank: 0, // Calculated separately or in leaderboard view
                 activities: activities?.map(a => ({
-                    ...a,
-                    date: a.date // Convert DB timestamp if needed, currently string is fine
+                    id: a.id,
+                    type: a.type,
+                    title: a.title,
+                    distance: a.distance_meters ? a.distance_meters / 1000 : 0, // Keep number for Profile.tsx calc? No, Profile expects number in `totalDistance` calc line 52
+                    duration: a.duration_seconds ? Math.round(a.duration_seconds / 60) : 0, // Minutes
+                    calories: a.calories,
+                    date: a.start_time,
+                    points: a.points || 0
                 })) || []
             };
         },
