@@ -13,6 +13,9 @@ export interface User {
   isConnectedToStrava: boolean;
   totalPoints: number;
   rank: number;
+  role?: string;
+  office?: string;
+  onboardingCompleted: boolean;
   activities: Activity[];
 }
 

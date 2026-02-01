@@ -30,7 +30,7 @@ const LandingFooter: React.FC = () => {
                         <li>KEO Porto Office</li>
                         <li>Praça da Trindade, 142</li>
                         <li>Porto, Portugal</li>
-                        <li class="mt-4"><a href="mailto:sports@keo.com" className="text-[#009CDE]">sports@keo.com</a></li>
+                        <li className="mt-4"><a href="mailto:sports@keo.com" className="text-[#009CDE]">sports@keo.com</a></li>
                     </ul>
                 </div>
             </div>

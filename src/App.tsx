@@ -23,6 +23,8 @@ import { useActivityStats } from './hooks/useActivityStats';
 import LandingPage from './pages/LandingPage';
 import AdminDashboard from './pages/AdminDashboard';
 
+import OnboardingPage from './pages/OnboardingPage';
+
 const AppLayout: React.FC = () => {
   const { user: authUser } = useAuth();
   const { data: userProfile, isLoading: isProfileLoading } = useProfile(authUser?.id);
@@ -42,6 +44,18 @@ const AppLayout: React.FC = () => {
       setPoints(userProfile.totalPoints);
     }
   }, [userProfile]);
+
+  // Check for onboarding and redirect if needed
+  useEffect(() => {
+    if (!isProfileLoading && userProfile && !userProfile.onboardingCompleted) {
+      // We're inside AppLayout, which is under /app/* path.
+      // However, we probably want Onboarding to be its own top-level route or inside App but full screen.
+      // The current structure has AppLayout rendering Navigation/Header etc.
+      // The best place for redirection is actually at the Routing level or inside AppLayout to navigate away.
+      // But if we navigate to /onboarding, we need that route to exist outside AppLayout if we want a clean screen.
+      navigate('/onboarding');
+    }
+  }, [userProfile, isProfileLoading, navigate]);
 
   const handlePurchase = (item: any) => {
     if (points >= item.cost) {
@@ -78,12 +92,6 @@ const AppLayout: React.FC = () => {
 
     try {
       await import('./features/strava/services/strava').then(m => m.disconnectStrava(userProfile.id));
-
-      // Force refresh of profile to update UI
-      // In a real app with QueryClient properly setup in Context, we would use queryClient.invalidateQueries(['profile'])
-      // Since we don't have direct access here easily without context hook, we might rely on window reload or just optimistic update.
-      // But query invalidation is best.
-      // Assuming a simple reload for now or check if we can get queryClient.
 
       setNotification("Desconectado com sucesso.");
 
@@ -215,6 +223,12 @@ const App: React.FC = () => {
         <Route path="/strava/callback" element={
           <RequireAuth>
             <StravaCallback />
+          </RequireAuth>
+        } />
+
+        <Route path="/onboarding" element={
+          <RequireAuth>
+            <OnboardingPage />
           </RequireAuth>
         } />
 

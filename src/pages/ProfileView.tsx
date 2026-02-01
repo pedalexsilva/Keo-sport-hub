@@ -5,6 +5,7 @@ import { useCreateTicket } from '../hooks/useTickets';
 import { useLogout } from '../hooks/useLogout';
 import SyncStravaButton from '../components/SyncStravaButton';
 import ProfileActivityHistory from '../components/ProfileActivityHistory';
+import { getStravaAuthUrl } from '../features/strava/services/strava';
 
 interface ProfileViewProps {
     user: any;
@@ -29,9 +30,19 @@ const ProfileView: React.FC<ProfileViewProps> = ({ user, points, inventory, stra
             description: ticket.description,
             priority: ticket.priority as any
         });
-        alert("Ticker criado com sucesso!");
+        alert("Ticke criado com sucesso!");
         setShowSupport(false);
         setTicket({ subject: '', description: '', priority: 'normal' });
+    };
+
+    const handleConnectStrava = async () => {
+        try {
+            const url = await getStravaAuthUrl();
+            if (url) window.location.href = url;
+        } catch (error) {
+            console.error("Failed to initiate connection", error);
+            alert("Erro ao iniciar conexão com Strava. Verifique se o servidor está configurado.");
+        }
     };
 
     return (
@@ -101,35 +112,45 @@ const ProfileView: React.FC<ProfileViewProps> = ({ user, points, inventory, stra
 
             {/* Connected Apps Section */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-6 p-6">
-                <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-bold text-[#002D72]">Aplicações Conectadas</h3>
+                <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-lg font-bold text-[#002D72]">Aplicações Conectadas</h3>
                     <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">INTEGRAÇÕES</span>
                 </div>
 
                 <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <div className="bg-[#FC4C02] p-2 rounded-xl text-white">
+                    <div className="flex items-center gap-4">
+                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-colors ${stravaConnected ? 'bg-[#FC4C02] text-white' : 'bg-gray-100 text-gray-400'}`}>
                             <Activity className="w-6 h-6" />
                         </div>
                         <div>
-                            <p className="font-bold text-gray-800">Strava</p>
+                            <p className="text-base font-bold text-[#002D72]">Strava</p>
                             {stravaConnected ? (
-                                <p className="text-xs font-bold text-green-500 flex items-center gap-1">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+                                <p className="text-sm font-medium text-green-500 flex items-center gap-1.5">
+                                    <span className="w-2 h-2 rounded-full bg-green-500"></span>
                                     Conectado
                                 </p>
                             ) : (
-                                <p className="text-xs text-gray-400">Não conectado</p>
+                                <p className="text-sm font-medium text-gray-400 flex items-center gap-1.5">
+                                    <span className="w-2 h-2 rounded-full border border-gray-400"></span>
+                                    Desconectado
+                                </p>
                             )}
                         </div>
                     </div>
 
-                    {stravaConnected && (
+                    {stravaConnected ? (
                         <button
                             onClick={onDisconnect}
-                            className="px-3 py-1.5 rounded-lg border border-red-100 text-red-500 text-xs font-bold hover:bg-red-50 transition"
+                            className="px-4 py-2 rounded-lg border border-red-200 text-red-500 text-sm font-bold hover:bg-red-50 transition"
                         >
                             Desconectar
+                        </button>
+                    ) : (
+                        <button
+                            onClick={handleConnectStrava}
+                            className="bg-[#0F172A] text-white px-6 py-2 rounded-lg font-bold text-sm hover:bg-black transition shadow-sm"
+                        >
+                            Conectar
                         </button>
                     )}
                 </div>

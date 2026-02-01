@@ -23,18 +23,16 @@ export function useStrava(): UseStravaReturn {
             });
 
             if (invokeError) {
-                // Try to parse the error message from the response body if it's a FunctionsHttpError
-                let errorMessage = invokeError.message;
-                if ((invokeError as any).context?.body) {
-                    try {
-                        const body = JSON.parse((invokeError as any).context.body);
-                        if (body.error) errorMessage = body.error;
-                    } catch (e) {
-                        // Not JSON, keep original message
-                    }
-                }
-                throw new Error(errorMessage);
+                console.error('Strava Sync Invoke Error:', invokeError);
+                throw new Error(invokeError.message);
             }
+
+            // Check for logical error returned in 200 OK response
+            if (data && data.error) {
+                console.error('Strava Sync Logic Error:', data.error);
+                throw new Error(data.error);
+            }
+
 
             // Invalidate queries to refresh data
             await queryClient.invalidateQueries({ queryKey: ['profile'] });

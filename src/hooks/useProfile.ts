@@ -23,7 +23,7 @@ export function useProfile(userId?: string) {
                 .select('is_active')
                 .eq('user_id', userId)
                 .eq('platform', 'strava')
-                .single();
+                .maybeSingle();
 
             // Fetch Activities Summary from workout_metrics
             const { data: activities, error: activityError } = await supabase
@@ -41,6 +41,9 @@ export function useProfile(userId?: string) {
                 id: profile.id,
                 name: profile.full_name || profile.username || 'Atleta',
                 avatar: profile.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.full_name || profile.username || 'User')}&background=random`,
+                role: profile.role,
+                office: profile.office,
+                onboardingCompleted: profile.onboarding_completed || false,
                 isConnectedToStrava: connection?.is_active || false,
                 totalPoints,
                 rank: 0, // Calculated separately or in leaderboard view

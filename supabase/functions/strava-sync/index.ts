@@ -148,8 +148,10 @@ serve(async (req) => {
 
     } catch (error) {
         console.error("Function Error:", error)
-        return new Response(JSON.stringify({ error: error.message }), {
-            status: 400,
+        // Return 200 OK but with error field so client can read the body easily
+        // The client throws 400s sometimes without giving access to body in some Supabase client versions/contexts
+        return new Response(JSON.stringify({ success: false, error: error.message }), {
+            status: 200,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         })
     }
