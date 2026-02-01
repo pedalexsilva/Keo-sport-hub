@@ -17,20 +17,29 @@ export function useStrava(): UseStravaReturn {
         setIsSyncing(true);
         setError(null);
         try {
-            // Call the Edge Function 'strava-webhook' effectively, but usually manually syncing
-            // implies calling a specific endpoint. 
-            // For now, let's assume we invoke a function or just mock it if function doesn't exist yet.
-            // But better: invoke the function.
-
-            const { error: invokeError } = await supabase.functions.invoke('strava-sync', {
+            // Call the Edge Function 'strava-sync'
+            const { data, error: invokeError } = await supabase.functions.invoke('strava-sync', {
                 method: 'POST',
             });
 
-            if (invokeError) throw invokeError;
+            if (invokeError) {
+                // Try to parse the error message from the response body if it's a FunctionsHttpError
+                let errorMessage = invokeError.message;
+                if ((invokeError as any).context?.body) {
+                    try {
+                        const body = JSON.parse((invokeError as any).context.body);
+                        if (body.error) errorMessage = body.error;
+                    } catch (e) {
+                        // Not JSON, keep original message
+                    }
+                }
+                throw new Error(errorMessage);
+            }
 
             // Invalidate queries to refresh data
             await queryClient.invalidateQueries({ queryKey: ['profile'] });
             await queryClient.invalidateQueries({ queryKey: ['activities'] });
+            await queryClient.invalidateQueries({ queryKey: ['workout_metrics'] });
 
             return true;
         } catch (err: any) {

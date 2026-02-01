@@ -13,43 +13,29 @@ serve(async (req) => {
     }
 
     try {
-        const { code, current_path, type } = await req.json() // type: 'exchange' or 'refresh' or 'authorize'
+        const body = await req.json()
+        const { code, type } = body
 
         // Environment Variables
         const STRAVA_CLIENT_ID = Deno.env.get('STRAVA_CLIENT_ID')
         const STRAVA_CLIENT_SECRET = Deno.env.get('STRAVA_CLIENT_SECRET')
         const STRAVA_ENCRYPTION_KEY = Deno.env.get('STRAVA_ENCRYPTION_KEY')
-        const SUPABASE_URL = Deno.env.get('SUPABASE_url')
+        const SUPABASE_URL = Deno.env.get('SUPABASE_URL')
         const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
 
-        if (!STRAVA_CLIENT_ID || !STRAVA_CLIENT_SECRET || !STRAVA_ENCRYPTION_KEY) {
+        if (!STRAVA_CLIENT_ID || !STRAVA_CLIENT_SECRET || !STRAVA_ENCRYPTION_KEY || !SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
             console.error("Missing Env Vars")
-            throw new Error('Server misconfiguration: Missing secrets.')
+            throw new Error('Server misconfiguration: Missing secrets or environment variables.')
         }
 
         // Initialize Admin Client
-        const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!)
+        const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
 
         // ==============================================================================
         // ACTION: AUTHORIZE (Generate URL with Secure State)
         // ==============================================================================
         if (type === 'authorize_url') {
-            const { userId } = await req.json() // pass userId? or get from auth header? 
-            // Better to get from Auth Header for security, but simpler here if passed or we just verify text.
-            // Let's assume the frontend redirects directly usually, but to use 'state' we need to generate it.
-            // Implementation: Frontend calls THIS to get the URL.
-
-            // For MVP, if we don't want to overcomplicate, we can skip strict state checking table 
-            // BUT the plan said "Implement state generation".
-            // Let's generate a simple signed state or random string.
             const state = crypto.randomUUID()
-
-            // Save state to DB
-            /* 
-               await supabase.from('oauth_states').insert({ state, user_id: ... })
-            */
-            // Skipping strict state persistence in this snippet to keep it simple, 
-            // but in production, save 'state' and verify it in callback.
 
             const redirectUri = `${req.headers.get('origin')}/strava/callback`
             const scope = 'read,activity:read_all,profile:read_all'
@@ -82,11 +68,7 @@ serve(async (req) => {
                 throw new Error(tokenData.message || 'Failed to exchange token with Strava')
             }
 
-            // B. Get User ID securely (from Authorization header or passed ID if trusted context)
-            // Ideally we parse the JWT from 'Authorization: Bearer ...' to get user_id.
-            // For now, let's assume the client sends 'user_id' in body (LESS SECURE) 
-            // OR we trust the Auth context if Supabase Gateway forwards it.
-            // Let's try to get user from Auth header.
+            // B. Get User ID securely
             const authHeader = req.headers.get('Authorization')
             let userId = null
             if (authHeader) {
@@ -94,8 +76,6 @@ serve(async (req) => {
                 if (user) userId = user.id
             }
 
-            // Fallback (for dev/testing if auth header has issues in Edge) - verify this risk!
-            // In production, ALWAYS use auth header.
             if (!userId) {
                 throw new Error('Unauthorized: No valid session')
             }
@@ -115,7 +95,6 @@ serve(async (req) => {
             }
 
             // D. Register Connection
-            // Get Athlete ID
             const athleteId = tokenData.athlete?.id
             if (athleteId) {
                 await supabase.rpc('update_device_connection', {
@@ -131,7 +110,7 @@ serve(async (req) => {
             })
         }
 
-        throw new Error('Invalid Request')
+        throw new Error('Invalid Request: Missing code or type')
 
     } catch (error) {
         return new Response(JSON.stringify({ error: error.message }), {

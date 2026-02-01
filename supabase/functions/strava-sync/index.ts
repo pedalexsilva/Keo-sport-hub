@@ -13,6 +13,7 @@ serve(async (req) => {
 
     try {
         // 1. Authenticate User
+        console.log("Authenticating user...")
         const authHeader = req.headers.get('Authorization')
         if (!authHeader) {
             throw new Error('Missing Authorization header')
@@ -26,27 +27,39 @@ serve(async (req) => {
         const { data: { user }, error: authError } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''))
 
         if (authError || !user) {
-            throw new Error('Unauthorized')
+            console.error("Auth Error:", authError)
+            throw new Error('Unauthorized: Invalid session')
         }
 
         const userId = user.id
+        console.log(`User authenticated: ${userId}`)
 
         // 2. Get Strava Tokens
         const STRAVA_ENCRYPTION_KEY = Deno.env.get('STRAVA_ENCRYPTION_KEY')
+        if (!STRAVA_ENCRYPTION_KEY) {
+            throw new Error('Server misconfiguration: Missing encryption key')
+        }
+
+        console.log("Fetching Strava tokens...")
         const { data: tokens, error: tokenError } = await supabase.rpc('get_strava_tokens', {
             p_user_id: userId,
             p_encryption_key: STRAVA_ENCRYPTION_KEY
         })
 
-        if (tokenError || !tokens || tokens.length === 0) {
-            throw new Error('Strava not connected')
+        if (tokenError) {
+            console.error("Token RPC Error:", tokenError)
+            throw new Error(`Database error fetching tokens: ${tokenError.message}`)
+        }
+
+        if (!tokens || tokens.length === 0) {
+            throw new Error('Strava not connected: No tokens found for user')
         }
 
         let { access_token, refresh_token, expires_at } = tokens[0]
 
         // 3. Refresh Token if needed
-        if (new Date(expires_at).getTime() < Date.now()) {
-            console.log("Refreshing token...")
+        if (new Date(expires_at).getTime() < Date.now() + 300000) { // Refresh if expires in < 5 mins
+            console.log("Refreshing Strava token...")
             const STRAVA_CLIENT_ID = Deno.env.get('STRAVA_CLIENT_ID')
             const STRAVA_CLIENT_SECRET = Deno.env.get('STRAVA_CLIENT_SECRET')
 
@@ -62,10 +75,13 @@ serve(async (req) => {
             })
 
             const refreshData = await refreshRes.json()
-            if (!refreshRes.ok) throw new Error('Failed to refresh Strava token')
+            if (!refreshRes.ok) {
+                console.error("Strava Refresh Error:", refreshData)
+                throw new Error(`Failed to refresh Strava token: ${refreshData.message || 'Unknown error'}`)
+            }
 
-            // Save new tokens
-            await supabase.rpc('save_strava_tokens', {
+            console.log("Saving new tokens...")
+            const { error: saveError } = await supabase.rpc('save_strava_tokens', {
                 p_user_id: userId,
                 p_access_token: refreshData.access_token,
                 p_refresh_token: refreshData.refresh_token,
@@ -73,22 +89,37 @@ serve(async (req) => {
                 p_encryption_key: STRAVA_ENCRYPTION_KEY
             })
 
+            if (saveError) {
+                console.error("Token Save Error:", saveError)
+                throw new Error(`Failed to save refreshed tokens: ${saveError.message}`)
+            }
+
             access_token = refreshData.access_token
         }
 
         // 4. Fetch Last 30 Days Activities
+        console.log("Fetching activities from Strava...")
         const thirtyDaysAgo = Math.floor((Date.now() - 30 * 24 * 60 * 60 * 1000) / 1000);
         const activitiesRes = await fetch(`https://www.strava.com/api/v3/athlete/activities?after=${thirtyDaysAgo}&per_page=50`, {
             headers: { Authorization: `Bearer ${access_token}` }
         })
 
-        if (!activitiesRes.ok) throw new Error('Failed to fetch from Strava')
+        if (!activitiesRes.ok) {
+            const errData = await activitiesRes.json()
+            console.error("Strava API Error:", errData)
+            throw new Error(`Failed to fetch from Strava: ${errData.message || activitiesRes.statusText}`)
+        }
         const activities = await activitiesRes.json()
+        console.log(`Found ${activities.length} activities to sync`)
 
         // 5. Save to DB
         let savedCount = 0
         for (const act of activities) {
-            const { error } = await supabase.from('workout_metrics').upsert({
+            // Sanitize values to avoid NaN or undefined causing DB errors
+            const distance = act.distance || 0
+            const points = Math.round(distance / 1000 * 10) || 0
+
+            const { error: upsertError } = await supabase.from('workout_metrics').upsert({
                 user_id: userId,
                 source_platform: 'strava',
                 external_id: act.id.toString(),
@@ -96,21 +127,27 @@ serve(async (req) => {
                 type: act.type,
                 start_time: act.start_date,
                 duration_seconds: act.moving_time,
-                distance_meters: act.distance,
-                calories: act.calories || act.kilojoules,
-                elevation_gain_meters: act.total_elevation_gain,
-                points: Math.round(act.distance / 1000 * 10),
+                distance_meters: distance,
+                calories: act.calories || act.kilojoules || 0,
+                elevation_gain_meters: act.total_elevation_gain || 0,
+                points: points,
                 updated_at: new Date().toISOString()
-            }, { onConflict: 'source_platform, external_id' })
+            }, { onConflict: 'source_platform,external_id' })
 
-            if (!error) savedCount++
+            if (upsertError) {
+                console.error(`Error saving activity ${act.id}:`, upsertError)
+            } else {
+                savedCount++
+            }
         }
 
+        console.log(`Sync completed. Saved ${savedCount} activities.`)
         return new Response(JSON.stringify({ synced: savedCount, message: `Synced ${savedCount} activities` }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         })
 
     } catch (error) {
+        console.error("Function Error:", error)
         return new Response(JSON.stringify({ error: error.message }), {
             status: 400,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },

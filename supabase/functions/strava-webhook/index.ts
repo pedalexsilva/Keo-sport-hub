@@ -95,7 +95,10 @@ serve(async (req) => {
                 const act = await stravaRes.json()
 
                 // 4. Save to workout_metrics
-                // Mapping:
+                // Mapping and sanitization
+                const distance = act.distance || 0
+                const points = Math.round(distance / 1000 * 10) || 0
+
                 const { error: saveError } = await supabase.from('workout_metrics').upsert({
                     user_id: userId,
                     source_platform: 'strava',
@@ -104,12 +107,12 @@ serve(async (req) => {
                     type: act.type,
                     start_time: act.start_date,
                     duration_seconds: act.moving_time,
-                    distance_meters: act.distance,
-                    calories: act.calories || act.kilojoules, // approximate
-                    elevation_gain_meters: act.total_elevation_gain,
-                    points: Math.round(act.distance / 1000 * 10), // Logic from previous code
+                    distance_meters: distance,
+                    calories: act.calories || act.kilojoules || 0,
+                    elevation_gain_meters: act.total_elevation_gain || 0,
+                    points: points,
                     updated_at: new Date().toISOString()
-                }, { onConflict: 'source_platform, external_id' })
+                }, { onConflict: 'source_platform,external_id' })
 
                 if (saveError) {
                     console.error("DB Save Error:", saveError)
