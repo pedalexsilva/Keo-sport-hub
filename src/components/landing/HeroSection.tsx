@@ -9,16 +9,27 @@ const HeroSection: React.FC = () => {
 
     return (
         <header className="relative flex flex-col items-center">
-            {/* Full Width Hero Image */}
+            {/* Full Width Hero Image or Video */}
             <div className="w-full h-[60vh] md:h-[70vh] relative overflow-hidden bg-gray-100">
-                <img
-                    src={config.heroImage}
-                    onError={(e) => {
-                        e.currentTarget.src = "https://images.unsplash.com/photo-1517649763962-0c623066013b?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80"; // Fallback
-                    }}
-                    alt="KEO Aerial View"
-                    className="w-full h-full object-cover"
-                />
+                {config.heroImage?.match(/\.(mp4|webm|ogg|mov)$/i) ? (
+                    <video
+                        src={config.heroImage}
+                        className="w-full h-full object-cover"
+                        autoPlay
+                        muted
+                        loop
+                        playsInline
+                    />
+                ) : (
+                    <img
+                        src={config.heroImage}
+                        onError={(e) => {
+                            e.currentTarget.src = "https://images.unsplash.com/photo-1517649763962-0c623066013b?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80"; // Fallback
+                        }}
+                        alt="KEO Aerial View"
+                        className="w-full h-full object-cover"
+                    />
+                )}
             </div>
 
             {/* Content Section (Below Image, Corporate Style) */}

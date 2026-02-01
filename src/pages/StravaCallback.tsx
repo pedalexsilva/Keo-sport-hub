@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { exchangeToken, saveStravaTokens } from '../features/strava/services/strava';
+import { exchangeToken } from '../features/strava/services/strava';
 import { useAuth } from '../features/auth/AuthContext';
 
 export default function StravaCallback() {
@@ -26,18 +26,13 @@ export default function StravaCallback() {
 
         const process = async () => {
             try {
-                const data = await exchangeToken(code);
-                await saveStravaTokens(user.id, data);
+                await exchangeToken(code);
+                // Tokens are saved securely on the server during exchange
                 setStatus('Success! Redirecting...');
                 setTimeout(() => navigate('/app/profile'), 1500);
             } catch (e: any) {
                 console.error('Strava connection error:', e);
-                // Check for specific Supabase error regarding missing table
-                if (e?.message?.includes('relation "user_secrets" does not exist')) {
-                    setStatus('Error: Database table missing. Please run the migration script.');
-                } else {
-                    setStatus(`Failed to connect: ${e?.message || 'Unknown error'}`);
-                }
+                setStatus(`Failed to connect: ${e?.message || 'Unknown error'}`);
             }
         };
 

@@ -14,13 +14,15 @@ const LandingNavbar: React.FC = () => {
     ];
 
     return (
-        <nav className="fixed w-full z-50 bg-white shadow-sm transition-all duration-300">
+        <nav className="w-full z-50 bg-white shadow-sm">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex justify-between items-center h-24">
                     {/* Left: Branding */}
                     <div className="flex items-center">
                         <Link to="/" className="flex items-center gap-2">
-                            <span className="text-2xl font-bold tracking-widest font-sans text-[#002D72]">KEO</span>
+                            <div className="bg-[#002D72] text-white px-3 py-1 rounded-[2px] shadow-sm">
+                                <span className="text-2xl font-bold tracking-widest font-sans">KEO</span>
+                            </div>
                             <span className="text-[#009CDE] text-xl font-light tracking-wider">ACTIVE</span>
                         </Link>
                     </div>
@@ -48,7 +50,7 @@ const LandingNavbar: React.FC = () => {
                         </Link>
                         {/* Official Logo Right */}
                         {/* Official Logo Right - Hidden on Mobile */}
-                        <img src="/keo-logo.jpg" alt="KEO Logo" className="hidden md:block h-20 w-auto" />
+                        {/* Official Logo removed as per request */}
                     </div>
 
                     {/* Mobile menu button (Only visible on small screens) */}

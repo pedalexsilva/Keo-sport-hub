@@ -22,7 +22,7 @@ export function useStrava(): UseStravaReturn {
             // For now, let's assume we invoke a function or just mock it if function doesn't exist yet.
             // But better: invoke the function.
 
-            const { error: invokeError } = await supabase.functions.invoke('sync-activities', {
+            const { error: invokeError } = await supabase.functions.invoke('strava-sync', {
                 method: 'POST',
             });
 

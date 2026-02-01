@@ -36,6 +36,8 @@ export interface Event {
   participants: string[]; // User IDs
   image: string;
   creatorId: string;
+  maxParticipants?: number;
+  status: 'open' | 'closed' | 'cancelled' | 'completed';
 }
 
 export interface Challenge {

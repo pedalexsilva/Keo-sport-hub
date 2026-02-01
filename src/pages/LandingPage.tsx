@@ -10,7 +10,7 @@ import LandingFooter from '../components/landing/LandingFooter';
 
 const LandingPage: React.FC = () => {
     return (
-        <div className="font-sans text-gray-800 bg-white pt-24">
+        <div className="font-sans text-gray-800 bg-white">
             <LandingNavbar />
             <HeroSection />
             <StatsSection />

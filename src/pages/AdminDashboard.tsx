@@ -421,97 +421,71 @@ const DashboardView = () => (
 import { useEvents, useCreateEvent, useDeleteEvent } from '../hooks/useEvents';
 import { ActivityType } from '../types';
 
-const EventsManagerView = () => {
-    const { data: events, isLoading } = useEvents();
-    const createEvent = useCreateEvent();
-    const deleteEvent = useDeleteEvent();
-
-    const [showModal, setShowModal] = useState(false);
-    const [newEvent, setNewEvent] = useState({
-        title: '',
-        date: '',
-        time: '',
-        location: '',
-        type: 'Run' as ActivityType,
-        description: '',
-        image: ''
-    });
-
-    const handleDelete = async (id: string) => {
-        if (confirm("Tem a certeza?")) {
-            await deleteEvent.mutateAsync(id);
-        }
-    };
-
-    const handleCreate = async () => {
-        // Combine date and time
-        const dateTime = new Date(`${newEvent.date}T${newEvent.time}`).toISOString();
-
-        await createEvent.mutateAsync({
-            title: newEvent.title,
-            description: newEvent.description,
-            date: dateTime,
-            location: newEvent.location,
-            type: newEvent.type,
-            image: newEvent.image
-        });
-
-        setShowModal(false);
-        setNewEvent({ title: '', date: '', time: '', location: '', type: 'Run', description: '', image: '' });
-    };
-
-    if (isLoading) return <div>Carregando eventos...</div>;
-
-    return (
-        <div className="p-8 animate-fade-in relative h-full">
-            <div className="flex justify-between items-center mb-8"><div><h2 className="text-2xl font-bold text-gray-800">Gestão de Eventos</h2><p className="text-gray-500 text-sm">Crie e edite os eventos visíveis na App.</p></div><button onClick={() => setShowModal(true)} className="bg-[#002D72] text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 hover:bg-blue-900 transition shadow-lg"><Plus className="w-5 h-5" /> Novo Evento</button></div>
-            <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mb-6 flex gap-4"><div className="flex-1 relative"><Search className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" /><input type="text" placeholder="Pesquisar eventos..." className="w-full pl-10 pr-4 py-2 bg-gray-50 rounded-lg border-none focus:ring-2 focus:ring-[#009CDE] outline-none" /></div><select className="bg-gray-50 px-4 py-2 rounded-lg text-gray-600 font-medium outline-none"><option>Todos os Estados</option><option>Aberto</option><option>Cheio</option><option>Terminado</option></select></div>
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden"><table className="w-full text-left"><thead className="bg-gray-50 border-b border-gray-100"><tr><th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Evento</th><th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Data & Local</th><th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Participantes</th><th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-right">Ações</th></tr></thead><tbody className="divide-y divide-gray-50">{(events || []).map((evt) => (<tr key={evt.id} className="hover:bg-blue-50/50 transition"><td className="px-6 py-4"><div className="font-bold text-gray-900">{evt.title}</div><div className="text-xs text-gray-400 bg-gray-100 inline-block px-2 py-0.5 rounded mt-1">{evt.type}</div></td><td className="px-6 py-4"><div className="flex items-center gap-1 text-sm text-gray-600 mb-1"><Calendar className="w-3 h-3" /> {new Date(evt.date).toLocaleDateString()}</div><div className="flex items-center gap-1 text-xs text-gray-500"><MapPin className="w-3 h-3" /> {evt.location}</div></td><td className="px-6 py-4"><div className="flex items-center gap-2"><div className="w-full bg-gray-200 rounded-full h-2 w-24"><div className="bg-[#009CDE] h-2 rounded-full" style={{ width: `50%` }}></div></div><span className="text-xs font-bold text-gray-600">{evt.participants?.length || 0}</span></div></td><td className="px-6 py-4 text-right"><button onClick={() => handleDelete(evt.id)} className="text-gray-400 hover:text-red-500 p-2 transition"><Trash2 className="w-4 h-4" /></button></td></tr>))}</tbody></table></div>
-            {showModal && (
-                <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm rounded-3xl">
-                    <div className="bg-white p-8 rounded-2xl w-full max-w-md shadow-2xl">
-                        <h3 className="text-xl font-bold text-[#002D72] mb-6">Criar Novo Evento</h3>
-                        <div className="space-y-4">
-                            <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Título</label><input type="text" className="w-full p-3 bg-gray-50 rounded-lg border border-gray-200" value={newEvent.title} onChange={e => setNewEvent({ ...newEvent, title: e.target.value })} /></div>
-                            <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Descrição</label><textarea className="w-full p-3 bg-gray-50 rounded-lg border border-gray-200" value={newEvent.description} onChange={e => setNewEvent({ ...newEvent, description: e.target.value })} /></div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Data</label><input type="date" className="w-full p-3 bg-gray-50 rounded-lg border border-gray-200" value={newEvent.date} onChange={e => setNewEvent({ ...newEvent, date: e.target.value })} /></div>
-                                <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Hora</label><input type="time" className="w-full p-3 bg-gray-50 rounded-lg border border-gray-200" value={newEvent.time} onChange={e => setNewEvent({ ...newEvent, time: e.target.value })} /></div>
-                            </div>
-                            <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Localização</label><input type="text" className="w-full p-3 bg-gray-50 rounded-lg border border-gray-200" value={newEvent.location} onChange={e => setNewEvent({ ...newEvent, location: e.target.value })} /></div>
-                            <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Imagem URL</label><input type="text" className="w-full p-3 bg-gray-50 rounded-lg border border-gray-200" value={newEvent.image} onChange={e => setNewEvent({ ...newEvent, image: e.target.value })} /></div>
-                            <div className="flex gap-4 mt-6">
-                                <button onClick={() => setShowModal(false)} className="flex-1 py-3 bg-gray-100 text-gray-600 rounded-xl font-bold hover:bg-gray-200">Cancelar</button>
-                                <button onClick={handleCreate} className="flex-1 py-3 bg-[#002D72] text-white rounded-xl font-bold hover:bg-blue-900">Criar Evento</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
-        </div>
-    );
-};
+import { EventsManager } from '../components/admin/EventsManager';
 
 import { useAdminStore } from '../hooks/useAdminStore';
 
 const StoreManagerView = () => {
-    const { products, orders, loading, addProduct, updateOrderStatus, deleteProduct, refresh } = useAdminStore();
+    const { products, orders, loading, addProduct, updateProduct, deleteProduct, updateOrderStatus, refresh, uploadProductImage } = useAdminStore();
     const [showProductModal, setShowProductModal] = useState(false);
+    const [editingProduct, setEditingProduct] = useState<any>(null);
+    const [isUploading, setIsUploading] = useState(false);
     const [newProduct, setNewProduct] = useState({
         name: '', description: '', cost: 0, stock: 0, category: 'Merch', image_url: ''
     });
 
-    const handleCreateProduct = async () => {
-        await addProduct(newProduct);
+    const handleSaveProduct = async () => {
+        if (editingProduct) {
+            await updateProduct(editingProduct.id, newProduct);
+        } else {
+            await addProduct(newProduct);
+        }
         setShowProductModal(false);
+        setEditingProduct(null);
         setNewProduct({ name: '', description: '', cost: 0, stock: 0, category: 'Merch', image_url: '' });
     };
+
+    const openEditModal = (product: any) => {
+        setEditingProduct(product);
+        setNewProduct({
+            name: product.name,
+            description: product.description,
+            cost: product.cost,
+            stock: product.stock,
+            category: product.category,
+            image_url: product.image_url
+        });
+        setShowProductModal(true);
+    };
+
+    const openCreateModal = () => {
+        setEditingProduct(null);
+        setNewProduct({ name: '', description: '', cost: 0, stock: 0, category: 'Merch', image_url: '' });
+        setShowProductModal(true);
+    };
+
+    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (!e.target.files || !e.target.files[0]) return;
+
+        setIsUploading(true);
+        try {
+            const url = await uploadProductImage(e.target.files[0]);
+            setNewProduct({ ...newProduct, image_url: url });
+        } catch (error) {
+            console.error("Upload failed", error);
+            alert("Erro ao carregar imagem");
+        } finally {
+            setIsUploading(false);
+        }
+    };
+
+
 
     if (loading) return <div>Carregando loja...</div>;
 
     return (
         <div className="p-8 animate-fade-in h-full flex flex-col gap-8">
-            <div className="flex justify-between items-center"><div><h2 className="text-2xl font-bold text-gray-800">Loja & Prémios</h2><p className="text-gray-500 text-sm">Gerir catálogo e aprovar trocas de pontos.</p></div><button onClick={() => setShowProductModal(true)} className="bg-[#002D72] text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 hover:bg-blue-900 transition shadow-lg"><Plus className="w-5 h-5" /> Novo Produto</button></div>
+            <div className="flex justify-between items-center"><div><h2 className="text-2xl font-bold text-gray-800">Loja & Prémios</h2><p className="text-gray-500 text-sm">Gerir catálogo e aprovar trocas de pontos.</p></div><button onClick={openCreateModal} className="bg-[#002D72] text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 hover:bg-blue-900 transition shadow-lg"><Plus className="w-5 h-5" /> Novo Produto</button></div>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                     <div className="p-4 border-b border-gray-50 bg-gray-50/50 flex justify-between items-center">
@@ -547,7 +521,10 @@ const StoreManagerView = () => {
                                     <p className="font-bold text-sm text-gray-800">{prod.name}</p>
                                     <div className="flex justify-between mt-1"><span className="text-xs font-bold text-[#009CDE]">{prod.cost} pts</span><span className="text-xs text-gray-500">Stock: {prod.stock}</span></div>
                                 </div>
-                                <button onClick={async () => { if (confirm('Apagar produto?')) await deleteProduct(prod.id); }} className="text-gray-400 hover:text-red-500"><Trash2 className="w-4 h-4" /></button>
+                                <div className="flex gap-2">
+                                    <button onClick={() => openEditModal(prod)} className="text-gray-400 hover:text-[#009CDE]"><Edit2 className="w-4 h-4" /></button>
+                                    <button onClick={async () => { if (confirm('Apagar produto?')) await deleteProduct(prod.id); }} className="text-gray-400 hover:text-red-500"><Trash2 className="w-4 h-4" /></button>
+                                </div>
                             </div>
                         ))}
                     </div>
@@ -557,7 +534,7 @@ const StoreManagerView = () => {
             {showProductModal && (
                 <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm rounded-3xl">
                     <div className="bg-white p-8 rounded-2xl w-full max-w-md shadow-2xl">
-                        <h3 className="text-xl font-bold text-[#002D72] mb-6">Novo Produto</h3>
+                        <h3 className="text-xl font-bold text-[#002D72] mb-6">{editingProduct ? 'Editar Produto' : 'Novo Produto'}</h3>
                         <div className="space-y-4">
                             <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Nome</label><input type="text" className="w-full p-3 bg-gray-50 rounded-lg border border-gray-200" value={newProduct.name} onChange={e => setNewProduct({ ...newProduct, name: e.target.value })} /></div>
                             <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Descrição</label><input type="text" className="w-full p-3 bg-gray-50 rounded-lg border border-gray-200" value={newProduct.description} onChange={e => setNewProduct({ ...newProduct, description: e.target.value })} /></div>
@@ -565,10 +542,46 @@ const StoreManagerView = () => {
                                 <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Custo (Pts)</label><input type="number" className="w-full p-3 bg-gray-50 rounded-lg border border-gray-200" value={newProduct.cost} onChange={e => setNewProduct({ ...newProduct, cost: parseInt(e.target.value) })} /></div>
                                 <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Stock</label><input type="number" className="w-full p-3 bg-gray-50 rounded-lg border border-gray-200" value={newProduct.stock} onChange={e => setNewProduct({ ...newProduct, stock: parseInt(e.target.value) })} /></div>
                             </div>
-                            <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Imagem URL</label><input type="text" className="w-full p-3 bg-gray-50 rounded-lg border border-gray-200" value={newProduct.image_url} onChange={e => setNewProduct({ ...newProduct, image_url: e.target.value })} /></div>
+                            <div>
+                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Imagem</label>
+                                <div className="space-y-3">
+                                    <div className="flex items-center gap-3">
+                                        {newProduct.image_url && <img src={newProduct.image_url} className="w-16 h-16 rounded-lg object-cover bg-gray-100 border border-gray-200" />}
+                                        <div className="flex-1">
+                                            <input
+                                                type="text"
+                                                className="w-full p-3 bg-gray-50 rounded-lg border border-gray-200 text-sm mb-2"
+                                                placeholder="Ou cole um URL..."
+                                                value={newProduct.image_url}
+                                                onChange={e => setNewProduct({ ...newProduct, image_url: e.target.value })}
+                                            />
+                                            <div className="relative">
+                                                <input
+                                                    type="file"
+                                                    onChange={handleFileUpload}
+                                                    className="hidden"
+                                                    id="product-image-upload"
+                                                    accept="image/*"
+                                                    disabled={isUploading}
+                                                />
+                                                <label
+                                                    htmlFor="product-image-upload"
+                                                    className={`flex items-center justify-center gap-2 w-full p-2 bg-white border border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 hover:border-[#009CDE] transition ${isUploading ? 'opacity-50' : ''}`}
+                                                >
+                                                    {isUploading ? <Loader2 className="w-4 h-4 animate-spin text-[#002D72]" /> : <UploadCloud className="w-4 h-4 text-gray-400" />}
+                                                    <span className="text-xs font-bold text-gray-500">{isUploading ? 'A Carregar...' : 'Carregar Ficheiro'}</span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                             <div className="flex gap-4 mt-6">
                                 <button onClick={() => setShowProductModal(false)} className="flex-1 py-3 bg-gray-100 text-gray-600 rounded-xl font-bold hover:bg-gray-200">Cancelar</button>
-                                <button onClick={handleCreateProduct} className="flex-1 py-3 bg-[#002D72] text-white rounded-xl font-bold hover:bg-blue-900">Adicionar</button>
+                                <button onClick={handleSaveProduct} disabled={isUploading} className="flex-1 py-3 bg-[#002D72] text-white rounded-xl font-bold hover:bg-blue-900 flex items-center justify-center gap-2">
+                                    {isUploading && <Loader2 className="w-4 h-4 animate-spin" />}
+                                    {editingProduct ? 'Guardar' : 'Adicionar'}
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -593,7 +606,8 @@ const UsersView = () => {
     );
 };
 
-import { useCMS, useUpdateCMS, useNotifications, useCreateNotification } from '../hooks/useCMS';
+import { useCMS, useUpdateCMS, useNotifications, useCreateNotification, uploadCMSMedia } from '../hooks/useCMS';
+import { Loader2 } from 'lucide-react';
 
 const CommunicationsView = () => {
     const { data: notifications } = useNotifications();
@@ -782,6 +796,7 @@ const CMSView = () => {
     const { data: config, isLoading } = useCMS();
     const updateCMS = useUpdateCMS();
     const [localConfig, setLocalConfig] = useState<any>(null);
+    const [isUploading, setIsUploading] = useState(false);
 
     // Sync local state when data loads
     useEffect(() => {
@@ -793,7 +808,26 @@ const CMSView = () => {
         alert("Guardado com sucesso!");
     };
 
+    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (!e.target.files || !e.target.files[0]) return;
+
+        const file = e.target.files[0];
+        setIsUploading(true);
+
+        try {
+            const url = await uploadCMSMedia(file);
+            setLocalConfig({ ...localConfig, heroImage: url });
+        } catch (error) {
+            console.error("Upload failed:", error);
+            alert("Erro ao carregar ficheiro.");
+        } finally {
+            setIsUploading(false);
+        }
+    };
+
     if (isLoading || !localConfig) return <div>Carregando CMS...</div>;
+
+    const isVideo = localConfig.heroImage?.match(/\.(mp4|webm|ogg|mov)$/i);
 
     return (
         <div className="p-8 animate-fade-in h-full flex flex-col gap-8">
@@ -803,7 +837,47 @@ const CMSView = () => {
                     <h3 className="font-bold text-gray-800 border-b border-gray-100 pb-2">Hero Section</h3>
                     <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Título Principal</label><input type="text" className="w-full p-3 bg-gray-50 rounded-lg border border-gray-200 outline-none" value={localConfig.heroTitle} onChange={e => setLocalConfig({ ...localConfig, heroTitle: e.target.value })} /></div>
                     <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Subtítulo</label><input type="text" className="w-full p-3 bg-gray-50 rounded-lg border border-gray-200 outline-none" value={localConfig.heroSubtitle} onChange={e => setLocalConfig({ ...localConfig, heroSubtitle: e.target.value })} /></div>
-                    <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">URL Imagem de Fundo</label><input type="text" className="w-full p-3 bg-gray-50 rounded-lg border border-gray-200 outline-none" value={localConfig.heroImage} onChange={e => setLocalConfig({ ...localConfig, heroImage: e.target.value })} /></div>
+
+                    <div>
+                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Imagem ou Vídeo de Fundo</label>
+                        <div className="flex flex-col gap-3">
+                            <input
+                                type="text"
+                                placeholder="URL (ou faça upload abaixo)"
+                                className="w-full p-3 bg-gray-50 rounded-lg border border-gray-200 outline-none text-sm text-gray-600"
+                                value={localConfig.heroImage}
+                                onChange={e => setLocalConfig({ ...localConfig, heroImage: e.target.value })}
+                            />
+                            <div className="relative">
+                                <input
+                                    type="file"
+                                    accept="image/*,video/*"
+                                    onChange={handleFileUpload}
+                                    className="hidden"
+                                    id="hero-media-upload"
+                                    disabled={isUploading}
+                                />
+                                <label
+                                    htmlFor="hero-media-upload"
+                                    className={`flex items-center justify-center gap-2 w-full p-3 rounded-lg border-2 border-dashed border-gray-300 cursor-pointer hover:border-[#009CDE] hover:bg-blue-50 transition ${isUploading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                >
+                                    {isUploading ? (
+                                        <>
+                                            <Loader2 className="w-5 h-5 animate-spin text-[#002D72]" />
+                                            <span className="text-gray-500 font-medium">A carregar...</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <UploadCloud className="w-5 h-5 text-gray-400" />
+                                            <span className="text-gray-500 font-medium">Carregar Imagem ou Vídeo</span>
+                                        </>
+                                    )}
+                                </label>
+                            </div>
+                            <p className="text-[10px] text-gray-400">Suporta JPG, PNG, WEBP, MP4, WEBM (Max 50MB)</p>
+                        </div>
+                    </div>
+
                     <div className="pt-4 border-t border-gray-100"><h3 className="font-bold text-gray-800 mb-4">Barra de Avisos</h3><div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Texto do Aviso (Topo)</label><input type="text" className="w-full p-3 bg-gray-50 rounded-lg border border-gray-200 outline-none" value={localConfig.announcement} onChange={e => setLocalConfig({ ...localConfig, announcement: e.target.value })} /></div></div>
                 </div>
                 <div className="bg-gray-100 rounded-2xl border-4 border-gray-200 overflow-hidden relative group">
@@ -812,7 +886,22 @@ const CMSView = () => {
                         {/* Mini Preview of Landing Page */}
                         <div className="relative h-full flex flex-col">
                             {localConfig.announcement && <div className="bg-[#009CDE] text-white text-center py-2 text-sm font-bold">{localConfig.announcement}</div>}
-                            <div className="relative h-[500px] flex items-center justify-center text-center px-4" style={{ backgroundImage: `url(${localConfig.heroImage})`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
+                            <div className="relative h-[500px] flex items-center justify-center text-center px-4 overflow-hidden">
+                                {isVideo ? (
+                                    <video
+                                        src={localConfig.heroImage}
+                                        className="absolute inset-0 w-full h-full object-cover"
+                                        autoPlay
+                                        muted
+                                        loop
+                                        playsInline
+                                    />
+                                ) : (
+                                    <div
+                                        className="absolute inset-0 w-full h-full bg-cover bg-center"
+                                        style={{ backgroundImage: `url(${localConfig.heroImage})` }}
+                                    />
+                                )}
                                 <div className="absolute inset-0 bg-black/40"></div>
                                 <div className="relative z-10 max-w-4xl mx-auto space-y-6">
                                     <h1 className="text-5xl md:text-7xl font-bold text-white tracking-tight">{localConfig.heroTitle}</h1>
@@ -858,7 +947,7 @@ export default function AdminDashboard() {
                 </header>
                 {activeTab === 'dashboard' && <DashboardView />}
                 {activeTab === 'analytics' && <AnalyticsView />}
-                {activeTab === 'events' && <EventsManagerView />}
+                {activeTab === 'events' && <EventsManager />}
                 {activeTab === 'store' && <StoreManagerView />}
                 {activeTab === 'communications' && <CommunicationsView />}
                 {activeTab === 'support' && <SupportView />}

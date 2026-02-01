@@ -8,12 +8,12 @@ const GallerySection: React.FC = () => {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 h-96">
                     <div className="col-span-2 row-span-2 relative group overflow-hidden rounded-2xl">
                         <img
-                            src="https://images.unsplash.com/photo-1526676037777-05a232554f77?ixlib=rb-1.2.1&auto=format&fit=crop&w=1000&q=80"
+                            src="/images/team-moment.jpg"
                             className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
                             alt="Team"
                         />
                         <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
-                            <span className="text-white font-bold">Team Building 2024</span>
+                            <span className="text-white font-bold">World Mental Health Day</span>
                         </div>
                     </div>
                     <div className="relative group overflow-hidden rounded-2xl">

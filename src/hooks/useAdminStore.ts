@@ -66,6 +66,12 @@ export const useAdminStore = () => {
         await fetchAll();
     };
 
+    const updateProduct = async (id: string, updates: Partial<Product>) => {
+        const { error } = await supabase.from('products').update(updates).eq('id', id);
+        if (error) throw error;
+        await fetchAll();
+    };
+
     const updateOrderStatus = async (id: string, status: string) => {
         const { error } = await supabase.from('orders').update({ status }).eq('id', id);
         if (error) throw error;
@@ -76,13 +82,33 @@ export const useAdminStore = () => {
         fetchAll();
     }, []);
 
+    const uploadProductImage = async (file: File) => {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
+        const filePath = `${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+            .from('store-products')
+            .upload(filePath, file);
+
+        if (uploadError) throw uploadError;
+
+        const { data } = supabase.storage
+            .from('store-products')
+            .getPublicUrl(filePath);
+
+        return data.publicUrl;
+    };
+
     return {
         products,
         orders,
         loading,
         addProduct,
         deleteProduct,
+        updateProduct,
         updateOrderStatus,
+        uploadProductImage, // New export
         refresh: fetchAll
     };
 };

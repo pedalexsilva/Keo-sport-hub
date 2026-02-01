@@ -19,6 +19,7 @@ import { useAuth } from './features/auth/AuthContext';
 import { useProfile } from './hooks/useProfile';
 import { useEvents, useJoinEvent } from './hooks/useEvents';
 import { getStravaAuthUrl, syncStravaActivities } from './features/strava/services/strava';
+import { useActivityStats } from './hooks/useActivityStats';
 import LandingPage from './pages/LandingPage';
 import AdminDashboard from './pages/AdminDashboard';
 
@@ -105,9 +106,10 @@ const AppLayout: React.FC = () => {
     try {
       const result = await syncStravaActivities(userProfile.id);
       setNotification(result.message);
-      // In a real app, invalidate queries here to refresh stats
+
+      // Force page reload to refresh all data (temp fix for context invalidation)
       if (result.count > 0) {
-        // re-fetch profile to update points
+        window.location.reload();
       }
     } catch (error) {
       console.error(error);
@@ -118,16 +120,18 @@ const AppLayout: React.FC = () => {
     }
   };
 
+  const { data: activityStats } = useActivityStats(userProfile?.id);
+
   if (isProfileLoading) {
     return <div className="flex h-screen items-center justify-center"><div className="w-8 h-8 animate-spin rounded-full border-4 border-[#002D72] border-t-transparent"></div></div>;
   }
 
   if (!userProfile) return <div>Erro ao carregar perfil.</div>;
 
-  // Default Stats (Mocked or derived)
+  // Derived Stats
   const userStats = {
-    calories: 420 + Math.floor(Math.random() * 100), // Random changes for "Live" feel
-    steps: 8432 + Math.floor(Math.random() * 500)
+    calories: activityStats?.calories || 0,
+    distance: activityStats?.distance || 0
   };
 
   return (
@@ -142,7 +146,7 @@ const AppLayout: React.FC = () => {
           </div>
         )}
 
-        <Header user={userProfile} points={points} />
+        <Header user={userProfile} />
 
         <main className="relative">
           <Routes>
@@ -150,6 +154,7 @@ const AppLayout: React.FC = () => {
               <HomeView
                 user={userProfile}
                 stats={userStats}
+                events={eventsData || []}
                 stravaConnected={userProfile.isConnectedToStrava}
                 isSyncing={isSyncing}
                 onSync={handleSyncData}
