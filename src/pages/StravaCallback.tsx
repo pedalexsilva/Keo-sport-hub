@@ -2,11 +2,13 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { exchangeToken } from '../features/strava/services/strava';
 import { useAuth } from '../features/auth/AuthContext';
+import { useStrava } from '../hooks/useStrava';
 
 export default function StravaCallback() {
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
     const { user } = useAuth();
+    const { syncActivities } = useStrava();
     const [status, setStatus] = useState('Processing connection to Strava...');
 
     useEffect(() => {
@@ -38,6 +40,10 @@ export default function StravaCallback() {
             try {
                 await exchangeToken(code);
                 // Tokens are saved securely on the server during exchange
+
+                setStatus('Conexão bem sucedida via Strava! A sincronizar atividades...');
+                await syncActivities();
+
                 setStatus('Sucesso! A redirecionar...');
                 setTimeout(() => navigate('/app/profile'), 1500);
             } catch (e: any) {

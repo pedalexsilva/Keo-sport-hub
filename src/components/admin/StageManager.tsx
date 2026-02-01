@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { useStages, useCreateStage, useDeleteStage, useProcessStage } from '../../hooks/useStages';
+import { useStages, useCreateStage, useDeleteStage, useProcessStage, useUpdateStage } from '../../hooks/useStages';
 import { uploadEventMedia } from '../../hooks/useEvents';
-import { Calendar, Plus, Trash2, Play, CheckCircle, Loader2, MapPin, ImageIcon } from 'lucide-react';
+import { Calendar, Plus, Trash2, Play, CheckCircle, Loader2, MapPin, ImageIcon, Pencil } from 'lucide-react';
 import { formatDate } from '../../utils/dateUtils';
 
 interface StageManagerProps {
@@ -14,6 +14,7 @@ export const StageManager = ({ eventId, onClose }: StageManagerProps) => {
     const createStage = useCreateStage();
     const deleteStage = useDeleteStage();
     const processStage = useProcessStage();
+    const updateStage = useUpdateStage();
 
     const [isCreating, setIsCreating] = useState(false);
     const [newStage, setNewStage] = useState({
@@ -24,6 +25,7 @@ export const StageManager = ({ eventId, onClose }: StageManagerProps) => {
         image_url: ''
     });
     const [imageFile, setImageFile] = useState<File | null>(null);
+    const [editingStageId, setEditingStageId] = useState<string | null>(null);
 
     const [processingId, setProcessingId] = useState<string | null>(null);
 
@@ -41,16 +43,30 @@ export const StageManager = ({ eventId, onClose }: StageManagerProps) => {
             }
         }
 
-        await createStage.mutateAsync({
-            event_id: eventId,
-            name: newStage.name,
-            description: '',
-            date: newStage.date,
-            stage_order: newStage.stage_order,
-            mountain_segment_ids: newStage.mountain_segment_ids.split(',').map(s => s.trim()).filter(Boolean),
-            image_url: imageUrl
-        } as any);
+        if (editingStageId) {
+            await updateStage.mutateAsync({
+                id: editingStageId,
+                event_id: eventId,
+                name: newStage.name,
+                description: '',
+                date: newStage.date,
+                stage_order: newStage.stage_order,
+                mountain_segment_ids: newStage.mountain_segment_ids.split(',').map(s => s.trim()).filter(Boolean),
+                image_url: imageUrl
+            } as any);
+        } else {
+            await createStage.mutateAsync({
+                event_id: eventId,
+                name: newStage.name,
+                description: '',
+                date: newStage.date,
+                stage_order: newStage.stage_order,
+                mountain_segment_ids: newStage.mountain_segment_ids.split(',').map(s => s.trim()).filter(Boolean),
+                image_url: imageUrl
+            } as any);
+        }
         setIsCreating(false);
+        setEditingStageId(null);
         setNewStage({ name: '', date: '', stage_order: (stages?.length || 0) + 2, mountain_segment_ids: '', image_url: '' });
         setImageFile(null);
     };
@@ -114,6 +130,22 @@ export const StageManager = ({ eventId, onClose }: StageManagerProps) => {
                                             Processar Resultados
                                         </button>
                                         <button
+                                            onClick={() => {
+                                                setEditingStageId(stage.id);
+                                                setNewStage({
+                                                    name: stage.name,
+                                                    date: stage.date,
+                                                    stage_order: stage.stage_order,
+                                                    mountain_segment_ids: stage.mountain_segment_ids?.join(', ') || '',
+                                                    image_url: stage.image_url || ''
+                                                });
+                                                setIsCreating(true);
+                                            }}
+                                            className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition"
+                                        >
+                                            <Pencil className="w-5 h-5" />
+                                        </button>
+                                        <button
                                             onClick={() => { if (confirm('Apagar etapa?')) deleteStage.mutate(stage.id) }}
                                             className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition"
                                         >
@@ -131,7 +163,7 @@ export const StageManager = ({ eventId, onClose }: StageManagerProps) => {
 
                             {isCreating ? (
                                 <form onSubmit={handleCreate} className="bg-white p-6 rounded-xl border-2 border-[#009CDE] shadow-md animate-fade-in">
-                                    <h4 className="font-bold text-gray-800 mb-4">Nova Etapa</h4>
+                                    <h4 className="font-bold text-gray-800 mb-4">{editingStageId ? 'Editar Etapa' : 'Nova Etapa'}</h4>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                                         <div>
                                             <label className="text-xs font-bold text-gray-500 uppercase">Nome</label>
@@ -195,8 +227,8 @@ export const StageManager = ({ eventId, onClose }: StageManagerProps) => {
                                         </div>
                                     </div>
                                     <div className="flex justify-end gap-2">
-                                        <button type="button" onClick={() => setIsCreating(false)} className="px-4 py-2 text-gray-500 hover:bg-gray-100 rounded-lg">Cancelar</button>
-                                        <button type="submit" className="px-6 py-2 bg-[#009CDE] text-white font-bold rounded-lg hover:bg-blue-600">Guardar Etapa</button>
+                                        <button type="button" onClick={() => { setIsCreating(false); setEditingStageId(null); setImageFile(null); setNewStage({ name: '', date: '', stage_order: (stages?.length || 0) + 1, mountain_segment_ids: '', image_url: '' }); }} className="px-4 py-2 text-gray-500 hover:bg-gray-100 rounded-lg">Cancelar</button>
+                                        <button type="submit" className="px-6 py-2 bg-[#009CDE] text-white font-bold rounded-lg hover:bg-blue-600">{editingStageId ? 'Atualizar Etapa' : 'Guardar Etapa'}</button>
                                     </div>
                                 </form>
                             ) : (

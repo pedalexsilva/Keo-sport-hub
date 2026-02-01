@@ -25,17 +25,26 @@ export function useProfile(userId?: string) {
                 .eq('platform', 'strava')
                 .maybeSingle();
 
-            // Fetch Activities Summary from workout_metrics
-            const { data: activities, error: activityError } = await supabase
+            // Fetch Activities Summary (for total points only)
+            const { data: pointsData, error: pointsError } = await supabase
                 .from('workout_metrics')
-                .select('*')
+                .select('points')
+                .eq('user_id', userId);
+
+            if (pointsError) throw pointsError;
+
+            // Fetch Recent Activities (top 5 only)
+            const { data: recentActivities, error: activityError } = await supabase
+                .from('workout_metrics')
+                .select('id, type, title, distance_meters, duration_seconds, calories, start_time, points')
                 .eq('user_id', userId)
-                .order('start_time', { ascending: false });
+                .order('start_time', { ascending: false })
+                .limit(5);
 
             if (activityError) throw activityError;
 
             // Map to User type
-            const totalPoints = activities?.reduce((sum, act) => sum + (act.points || 0), 0) || 0;
+            const totalPoints = pointsData?.reduce((sum, act) => sum + (act.points || 0), 0) || 0;
 
             return {
                 id: profile.id,
@@ -47,11 +56,11 @@ export function useProfile(userId?: string) {
                 isConnectedToStrava: connection?.is_active || false,
                 totalPoints,
                 rank: 0, // Calculated separately or in leaderboard view
-                activities: activities?.map(a => ({
+                activities: recentActivities?.map(a => ({
                     id: a.id,
                     type: a.type,
                     title: a.title,
-                    distance: a.distance_meters ? a.distance_meters / 1000 : 0, // Keep number for Profile.tsx calc? No, Profile expects number in `totalDistance` calc line 52
+                    distance: a.distance_meters ? a.distance_meters / 1000 : 0,
                     duration: a.duration_seconds ? Math.round(a.duration_seconds / 60) : 0, // Minutes
                     calories: a.calories,
                     date: a.start_time,

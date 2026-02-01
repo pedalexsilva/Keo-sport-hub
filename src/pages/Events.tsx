@@ -36,8 +36,8 @@ const Events: React.FC<EventsProps> = ({ user }) => {
 
   const displayedEvents = activeTab === 'upcoming' ? upcomingEvents : pastEvents;
 
-  const handleJoin = (eventId: string, currentParticipants: string[]) => {
-    const isJoined = currentParticipants.includes(user.id);
+  const handleJoin = (eventId: string, currentParticipants: any[]) => {
+    const isJoined = currentParticipants.some(p => p.id === user.id);
     joinEventMutation.mutate({ eventId, userId: user.id, isJoining: !isJoined });
   };
 

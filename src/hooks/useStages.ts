@@ -49,6 +49,32 @@ export function useCreateStage() {
     });
 }
 
+export function useUpdateStage() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async (stage: EventStage) => {
+            const { data, error } = await supabase
+                .from('event_stages')
+                .update({
+                    name: stage.name,
+                    description: stage.description,
+                    date: stage.date,
+                    stage_order: stage.stage_order,
+                    mountain_segment_ids: stage.mountain_segment_ids,
+                    image_url: stage.image_url
+                })
+                .eq('id', stage.id)
+                .select()
+                .single();
+            if (error) throw error;
+            return data;
+        },
+        onSuccess: (_, variables) => {
+            queryClient.invalidateQueries({ queryKey: ['stages', variables.event_id] });
+        }
+    });
+}
+
 export function useDeleteStage() {
     const queryClient = useQueryClient();
     return useMutation({

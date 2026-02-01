@@ -38,11 +38,20 @@ export function useStrava(): UseStravaReturn {
             await queryClient.invalidateQueries({ queryKey: ['profile'] });
             await queryClient.invalidateQueries({ queryKey: ['activities'] });
             await queryClient.invalidateQueries({ queryKey: ['workout_metrics'] });
+            await queryClient.invalidateQueries({ queryKey: ['activityStats'] });
 
             return true;
         } catch (err: any) {
             console.error('Strava sync error:', err);
-            setError(err.message || 'Falha ao sincronizar');
+            const msg = err.message || 'Falha ao sincronizar';
+
+            // Detect invalid token to prompt reconnection
+            if (msg.includes('Invalid Refresh Token') || msg.includes('access_denied')) {
+                // We could potentially trigger a disconnect here or just inform the user
+                setError('Sessão Strava expirada. Por favor reconecte.');
+            } else {
+                setError(msg);
+            }
             return false;
         } finally {
             setIsSyncing(false);

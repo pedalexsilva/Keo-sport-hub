@@ -28,7 +28,8 @@ export const getOptimizedImageUrl = (
         // Add transformation parameters
         urlObj.searchParams.set('width', width.toString());
         urlObj.searchParams.set('resize', resize);
-        urlObj.searchParams.set('quality', '80'); // Reasonable default for web
+        urlObj.searchParams.set('quality', '70'); // Optimized for web
+        urlObj.searchParams.set('format', 'webp'); // Use modern WebP format
 
         if (height) {
             urlObj.searchParams.set('height', height.toString());
@@ -40,3 +41,4 @@ export const getOptimizedImageUrl = (
         return url;
     }
 };
+

@@ -25,7 +25,7 @@ const HomeView: React.FC<HomeViewProps> = ({ user, stats, events, stravaConnecte
     const { products } = useStore();
 
     const myUpcomingEvents = events
-        .filter(e => e.participants.includes(user.id) && new Date(e.date) >= new Date())
+        .filter(e => e.participants.some(p => p.id === user.id) && new Date(e.date) >= new Date())
         .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
     return (

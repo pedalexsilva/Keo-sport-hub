@@ -11,11 +11,11 @@ interface EventCardProps {
     isExpanded: boolean;
     toggleExpand: (id: string) => void;
     isPast: boolean;
-    handleJoin: (eventId: string, currentParticipants: string[]) => void;
+    handleJoin: (eventId: string, currentParticipants: any[]) => void;
 }
 
 export const EventCard: React.FC<EventCardProps> = ({ evt, user, isExpanded, toggleExpand, isPast, handleJoin }) => {
-    const isParticipant = evt.participants.includes(user.id);
+    const isParticipant = evt.participants.some(p => p.id === user.id);
 
     return (
         <div className={`group overflow-hidden rounded-xl bg-white shadow-sm border border-gray-100 transition-all duration-300 hover:shadow-md ${isExpanded ? 'ring-2 ring-blue-100' : ''} ${isPast ? 'opacity-90' : ''}`}>
@@ -116,17 +116,24 @@ export const EventCard: React.FC<EventCardProps> = ({ evt, user, isExpanded, tog
                                     Participantes ({evt.participants.length})
                                 </h4>
                                 <div className="flex flex-col gap-2 max-h-40 overflow-y-auto pr-1 custom-scrollbar">
-                                    {evt.participants.length > 0 ? evt.participants.map(pid => (
-                                        <div key={pid} className="flex items-center justify-between bg-gray-50 p-2 rounded-lg">
+                                    {evt.participants.length > 0 ? evt.participants.map(participant => (
+                                        <div key={participant.id} className="flex items-center justify-between bg-gray-50 p-2 rounded-lg">
                                             <div className="flex items-center gap-3">
-                                                <div className="h-8 w-8 rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center text-white text-xs font-bold shadow-sm">
-                                                    {pid.replace('user_', 'U').slice(0, 2).toUpperCase()}
+                                                {participant.avatar && participant.avatar.startsWith('http') ? (
+                                                    <img src={participant.avatar} alt={participant.name} className="h-8 w-8 rounded-full object-cover" />
+                                                ) : (
+                                                    <div className="h-8 w-8 rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center text-white text-xs font-bold shadow-sm">
+                                                        {participant.name.slice(0, 2).toUpperCase()}
+                                                    </div>
+                                                )}
+                                                <div className="flex flex-col">
+                                                    <span className="text-sm font-medium text-gray-700">
+                                                        {participant.id === user.id ? 'Você' : participant.name}
+                                                    </span>
+                                                    <span className="text-xs text-gray-400">{participant.office}</span>
                                                 </div>
-                                                <span className="text-sm font-medium text-gray-700">
-                                                    {pid === user.id ? 'Você' : `Colega Keo (${pid})`}
-                                                </span>
                                             </div>
-                                            {pid === evt.creatorId && <span className="text-[10px] font-bold bg-yellow-100 text-yellow-700 px-1.5 py-0.5 rounded">Host</span>}
+                                            {participant.id === evt.creatorId && <span className="text-[10px] font-bold bg-yellow-100 text-yellow-700 px-1.5 py-0.5 rounded">Host</span>}
                                         </div>
                                     )) : (
                                         <p className="text-sm text-gray-400 italic">Seja o primeiro a participar!</p>

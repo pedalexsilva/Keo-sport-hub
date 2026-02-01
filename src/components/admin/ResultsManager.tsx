@@ -1,116 +1,155 @@
 import React, { useState } from 'react';
 import { useEvents } from '../../hooks/useEvents';
+import { useStages } from '../../hooks/useStages';
 import { useGeneralClassification, useMountainClassification } from '../../hooks/useResults';
-import { Trophy, Timer, Mountain, Loader2 } from 'lucide-react';
+import { Loader2, Trophy, Mountain, Medal } from 'lucide-react';
+import { formatDate } from '../../utils/dateUtils';
 
 export const ResultsManager = () => {
-    const { data: events, isLoading: eventsLoading } = useEvents();
-    const [selectedEventId, setSelectedEventId] = useState<string>('');
-    const [activeTab, setActiveTab] = useState<'gc' | 'mountain'>('gc');
+    const { data: events, isLoading: isLoadingEvents } = useEvents();
+    const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
 
-    // Auto-select first event
-    React.useEffect(() => {
-        if (events && events.length > 0 && !selectedEventId) {
-            setSelectedEventId(events[0].id);
+    const { data: stages } = useStages(selectedEventId || undefined);
+    const { data: gcResults, isLoading: isLoadingGC } = useGeneralClassification(selectedEventId || undefined);
+    const { data: mountainResults, isLoading: isLoadingMountain } = useMountainClassification(selectedEventId || undefined);
+
+    // Only show mountain classification if there are stages with mountain segments
+    const hasMountainSegments = stages?.some(s => s.mountain_segment_ids && s.mountain_segment_ids.length > 0);
+
+    // Safe formatting for duration
+    const formatDuration = (seconds: number) => {
+        if (!seconds && seconds !== 0) return '-';
+        try {
+            return new Date(seconds * 1000).toISOString().substr(11, 8);
+        } catch (e) {
+            return `${Math.floor(seconds / 3600)}h ${Math.floor((seconds % 3600) / 60)}m`;
         }
-    }, [events]);
-
-    const { data: gcData, isLoading: gcLoading } = useGeneralClassification(selectedEventId);
-    const { data: mountainData, isLoading: mountainLoading } = useMountainClassification(selectedEventId);
-
-    const formatTime = (seconds: number) => {
-        const h = Math.floor(seconds / 3600);
-        const m = Math.floor((seconds % 3600) / 60);
-        const s = seconds % 60;
-        return `${h}h ${m}m ${s}s`;
     };
 
-    if (eventsLoading) return <div className="p-8 text-center"><Loader2 className="animate-spin mx-auto text-[#002D72]" /></div>;
+    if (isLoadingEvents) return <div className="flex justify-center p-8"><Loader2 className="animate-spin" /></div>;
 
     return (
         <div className="p-8 animate-fade-in h-full flex flex-col gap-6">
             <div className="flex justify-between items-center">
                 <div>
-                    <h2 className="text-2xl font-bold text-gray-800">Classificações</h2>
-                    <p className="text-gray-500 text-sm">Consulte os resultados de GC e Montanha.</p>
+                    <h2 className="text-2xl font-bold text-gray-800">Resultados</h2>
+                    <p className="text-gray-500 text-sm">Consulte as classificações e resultados dos eventos.</p>
                 </div>
-                <div>
-                    <select
-                        className="p-3 bg-white border border-gray-200 rounded-xl font-bold text-[#002D72] outline-none shadow-sm"
-                        value={selectedEventId}
-                        onChange={(e) => setSelectedEventId(e.target.value)}
-                    >
-                        {events?.map(e => (
-                            <option key={e.id} value={e.id}>{e.title}</option>
-                        ))}
-                    </select>
-                </div>
+            </div>
+
+            {/* Event Selector */}
+            <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Selecione o Evento</label>
+                <select
+                    className="w-full p-3 bg-gray-50 rounded-lg border border-gray-200 outline-none"
+                    value={selectedEventId || ''}
+                    onChange={(e) => setSelectedEventId(e.target.value || null)}
+                >
+                    <option value="">-- Selecione um evento --</option>
+                    {events?.map(evt => (
+                        <option key={evt.id} value={evt.id}>{evt.title} ({formatDate(evt.date)})</option>
+                    ))}
+                </select>
             </div>
 
             {selectedEventId && (
-                <div className="flex gap-4 border-b border-gray-200">
-                    <button
-                        onClick={() => setActiveTab('gc')}
-                        className={`pb-4 px-4 font-bold flex items-center gap-2 transition ${activeTab === 'gc' ? 'text-[#002D72] border-b-2 border-[#002D72]' : 'text-gray-400 hover:text-gray-600'}`}
-                    >
-                        <Timer className="w-5 h-5" /> Classificação Geral (GC)
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('mountain')}
-                        className={`pb-4 px-4 font-bold flex items-center gap-2 transition ${activeTab === 'mountain' ? 'text-[#002D72] border-b-2 border-[#002D72]' : 'text-gray-400 hover:text-gray-600'}`}
-                    >
-                        <Mountain className="w-5 h-5" /> Prémio de Montanha
-                    </button>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    {/* General Classification */}
+                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col">
+                        <div className="p-4 border-b border-gray-50 bg-gray-50/50 flex items-center gap-2">
+                            <Trophy className="w-5 h-5 text-yellow-500" />
+                            <h3 className="font-bold text-gray-800">Classificação Geral (GC)</h3>
+                        </div>
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left">
+                                <thead className="bg-gray-50 border-b border-gray-100">
+                                    <tr>
+                                        <th className="px-6 py-3 text-xs font-bold text-gray-500 uppercase">Pos</th>
+                                        <th className="px-6 py-3 text-xs font-bold text-gray-500 uppercase">Atleta</th>
+                                        <th className="px-6 py-3 text-xs font-bold text-gray-500 uppercase text-right">Tempo</th>
+                                        <th className="px-6 py-3 text-xs font-bold text-gray-500 uppercase text-right">Diff</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-50">
+                                    {isLoadingGC ? (
+                                        <tr><td colSpan={4} className="p-8 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto text-gray-400" /></td></tr>
+                                    ) : gcResults?.length === 0 ? (
+                                        <tr><td colSpan={4} className="p-8 text-center text-gray-400">Sem resultados disponíveis.</td></tr>
+                                    ) : (
+                                        gcResults?.map((res, idx) => (
+                                            <tr key={res.user_id} className="hover:bg-yellow-50/30 transition">
+                                                <td className="px-6 py-4 font-bold text-gray-700">
+                                                    {idx === 0 ? <Medal className="w-4 h-4 text-yellow-500" /> : res.rank}
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <div className="font-bold text-sm text-gray-900">{res.profile.name}</div>
+                                                    <div className="text-xs text-gray-400">{res.profile.email}</div>
+                                                </td>
+                                                <td className="px-6 py-4 text-right font-mono text-gray-600">
+                                                    {formatDuration(res.total_time_seconds)}
+                                                </td>
+                                                <td className="px-6 py-4 text-right font-mono text-xs text-gray-400">
+                                                    {res.gap_seconds > 0 ? `+${formatDuration(res.gap_seconds)}` : '-'}
+                                                </td>
+                                            </tr>
+                                        ))
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    {/* Mountain Classification - Only show if has segments */}
+                    {hasMountainSegments && (
+                        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col">
+                            <div className="p-4 border-b border-gray-50 bg-gray-50/50 flex items-center gap-2">
+                                <Mountain className="w-5 h-5 text-red-500" />
+                                <h3 className="font-bold text-gray-800">Prémio de Montanha</h3>
+                            </div>
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left">
+                                    <thead className="bg-gray-50 border-b border-gray-100">
+                                        <tr>
+                                            <th className="px-6 py-3 text-xs font-bold text-gray-500 uppercase">Pos</th>
+                                            <th className="px-6 py-3 text-xs font-bold text-gray-500 uppercase">Atleta</th>
+                                            <th className="px-6 py-3 text-xs font-bold text-gray-500 uppercase text-right">Pontos</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-gray-50">
+                                        {isLoadingMountain ? (
+                                            <tr><td colSpan={3} className="p-8 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto text-gray-400" /></td></tr>
+                                        ) : mountainResults?.length === 0 ? (
+                                            <tr><td colSpan={3} className="p-8 text-center text-gray-400">Sem resultados de montanha.</td></tr>
+                                        ) : (
+                                            mountainResults?.map((res, idx) => (
+                                                <tr key={res.user_id} className="hover:bg-red-50/30 transition">
+                                                    <td className="px-6 py-4 font-bold text-gray-700">
+                                                        {idx === 0 ? <Medal className="w-4 h-4 text-yellow-500" /> : res.rank}
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        <div className="font-bold text-sm text-gray-900">{res.profile.name}</div>
+                                                        <div className="text-xs text-gray-400">{res.profile.email}</div>
+                                                    </td>
+                                                    <td className="px-6 py-4 text-right font-bold text-red-600">
+                                                        {res.total_points} pts
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    )}
                 </div>
             )}
-
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex-1 overflow-y-auto">
-                {activeTab === 'gc' ? (
-                    <table className="w-full text-left">
-                        <thead className="bg-gray-50 border-b border-gray-100 sticky top-0">
-                            <tr>
-                                <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase w-16">Pos</th>
-                                <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase">Atleta</th>
-                                <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase text-right">Tempo Total</th>
-                                <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase text-right">Diferença</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-50">
-                            {gcLoading ? <tr><td colSpan={4} className="p-8 text-center">A carregar...</td></tr> : gcData?.map((row, idx) => (
-                                <tr key={row.user_id} className="hover:bg-blue-50/50">
-                                    <td className="px-6 py-4 font-bold text-gray-800">{idx + 1}</td>
-                                    <td className="px-6 py-4 font-bold text-[#002D72]">{row.profile.name}</td>
-                                    <td className="px-6 py-4 text-right font-mono text-gray-600">{formatTime(row.total_time_seconds)}</td>
-                                    <td className="px-6 py-4 text-right font-mono text-red-400 text-sm">
-                                        {idx === 0 ? '-' : `+ ${formatTime(row.total_time_seconds - (gcData[0]?.total_time_seconds || 0))}`}
-                                    </td>
-                                </tr>
-                            ))}
-                            {gcData?.length === 0 && <tr><td colSpan={4} className="p-8 text-center text-gray-400">Sem resultados disponíveis.</td></tr>}
-                        </tbody>
-                    </table>
-                ) : (
-                    <table className="w-full text-left">
-                        <thead className="bg-gray-50 border-b border-gray-100 sticky top-0">
-                            <tr>
-                                <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase w-16">Pos</th>
-                                <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase">Atleta</th>
-                                <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase text-right">Pontos</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-50">
-                            {mountainLoading ? <tr><td colSpan={3} className="p-8 text-center">A carregar...</td></tr> : mountainData?.map((row, idx) => (
-                                <tr key={row.user_id} className="hover:bg-blue-50/50">
-                                    <td className="px-6 py-4 font-bold text-gray-800">{idx + 1}</td>
-                                    <td className="px-6 py-4 font-bold text-[#002D72]">{row.profile.name}</td>
-                                    <td className="px-6 py-4 text-right font-bold text-gray-800">{row.total_points} pts</td>
-                                </tr>
-                            ))}
-                            {mountainData?.length === 0 && <tr><td colSpan={3} className="p-8 text-center text-gray-400">Sem resultados disponíveis.</td></tr>}
-                        </tbody>
-                    </table>
-                )}
-            </div>
+            {!selectedEventId && (
+                <div className="flex flex-col items-center justify-center p-12 bg-white rounded-2xl border border-gray-100 text-center">
+                    <Trophy className="w-16 h-16 text-gray-200 mb-4" />
+                    <h3 className="text-lg font-bold text-gray-800">Selecione um Evento</h3>
+                    <p className="text-gray-500">Escolha um evento acima para ver as classificações.</p>
+                </div>
+            )}
         </div>
     );
 };

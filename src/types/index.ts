@@ -29,6 +29,13 @@ export interface Activity {
   title: string;
 }
 
+export interface Participant {
+  id: string;
+  name: string;
+  office: string;
+  avatar: string;
+}
+
 export interface Event {
   id: string;
   title: string;
@@ -36,7 +43,7 @@ export interface Event {
   date: string;
   location: string;
   type: ActivityType;
-  participants: string[]; // User IDs
+  participants: Participant[]; // Updated to store full objects
   image: string;
   creatorId: string;
   maxParticipants?: number;

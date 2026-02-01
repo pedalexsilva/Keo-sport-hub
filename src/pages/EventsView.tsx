@@ -33,7 +33,7 @@ const EventsView: React.FC<EventsViewProps> = ({ events, onJoin, user }) => {
 
     if (selectedEvent) {
         const isPast = isPastEvent(selectedEvent.date);
-        const joined = selectedEvent.participants.includes(user.id);
+        const joined = selectedEvent.participants.some(p => p.id === user.id);
 
         return (
             <div className="bg-white min-h-full pb-24 animate-fade-in relative z-20">
@@ -80,14 +80,18 @@ const EventsView: React.FC<EventsViewProps> = ({ events, onJoin, user }) => {
                             </h3>
 
                             <div className="space-y-3 mb-8">
-                                {selectedEvent.participants.map((pid, idx) => (
+                                {selectedEvent.participants.map((participant, idx) => (
                                     <div key={idx} className="flex items-center p-3 rounded-xl bg-gray-50 border border-gray-100">
-                                        <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-[#002D72] font-bold mr-3 text-xs">
-                                            {pid.slice(0, 2).toUpperCase()}
+                                        <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-[#002D72] font-bold mr-3 text-xs overflow-hidden">
+                                            {participant.avatar ? (
+                                                <img src={participant.avatar} alt={participant.name} className="w-full h-full object-cover" />
+                                            ) : (
+                                                participant.name.slice(0, 2).toUpperCase()
+                                            )}
                                         </div>
                                         <div>
-                                            <p className="font-bold text-gray-900 text-sm">Utilizador {pid.slice(0, 5)}...</p>
-                                            <p className="text-xs text-gray-500">KEO Athlete</p>
+                                            <p className="font-bold text-gray-900 text-sm">{participant.name}</p>
+                                            <p className="text-xs text-gray-500">{participant.office} • KEO Athlete</p>
                                         </div>
                                     </div>
                                 ))}
@@ -154,7 +158,7 @@ const EventsView: React.FC<EventsViewProps> = ({ events, onJoin, user }) => {
                                     <div className="flex -space-x-2">
                                         {event.participants?.slice(0, 3).map((p, i) => (
                                             <div key={i} className="w-7 h-7 rounded-full border-2 border-white bg-blue-100 flex items-center justify-center text-[8px] font-bold text-blue-800 overflow-hidden">
-                                                {p.substring(0, 2).toUpperCase()}
+                                                {p.avatar ? <img src={p.avatar} className="w-full h-full object-cover" /> : p.name.substring(0, 2).toUpperCase()}
                                             </div>
                                         ))}
                                         {(event.participants?.length > 3) && (

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useTickets, useUpdateTicket } from '../hooks/useTickets';
+import { useTickets, useUpdateTicket, useAdminTickets, useTicketStats } from '../hooks/useTickets';
+import { useUsers, useUserStats } from '../hooks/useUsers';
 import { useLogout } from '../hooks/useLogout';
 import {
     LayoutDashboard,
@@ -43,116 +44,84 @@ import {
     Medal
 } from 'lucide-react';
 import { formatDate } from '../utils/dateUtils';
+import { supabase } from '../lib/supabase';
 
-// --- MOCK DATA ---
-const INITIAL_STATS = [
-    { label: "Utilizadores Totais", value: "1,240", change: "+12%", icon: Users, color: "bg-blue-500" },
-    { label: "Eventos Ativos", value: "8", change: "+2", icon: Calendar, color: "bg-[#009CDE]" },
-    { label: "Trocas na Loja", value: "45", change: "+8%", icon: ShoppingBag, color: "bg-purple-500" },
-    { label: "Kms Percorridos (Mês)", value: "12.5k", change: "+18%", icon: MapPin, color: "bg-orange-500" },
-];
+// --- MOCK DATA REMOVED ---
 
-const ANALYTICS_DATA = {
-    totalKm: 12450,
-    totalCalories: 840000,
-    co2Saved: 145, // kg
-    activeUsersMonthly: 890,
-    departments: [
-        { name: "Engenharia", value: 85, color: "bg-[#002D72]" },
-        { name: "Arquitetura", value: 65, color: "bg-[#009CDE]" },
-        { name: "Recursos Humanos", value: 40, color: "bg-orange-500" },
-        { name: "IT & Sistemas", value: 55, color: "bg-purple-500" },
-        { name: "Administração", value: 30, color: "bg-gray-400" },
-    ],
-    weeklyActivity: [40, 65, 30, 85, 50, 95, 70] // Sun to Sat
-};
-
-const INITIAL_EVENTS = [
-    { id: 1, title: "KEO Run 10K", date: "2026-03-15", time: "09:00", location: "Parque da Cidade, Porto", category: "Running", participants: 42, maxSpots: 50, status: "Aberto" },
-    { id: 2, title: "Torneio de Padel", date: "2026-03-22", time: "18:30", location: "Estádio Universitário, Lisboa", category: "Padel", participants: 16, maxSpots: 16, status: "Cheio" },
-    { id: 3, title: "Yoga & Mindfulness", date: "2026-03-25", time: "08:00", location: "Online", category: "Bem-estar", participants: 120, maxSpots: 200, status: "Aberto" },
-];
-
-const INITIAL_CMS = {
-    heroTitle: "Construímos o Futuro. Treinamos Juntos.",
-    heroSubtitle: "Junte-se à comunidade KEO Active. Desafios globais, eventos locais no Porto e Lisboa.",
-    heroImage: "https://images.unsplash.com/photo-1517649763962-0c623066013b?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80",
-    announcementBar: "🏆 O Torneio de Padel de Lisboa já tem inscrições abertas!"
-};
-
-const INITIAL_USERS = [
-    { id: 1, name: "Miguel Silva", email: "miguel.s@keo.com", office: "Porto", role: "Engenheiro", points: 1250, status: "Ativo", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Miguel" },
-    { id: 2, name: "Ana Santos", email: "ana.s@keo.com", office: "Lisboa", role: "Arquiteta", points: 2400, status: "Ativo", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Ana" },
-    { id: 3, name: "Rui Costa", email: "rui.c@keo.com", office: "Porto", role: "RH", points: 850, status: "Inativo", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Rui" },
-    { id: 4, name: "Sarah Johnson", email: "sarah.j@keo.com", office: "Dubai", role: "Manager", points: 3100, status: "Ativo", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah" },
-    { id: 5, name: "Pedro Martins", email: "pedro.m@keo.com", office: "Lisboa", role: "IT", points: 150, status: "Ativo", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Pedro" },
-];
-
-const INITIAL_PRODUCTS = [
-    { id: 1, name: "Garrafa Térmica KEO", cost: 800, stock: 45, category: "Merch", image: "https://images.unsplash.com/photo-1602143407151-011141950038?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80" },
-    { id: 2, name: "Voucher Saída 1h Cedo", cost: 2500, stock: 999, category: "Benefícios", image: "https://images.unsplash.com/photo-1499750310159-57751c6e9f26?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80" },
-    { id: 3, name: "Hoodie KEO Active", cost: 3500, stock: 12, category: "Merch", image: "https://images.unsplash.com/photo-1556906781-9a412961d289?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80" },
-];
-
-const INITIAL_ORDERS = [
-    { id: 101, user: "Ana Santos", item: "Hoodie KEO Active", date: "Hoje, 10:30", status: "Pendente", office: "Lisboa" },
-    { id: 102, user: "Miguel Silva", item: "Voucher Saída 1h Cedo", date: "Ontem, 15:45", status: "Concluído", office: "Porto" },
-    { id: 103, user: "Pedro Martins", item: "Garrafa Térmica KEO", date: "12 Mar, 09:20", status: "Pendente", office: "Lisboa" },
-];
-
-const INITIAL_MESSAGES = [
-    { id: 1, title: "Abertura Inscrições Padel", audience: "Todos (Lisboa)", date: "Hoje, 09:00", status: "Enviado", opens: "68%" },
-    { id: 2, title: "Recordatório: Sincronizar Strava", audience: "Todos", date: "Ontem, 18:00", status: "Enviado", opens: "45%" },
-];
-
-const INITIAL_TICKETS = [
-    { id: 1, user: "Rui Costa", issue: "Pontos Strava não atualizaram", category: "Técnico", date: "Há 2 horas", status: "Aberto" },
-    { id: 2, user: "Sarah J.", issue: "Voucher não recebido no email", category: "Loja", date: "Há 1 dia", status: "Resolvido" },
-];
 
 // --- COMPONENTS ---
 
 const Sidebar = ({ activeTab, setActiveTab }: { activeTab: string, setActiveTab: (tab: string) => void }) => {
-    const menuItems = [
-        { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-        { id: 'analytics', label: 'Analytics & ROI', icon: PieChart },
-        { id: 'events', label: 'Gestão de Eventos', icon: Calendar },
-        { id: 'results', label: 'Resultados', icon: Medal }, // New
-        { id: 'store', label: 'Loja & Prémios', icon: ShoppingBag },
-        { id: 'communications', label: 'Comunicações', icon: MessageSquare }, // New
-        { id: 'support', label: 'Suporte / Helpdesk', icon: LifeBuoy },       // New
-        { id: 'users', label: 'Utilizadores', icon: Users },
-        { id: 'app_menu', label: 'Menus da App', icon: Menu }, // New
-        { id: 'cms', label: 'Landing Page', icon: Image },
-        { id: 'settings', label: 'Definições', icon: Settings },
+    // Grouped Menu Structure
+    const menuGroups = [
+        {
+            title: "VISÃO GERAL",
+            items: [
+                { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+                { id: 'analytics', label: 'Analytics & ROI', icon: PieChart },
+            ]
+        },
+        {
+            title: "GESTÃO",
+            items: [
+                { id: 'events', label: 'Gestão de Eventos', icon: Calendar },
+                { id: 'results', label: 'Resultados', icon: Medal },
+                { id: 'store', label: 'Loja & Prémios', icon: ShoppingBag },
+            ]
+        },
+        {
+            title: "UTILIZADORES",
+            items: [
+                { id: 'users', label: 'Utilizadores', icon: Users },
+                { id: 'support', label: 'Suporte / Helpdesk', icon: LifeBuoy },
+            ]
+        },
+        {
+            title: "CONFIGURAÇÕES",
+            items: [
+                { id: 'communications', label: 'Comunicações', icon: MessageSquare },
+                { id: 'app_menu', label: 'Menus da App', icon: Menu },
+                { id: 'cms', label: 'Landing Page', icon: Image },
+                { id: 'settings', label: 'Definições', icon: Settings },
+            ]
+        }
     ];
 
     return (
-        <div className="w-64 bg-[#002D72] text-white min-h-screen flex flex-col fixed left-0 top-0 z-20 shadow-xl">
+        <div className="w-64 bg-[#002D72] text-white min-h-screen flex flex-col fixed left-0 top-0 z-20 shadow-xl overflow-y-auto no-scrollbar">
             <div className="p-6">
                 <h1 className="text-2xl font-bold tracking-widest">KEO <span className="text-[#009CDE] font-light">ADMIN</span></h1>
             </div>
 
-            <nav className="flex-1 px-4 space-y-2 overflow-y-auto no-scrollbar pb-6">
-                {menuItems.map((item) => {
-                    const Icon = item.icon;
-                    return (
-                        <button
-                            key={item.id}
-                            onClick={() => setActiveTab(item.id)}
-                            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${activeTab === item.id
-                                ? 'bg-[#009CDE] text-white shadow-lg font-bold'
-                                : 'text-blue-200 hover:bg-white/10 hover:text-white'
-                                }`}
-                        >
-                            <Icon className="w-5 h-5" />
-                            {item.label}
-                        </button>
-                    );
-                })}
+            <nav className="flex-1 px-4 pb-6 space-y-6">
+                {menuGroups.map((group, idx) => (
+                    <div key={idx}>
+                        <h3 className="text-xs font-bold text-blue-300 uppercase tracking-wider mb-2 px-4">
+                            {group.title}
+                        </h3>
+                        <div className="space-y-1">
+                            {group.items.map((item) => {
+                                const Icon = item.icon;
+                                return (
+                                    <button
+                                        key={item.id}
+                                        onClick={() => setActiveTab(item.id)}
+                                        className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all text-sm ${activeTab === item.id
+                                            ? 'bg-[#009CDE] text-white shadow-lg font-bold'
+                                            : 'text-blue-100 hover:bg-white/10 hover:text-white font-medium'
+                                            }`}
+                                    >
+                                        <Icon className="w-4 h-4 opacity-70" />
+                                        {item.label}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+                ))}
             </nav>
 
-            <div className="p-6 border-t border-blue-900">
+            <div className="p-6 border-t border-blue-900 mt-auto">
                 <div className="flex items-center gap-3">
                     <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Admin" className="w-10 h-10 rounded-full bg-white" />
                     <div>
@@ -165,196 +134,8 @@ const Sidebar = ({ activeTab, setActiveTab }: { activeTab: string, setActiveTab:
     );
 };
 
-// --- NEW VIEWS ---
+// --- VIEWS ---
 
-const OldCommunicationsView = () => {
-    const [messages, setMessages] = useState(INITIAL_MESSAGES);
-    const [isComposing, setIsComposing] = useState(false);
-
-    const handleSend = () => {
-        setIsComposing(false);
-        alert("Mensagem enviada com sucesso!");
-        // In a real app, send to backend
-    };
-
-    return (
-        <div className="p-8 animate-fade-in h-full">
-            <div className="flex justify-between items-center mb-8">
-                <div>
-                    <h2 className="text-2xl font-bold text-gray-800">Comunicações</h2>
-                    <p className="text-gray-500 text-sm">Enviar notificações Push e Emails para a equipa.</p>
-                </div>
-                <button
-                    onClick={() => setIsComposing(true)}
-                    className="bg-[#002D72] text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 hover:bg-blue-900 transition shadow-lg"
-                >
-                    <Send className="w-4 h-4" /> Nova Mensagem
-                </button>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* History Column */}
-                <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                    <div className="p-4 border-b border-gray-50 bg-gray-50/50 flex justify-between items-center">
-                        <h3 className="font-bold text-gray-800 flex items-center gap-2"><Clock className="w-4 h-4 text-[#009CDE]" /> Histórico de Envios</h3>
-                    </div>
-                    <table className="w-full text-left">
-                        <thead className="bg-gray-50 border-b border-gray-100">
-                            <tr>
-                                <th className="px-6 py-3 text-xs font-bold text-gray-500 uppercase">Mensagem</th>
-                                <th className="px-6 py-3 text-xs font-bold text-gray-500 uppercase">Público-Alvo</th>
-                                <th className="px-6 py-3 text-xs font-bold text-gray-500 uppercase">Data</th>
-                                <th className="px-6 py-3 text-xs font-bold text-gray-500 uppercase text-right">Aberturas</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-50">
-                            {messages.map((msg) => (
-                                <tr key={msg.id} className="hover:bg-blue-50/30">
-                                    <td className="px-6 py-4 font-bold text-gray-800">{msg.title}</td>
-                                    <td className="px-6 py-4 text-sm text-gray-600">{msg.audience}</td>
-                                    <td className="px-6 py-4 text-sm text-gray-500">{msg.date}</td>
-                                    <td className="px-6 py-4 text-right font-bold text-[#009CDE]">{msg.opens}</td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-
-                {/* Templates / Quick Stats */}
-                <div className="space-y-6">
-                    <div className="bg-blue-50 p-6 rounded-2xl border border-blue-100">
-                        <h3 className="font-bold text-[#002D72] mb-2">Dica de Engajamento</h3>
-                        <p className="text-sm text-gray-600 mb-4">Notificações enviadas às <strong>Terças-feiras às 10:00</strong> têm 20% mais taxa de abertura.</p>
-                    </div>
-
-                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                        <h3 className="font-bold text-gray-800 mb-4">Templates Rápidos</h3>
-                        <div className="space-y-2">
-                            <button className="w-full text-left p-3 rounded-lg hover:bg-gray-50 text-sm font-medium border border-gray-100 transition">🏆 Vencedor da Semana</button>
-                            <button className="w-full text-left p-3 rounded-lg hover:bg-gray-50 text-sm font-medium border border-gray-100 transition">📅 Lembrete de Evento</button>
-                            <button className="w-full text-left p-3 rounded-lg hover:bg-gray-50 text-sm font-medium border border-gray-100 transition">🛍️ Novidades na Loja</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {/* Compose Modal */}
-            {isComposing && (
-                <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm rounded-3xl">
-                    <div className="bg-white p-8 rounded-2xl w-full max-w-lg shadow-2xl animate-fade-in">
-                        <h3 className="text-xl font-bold text-[#002D72] mb-6">Nova Notificação</h3>
-                        <div className="space-y-4">
-                            <div>
-                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Título</label>
-                                <input type="text" className="w-full p-3 bg-gray-50 rounded-lg border border-gray-200" placeholder="Ex: Corrida amanhã!" />
-                            </div>
-                            <div>
-                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Mensagem</label>
-                                <textarea rows="4" className="w-full p-3 bg-gray-50 rounded-lg border border-gray-200" placeholder="Escreve aqui a tua mensagem..." />
-                            </div>
-                            <div>
-                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Público-Alvo</label>
-                                <select className="w-full p-3 bg-gray-50 rounded-lg border border-gray-200 outline-none">
-                                    <option>Todos os Colaboradores</option>
-                                    <option>Apenas Porto</option>
-                                    <option>Apenas Lisboa</option>
-                                    <option>Top 10 Ranking</option>
-                                </select>
-                            </div>
-
-                            <div className="flex items-center gap-2 mt-2 p-3 bg-yellow-50 rounded-lg border border-yellow-100">
-                                <input type="checkbox" className="w-4 h-4 text-yellow-600 rounded" />
-                                <span className="text-sm text-yellow-700">Enviar também por email</span>
-                            </div>
-
-                            <div className="flex gap-4 mt-6">
-                                <button onClick={() => setIsComposing(false)} className="flex-1 py-3 bg-gray-100 text-gray-600 rounded-xl font-bold hover:bg-gray-200">Cancelar</button>
-                                <button onClick={handleSend} className="flex-1 py-3 bg-[#002D72] text-white rounded-xl font-bold hover:bg-blue-900 flex items-center justify-center gap-2">
-                                    <Send className="w-4 h-4" /> Enviar Agora
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
-        </div>
-    );
-};
-
-const OldSupportView = () => {
-    const [tickets, setTickets] = useState(INITIAL_TICKETS);
-
-    const handleResolve = (id: number) => {
-        if (confirm("Marcar este ticket como resolvido?")) {
-            setTickets(tickets.map(t => t.id === id ? { ...t, status: "Resolvido" } : t));
-        }
-    };
-
-    return (
-        <div className="p-8 animate-fade-in h-full">
-            <div className="flex justify-between items-center mb-8">
-                <div>
-                    <h2 className="text-2xl font-bold text-gray-800">Suporte & Helpdesk</h2>
-                    <p className="text-gray-500 text-sm">Gerir pedidos de ajuda e reportes de problemas.</p>
-                </div>
-                <div className="flex gap-2">
-                    <span className="bg-red-100 text-red-600 px-4 py-2 rounded-lg font-bold text-sm">{tickets.filter(t => t.status === 'Aberto').length} Abertos</span>
-                </div>
-            </div>
-
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                <div className="p-4 border-b border-gray-50 flex gap-4">
-                    <button className="flex items-center gap-2 text-sm font-bold text-[#002D72] border-b-2 border-[#002D72] pb-4 -mb-4.5">Todos</button>
-                    <button className="flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-gray-700 pb-4 -mb-4">Abertos</button>
-                    <button className="flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-gray-700 pb-4 -mb-4">Resolvidos</button>
-                </div>
-
-                <table className="w-full text-left">
-                    <thead className="bg-gray-50 border-b border-gray-100">
-                        <tr>
-                            <th className="px-6 py-3 text-xs font-bold text-gray-500 uppercase">Utilizador</th>
-                            <th className="px-6 py-3 text-xs font-bold text-gray-500 uppercase">Problema</th>
-                            <th className="px-6 py-3 text-xs font-bold text-gray-500 uppercase">Categoria</th>
-                            <th className="px-6 py-3 text-xs font-bold text-gray-500 uppercase">Data</th>
-                            <th className="px-6 py-3 text-xs font-bold text-gray-500 uppercase">Estado</th>
-                            <th className="px-6 py-3 text-xs font-bold text-gray-500 uppercase text-right">Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-50">
-                        {tickets.map((ticket) => (
-                            <tr key={ticket.id} className="hover:bg-blue-50/30">
-                                <td className="px-6 py-4 font-bold text-gray-800">{ticket.user}</td>
-                                <td className="px-6 py-4 text-sm text-gray-700">{ticket.issue}</td>
-                                <td className="px-6 py-4">
-                                    <span className="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs font-medium">{ticket.category}</span>
-                                </td>
-                                <td className="px-6 py-4 text-sm text-gray-500">{ticket.date}</td>
-                                <td className="px-6 py-4">
-                                    <span className={`px-2 py-1 rounded text-xs font-bold ${ticket.status === 'Resolvido' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                                        {ticket.status}
-                                    </span>
-                                </td>
-                                <td className="px-6 py-4 text-right">
-                                    {ticket.status === 'Aberto' && (
-                                        <button onClick={() => handleResolve(ticket.id)} className="text-[#009CDE] hover:text-[#002D72] font-bold text-xs flex items-center justify-end gap-1">
-                                            <CheckSquare className="w-4 h-4" /> Resolver
-                                        </button>
-                                    )}
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-                {tickets.length === 0 && (
-                    <div className="p-8 text-center text-gray-400">
-                        <CheckCircle2 className="w-12 h-12 mx-auto mb-2 text-green-200" />
-                        <p>Tudo limpo! Não há tickets pendentes.</p>
-                    </div>
-                )}
-            </div>
-        </div>
-    );
-};
 
 // --- EXISTING VIEWS (Retained for context) ---
 
@@ -371,54 +152,79 @@ const AnalyticsView = () => (
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <div className="bg-gradient-to-br from-[#002D72] to-blue-900 p-6 rounded-2xl text-white shadow-lg relative overflow-hidden">
-                <div className="relative z-10"><div className="flex items-center gap-2 mb-2 text-blue-200 text-sm font-bold uppercase tracking-wider"><TrendingUp className="w-4 h-4" /> Distância Total</div><div className="text-4xl font-bold mb-1">12,450 <span className="text-lg font-normal text-blue-300">km</span></div><p className="text-xs text-blue-200">Equivalente a ir do Porto ao Dubai 2x</p></div><MapPin className="absolute -bottom-4 -right-4 w-32 h-32 text-white opacity-5" />
+                <div className="relative z-10"><div className="flex items-center gap-2 mb-2 text-blue-200 text-sm font-bold uppercase tracking-wider"><TrendingUp className="w-4 h-4" /> Distância Total</div><div className="text-4xl font-bold mb-1">0 <span className="text-lg font-normal text-blue-300">km</span></div><p className="text-xs text-blue-200">Total acumulado</p></div><MapPin className="absolute -bottom-4 -right-4 w-32 h-32 text-white opacity-5" />
             </div>
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 relative overflow-hidden"><div className="flex items-center gap-2 mb-2 text-green-600 text-sm font-bold uppercase tracking-wider"><Leaf className="w-4 h-4" /> Sustentabilidade</div><div className="text-4xl font-bold mb-1 text-gray-800">145 <span className="text-lg font-normal text-gray-400">kg CO2</span></div><p className="text-xs text-gray-500">Poupados em deslocações ativas este mês</p></div>
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 relative overflow-hidden"><div className="flex items-center gap-2 mb-2 text-orange-500 text-sm font-bold uppercase tracking-wider"><Activity className="w-4 h-4" /> Calorias Queimadas</div><div className="text-4xl font-bold mb-1 text-gray-800">840k <span className="text-lg font-normal text-gray-400">kcal</span></div><p className="text-xs text-gray-500">+12% vs mês anterior</p></div>
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 relative overflow-hidden"><div className="flex items-center gap-2 mb-2 text-green-600 text-sm font-bold uppercase tracking-wider"><Leaf className="w-4 h-4" /> Sustentabilidade</div><div className="text-4xl font-bold mb-1 text-gray-800">0 <span className="text-lg font-normal text-gray-400">kg CO2</span></div><p className="text-xs text-gray-500">Poupados este mês</p></div>
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 relative overflow-hidden"><div className="flex items-center gap-2 mb-2 text-orange-500 text-sm font-bold uppercase tracking-wider"><Activity className="w-4 h-4" /> Calorias Queimadas</div><div className="text-4xl font-bold mb-1 text-gray-800">0 <span className="text-lg font-normal text-gray-400">kcal</span></div><p className="text-xs text-gray-500">Total acumulado</p></div>
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
                 <h3 className="font-bold text-gray-800 mb-6">Atividade Semanal (Colaboradores Ativos)</h3>
-                <div className="h-64 flex items-end justify-between gap-4">{ANALYTICS_DATA.weeklyActivity.map((val, i) => (<div key={i} className="w-full bg-blue-50 rounded-t-xl relative group hover:bg-blue-100 transition-all cursor-pointer"><div className="absolute bottom-0 w-full bg-[#009CDE] rounded-t-xl transition-all duration-700" style={{ height: `${val}%` }}></div><div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity">{val} Ativos</div><div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 text-xs text-gray-400 font-bold">{['D', 'S', 'T', 'Q', 'Q', 'S', 'S'][i]}</div></div>))}</div>
-                <div className="mt-8 pt-4 border-t border-gray-50 flex justify-between text-sm text-gray-500"><span>Média Diária: <strong>62 Ativos</strong></span><span>Pico: <strong>Sábado (Eventos)</strong></span></div>
+                <div className="h-64 flex items-end justify-between gap-4">
+                    {[0, 0, 0, 0, 0, 0, 0].map((val, i) => (
+                        <div key={i} className="w-full bg-blue-50 rounded-t-xl relative group hover:bg-blue-100 transition-all cursor-pointer">
+                            <div className="absolute bottom-0 w-full bg-[#009CDE] rounded-t-xl transition-all duration-700" style={{ height: `${val}%` }}></div>
+                            <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity">{val} Ativos</div>
+                            <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 text-xs text-gray-400 font-bold">{['D', 'S', 'T', 'Q', 'Q', 'S', 'S'][i]}</div>
+                        </div>
+                    ))}
+                </div>
+                <div className="mt-8 pt-4 border-t border-gray-50 flex justify-between text-sm text-gray-500"><span>Média Diária: <strong>0 Ativos</strong></span><span>Dados insuficientes</span></div>
             </div>
             <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
                 <h3 className="font-bold text-gray-800 mb-6">Ranking por Departamento</h3>
-                <div className="space-y-5">{ANALYTICS_DATA.departments.map((dept, i) => (<div key={i}><div className="flex justify-between text-sm mb-1"><span className="font-medium text-gray-700">{dept.name}</span><span className="font-bold text-gray-900">{dept.value}k pts</span></div><div className="w-full bg-gray-100 rounded-full h-2.5 overflow-hidden"><div className={`h-full rounded-full ${dept.color}`} style={{ width: `${dept.value}%` }}></div></div></div>))}</div>
+                <div className="space-y-5">
+                    <p className="text-sm text-gray-500 text-center py-4">Sem dados disponíveis</p>
+                </div>
                 <div className="mt-6 p-4 bg-gray-50 rounded-xl text-center"><p className="text-xs text-gray-500 mb-2">Departamento vencedor ganha:</p><p className="text-sm font-bold text-[#002D72] flex items-center justify-center gap-1"><Trophy className="w-4 h-4 text-yellow-500" /> Pequeno-almoço Equipa</p></div>
             </div>
         </div>
     </div>
 );
 
-const DashboardView = () => (
-    <div className="p-8 animate-fade-in">
-        <h2 className="text-2xl font-bold text-gray-800 mb-6">Visão Geral</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            {INITIAL_STATS.map((stat, idx) => {
-                const Icon = stat.icon;
-                return (
-                    <div key={idx} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                        <div className="flex justify-between items-start mb-4"><div className={`p-3 rounded-xl ${stat.color} bg-opacity-10`}><Icon className={`w-6 h-6 text-${stat.color.split('-')[1]}-600`} style={{ color: stat.color.replace('bg-', 'text-') }} /></div><span className="text-xs font-bold text-green-600 bg-green-50 px-2 py-1 rounded-full">{stat.change}</span></div><h3 className="text-3xl font-bold text-gray-800 mb-1">{stat.value}</h3><p className="text-sm text-gray-500">{stat.label}</p>
+
+const DashboardView = () => {
+    // Placeholder stats - eventually fetch from DB
+    const { data: totalUsers } = useUserStats();
+
+    const stats = [
+        { label: "Utilizadores Totais", value: totalUsers?.toString() || "0", change: "0%", icon: Users, color: "bg-blue-500" },
+        { label: "Eventos Ativos", value: "0", change: "0", icon: Calendar, color: "bg-[#009CDE]" },
+        { label: "Trocas na Loja", value: "0", change: "0%", icon: ShoppingBag, color: "bg-purple-500" },
+        { label: "Kms Percorridos (Mês)", value: "0", change: "0%", icon: MapPin, color: "bg-orange-500" },
+    ];
+
+    return (
+        <div className="p-8 animate-fade-in">
+            <h2 className="text-2xl font-bold text-gray-800 mb-6">Visão Geral</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                {stats.map((stat, idx) => {
+                    const Icon = stat.icon;
+                    return (
+                        <div key={idx} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                            <div className="flex justify-between items-start mb-4"><div className={`p-3 rounded-xl ${stat.color} bg-opacity-10`}><Icon className={`w-6 h-6 text-${stat.color.split('-')[1]}-600`} style={{ color: stat.color.replace('bg-', 'text-') }} /></div><span className="text-xs font-bold text-gray-400 bg-green-50 px-2 py-1 rounded-full">{stat.change}</span></div><h3 className="text-3xl font-bold text-gray-800 mb-1">{stat.value}</h3><p className="text-sm text-gray-500">{stat.label}</p>
+                        </div>
+                    );
+                })}
+            </div>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div className="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                    <div className="flex justify-between items-center mb-6"><h3 className="font-bold text-lg text-gray-800">Atividade Recente</h3><button className="text-sm text-[#009CDE] font-bold">Ver relatório</button></div>
+                    <div className="space-y-4">
+                        <p className="text-sm text-gray-500 text-center py-8">Sem atividade recente para mostrar.</p>
                     </div>
-                );
-            })}
-        </div>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div className="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                <div className="flex justify-between items-center mb-6"><h3 className="font-bold text-lg text-gray-800">Atividade Recente</h3><button className="text-sm text-[#009CDE] font-bold">Ver relatório</button></div>
-                <div className="space-y-4">{[1, 2, 3, 4].map((i) => (<div key={i} className="flex items-center justify-between p-4 hover:bg-gray-50 rounded-xl transition cursor-pointer border-b border-gray-50 last:border-0"><div className="flex items-center gap-4"><div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center font-bold text-gray-500">M</div><div><p className="font-bold text-gray-800 text-sm">Miguel inscreveu-se em "KEO Run 10K"</p><p className="text-xs text-gray-400">Há 25 minutos • Porto Office</p></div></div><ArrowUpRight className="w-4 h-4 text-gray-400" /></div>))}</div>
-            </div>
-            <div className="bg-[#002D72] text-white p-6 rounded-2xl shadow-lg relative overflow-hidden">
-                <div className="relative z-10">
-                    <h3 className="font-bold text-lg mb-4">Ações Rápidas</h3>
-                    <div className="space-y-3"><button className="w-full bg-white/10 hover:bg-white/20 p-3 rounded-xl flex items-center gap-3 transition text-sm font-medium"><Plus className="w-4 h-4" /> Criar Novo Evento</button><button className="w-full bg-white/10 hover:bg-white/20 p-3 rounded-xl flex items-center gap-3 transition text-sm font-medium"><Bell className="w-4 h-4" /> Enviar Notificação Push</button><button className="w-full bg-white/10 hover:bg-white/20 p-3 rounded-xl flex items-center gap-3 transition text-sm font-medium"><UploadCloud className="w-4 h-4" /> Exportar Dados (CSV)</button></div>
                 </div>
-                <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-[#009CDE] rounded-full opacity-20 blur-2xl"></div>
+                <div className="bg-[#002D72] text-white p-6 rounded-2xl shadow-lg relative overflow-hidden">
+                    <div className="relative z-10">
+                        <h3 className="font-bold text-lg mb-4">Ações Rápidas</h3>
+                        <div className="space-y-3"><button className="w-full bg-white/10 hover:bg-white/20 p-3 rounded-xl flex items-center gap-3 transition text-sm font-medium"><Plus className="w-4 h-4" /> Criar Novo Evento</button><button className="w-full bg-white/10 hover:bg-white/20 p-3 rounded-xl flex items-center gap-3 transition text-sm font-medium"><Bell className="w-4 h-4" /> Enviar Notificação Push</button><button className="w-full bg-white/10 hover:bg-white/20 p-3 rounded-xl flex items-center gap-3 transition text-sm font-medium"><UploadCloud className="w-4 h-4" /> Exportar Dados (CSV)</button></div>
+                    </div>
+                    <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-[#009CDE] rounded-full opacity-20 blur-2xl"></div>
+                </div>
             </div>
         </div>
-    </div>
-);
+    );
+};
 
 // Imported hooks
 import { useEvents, useCreateEvent, useDeleteEvent } from '../hooks/useEvents';
@@ -427,6 +233,7 @@ import { ActivityType } from '../types';
 import { EventsManager } from '../components/admin/EventsManager';
 
 import { useAdminStore } from '../hooks/useAdminStore';
+import { ResultsManager } from '../components/admin/ResultsManager';
 
 const StoreManagerView = () => {
     const { products, orders, loading, addProduct, updateProduct, deleteProduct, updateOrderStatus, refresh, uploadProductImage } = useAdminStore();
@@ -613,16 +420,39 @@ const StoreManagerView = () => {
 };
 
 const UsersView = () => {
-    const [users, setUsers] = useState(INITIAL_USERS);
-    const [filter, setFilter] = useState('');
-    const filteredUsers = users.filter(u => u.name.toLowerCase().includes(filter.toLowerCase()) || u.email.includes(filter.toLowerCase()));
-    const handleBonus = (id: number) => { const amount = prompt("Quantos pontos?"); if (amount) { setUsers(users.map(u => u.id === id ? { ...u, points: u.points + parseInt(amount) } : u)); alert("Sucesso!"); } }
+    const { data: usersData, isLoading } = useUsers();
+
+    const users = usersData || [];
+
+    const handleBonus = (id: string) => {
+        // Implement bonus logic here or open a modal
+        alert("Funcionalidade de bónus a implementar com backend.");
+    };
 
     return (
         <div className="p-8 animate-fade-in h-full">
-            <div className="flex justify-between items-center mb-8"><div><h2 className="text-2xl font-bold text-gray-800">Utilizadores</h2><p className="text-gray-500 text-sm">Gerir colaboradores, permissões e gamificação.</p></div><button className="bg-[#002D72] text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 hover:bg-blue-900 transition shadow-lg"><Plus className="w-5 h-5" /> Adicionar Colaborador</button></div>
-            <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mb-6 flex gap-4"><div className="flex-1 relative"><Search className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" /><input type="text" placeholder="Pesquisar..." className="w-full pl-10 pr-4 py-2 bg-gray-50 rounded-lg border-none focus:ring-2 focus:ring-[#009CDE] outline-none" onChange={(e) => setFilter(e.target.value)} /></div><select className="bg-gray-50 px-4 py-2 rounded-lg text-gray-600 font-medium outline-none"><option>Todos os Escritórios</option><option>Porto</option><option>Lisboa</option><option>Dubai</option></select></div>
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden"><table className="w-full text-left"><thead className="bg-gray-50 border-b border-gray-100"><tr><th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase">Colaborador</th><th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase">Cargo & Escritório</th><th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase">Pontos (Saldo)</th><th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase">Estado</th><th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase text-right">Ações</th></tr></thead><tbody className="divide-y divide-gray-50">{filteredUsers.map((user) => (<tr key={user.id} className="hover:bg-blue-50/50 transition"><td className="px-6 py-4"><div className="flex items-center gap-3"><img src={user.avatar} className="w-8 h-8 rounded-full bg-gray-200" /><div><div className="font-bold text-gray-900">{user.name}</div><div className="text-xs text-gray-500">{user.email}</div></div></div></td><td className="px-6 py-4"><div className="text-sm text-gray-900">{user.role}</div><div className="text-xs text-[#009CDE] font-medium">{user.office}</div></td><td className="px-6 py-4"><div className="font-bold text-gray-700">{user.points.toLocaleString()} pts</div></td><td className="px-6 py-4"><span className={`px-2 py-1 rounded text-xs font-bold ${user.status === 'Ativo' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>{user.status}</span></td><td className="px-6 py-4 text-right flex justify-end gap-2"><button onClick={() => handleBonus(user.id)} title="Bónus" className="bg-yellow-100 text-yellow-600 p-2 rounded-lg hover:bg-yellow-200 transition"><Gift className="w-4 h-4" /></button><button title="Editar" className="bg-gray-100 text-gray-600 p-2 rounded-lg hover:bg-gray-200 transition"><Edit2 className="w-4 h-4" /></button><button title="Bloquear" className="bg-red-50 text-red-500 p-2 rounded-lg hover:bg-red-100 transition"><Ban className="w-4 h-4" /></button></td></tr>))}</tbody></table></div>
+            <div className="flex justify-between items-center mb-8"><div><h2 className="text-2xl font-bold text-gray-800">Utilizadores</h2><p className="text-gray-500 text-sm">Gerir colaboradores, permissões e gamificação.</p></div></div>
+
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                {isLoading ? (
+                    <div className="p-8 text-center text-gray-500">A carregar utilizadores...</div>
+                ) : (
+                    <table className="w-full text-left">
+                        <thead className="bg-gray-50 border-b border-gray-100"><tr><th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase">Colaborador</th><th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase">Cargo & Escritório</th><th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase">Pontos (Saldo)</th><th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase">Estado</th><th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase text-right">Ações</th></tr></thead>
+                        <tbody className="divide-y divide-gray-50">
+                            {users.map((user) => (
+                                <tr key={user.id} className="hover:bg-blue-50/50 transition">
+                                    <td className="px-6 py-4"><div className="flex items-center gap-3"><img src={user.avatar} className="w-8 h-8 rounded-full bg-gray-200" /><div><div className="font-bold text-gray-900">{user.name}</div><div className="text-xs text-gray-500">{user.email}</div></div></div></td>
+                                    <td className="px-6 py-4"><div className="text-sm text-gray-900">{user.role}</div><div className="text-xs text-[#009CDE] font-medium">{user.office}</div></td>
+                                    <td className="px-6 py-4"><div className="font-bold text-gray-700">{user.points.toLocaleString()} pts</div></td>
+                                    <td className="px-6 py-4"><span className={`px-2 py-1 rounded text-xs font-bold ${user.status === 'Ativo' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>{user.status}</span></td>
+                                    <td className="px-6 py-4 text-right flex justify-end gap-2"><button onClick={() => handleBonus(user.id)} title="Bónus" className="bg-yellow-100 text-yellow-600 p-2 rounded-lg hover:bg-yellow-200 transition"><Gift className="w-4 h-4" /></button><button title="Editar" className="bg-gray-100 text-gray-600 p-2 rounded-lg hover:bg-gray-200 transition"><Edit2 className="w-4 h-4" /></button><button title="Bloquear" className="bg-red-50 text-red-500 p-2 rounded-lg hover:bg-red-100 transition"><Ban className="w-4 h-4" /></button></td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                )}
+            </div>
         </div>
     );
 };
@@ -677,9 +507,21 @@ const CommunicationsView = () => {
 };
 
 const SupportView = () => {
-    const { data: tickets, isLoading } = useTickets();
-    const updateTicket = useUpdateTicket();
+    const [page, setPage] = useState(1);
     const [filter, setFilter] = useState('all');
+
+    // Pagination reset when filter changes
+    useEffect(() => {
+        setPage(1);
+    }, [filter]);
+
+    const { data: ticketsData, isLoading, isFetching } = useAdminTickets({ page, status: filter });
+    const { data: stats } = useTicketStats();
+    const updateTicket = useUpdateTicket();
+
+    const tickets = ticketsData?.data || [];
+    const totalCount = ticketsData?.count || 0;
+    const totalPages = Math.ceil(totalCount / 20);
 
     const handleResolve = async (id: string) => {
         if (confirm("Marcar como resolvido?")) {
@@ -687,36 +529,87 @@ const SupportView = () => {
         }
     };
 
-    const filteredTickets = (tickets || []).filter(t => {
-        if (filter === 'all') return true;
-        return t.status === filter;
-    });
-
-    if (isLoading) return <div>Carregando tickets...</div>;
-
     return (
         <div className="p-8 animate-fade-in h-full flex flex-col gap-8">
-            <div className="flex justify-between items-center"><div><h2 className="text-2xl font-bold text-gray-800">Suporte & Helpdesk</h2><p className="text-gray-500 text-sm">Gerir pedidos de suporte.</p></div><span className="bg-red-50 text-red-600 px-4 py-2 rounded-lg font-bold text-sm">{(tickets || []).filter(t => t.status === 'open').length} Tickets Abertos</span></div>
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden text-sm">
-                <div className="p-4 border-b border-gray-50 flex gap-4 bg-gray-50/50">
-                    <button onClick={() => setFilter('all')} className={`px-4 py-2 rounded-lg font-bold transition ${filter === 'all' ? 'bg-[#002D72] text-white shadow-lg' : 'text-gray-500 hover:bg-gray-200'}`}>Todos</button>
-                    <button onClick={() => setFilter('open')} className={`px-4 py-2 rounded-lg font-bold transition ${filter === 'open' ? 'bg-[#002D72] text-white shadow-lg' : 'text-gray-500 hover:bg-gray-200'}`}>Abertos</button>
-                    <button onClick={() => setFilter('resolved')} className={`px-4 py-2 rounded-lg font-bold transition ${filter === 'resolved' ? 'bg-[#002D72] text-white shadow-lg' : 'text-gray-500 hover:bg-gray-200'}`}>Resolvidos</button>
+            <div className="flex justify-between items-center">
+                <div>
+                    <h2 className="text-2xl font-bold text-gray-800">Suporte & Helpdesk</h2>
+                    <p className="text-gray-500 text-sm">Gerir pedidos de suporte.</p>
                 </div>
-                <table className="w-full text-left">
-                    <thead className="bg-gray-50 border-b border-gray-100"><tr><th className="px-6 py-4 font-bold text-gray-500 uppercase">Utilizador</th><th className="px-6 py-4 font-bold text-gray-500 uppercase">Assunto</th><th className="px-6 py-4 font-bold text-gray-500 uppercase">Prioridade</th><th className="px-6 py-4 font-bold text-gray-500 uppercase">Estado</th><th className="px-6 py-4 font-bold text-gray-500 uppercase text-right">Ação</th></tr></thead>
-                    <tbody className="divide-y divide-gray-50">
-                        {filteredTickets.map(t => (
-                            <tr key={t.id} className="hover:bg-blue-50/50">
-                                <td className="px-6 py-4 font-bold text-gray-800">{t.user_email}</td>
-                                <td className="px-6 py-4 text-gray-600">{t.subject}</td>
-                                <td className="px-6 py-4"><span className="bg-gray-100 px-2 py-1 rounded text-xs font-bold text-gray-600 uppercase">{t.priority}</span></td>
-                                <td className="px-6 py-4"><span className={`px-2 py-1 rounded text-xs font-bold ${t.status === 'resolved' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>{t.status}</span></td>
-                                <td className="px-6 py-4 text-right">{t.status === 'open' && <button onClick={() => handleResolve(t.id)} className="text-[#009CDE] font-bold hover:underline">Resolver</button>}</td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
+                <span className="bg-red-50 text-red-600 px-4 py-2 rounded-lg font-bold text-sm">
+                    {stats?.open || 0} Tickets Abertos
+                </span>
+            </div>
+
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden text-sm flex flex-col h-full max-h-[calc(100vh-250px)]">
+                <div className="p-4 border-b border-gray-50 flex justify-between items-center bg-gray-50/50">
+                    <div className="flex gap-4">
+                        <button onClick={() => setFilter('all')} className={`px-4 py-2 rounded-lg font-bold transition ${filter === 'all' ? 'bg-[#002D72] text-white shadow-lg' : 'text-gray-500 hover:bg-gray-200'}`}>Todos</button>
+                        <button onClick={() => setFilter('open')} className={`px-4 py-2 rounded-lg font-bold transition ${filter === 'open' ? 'bg-[#002D72] text-white shadow-lg' : 'text-gray-500 hover:bg-gray-200'}`}>Abertos</button>
+                        <button onClick={() => setFilter('resolved')} className={`px-4 py-2 rounded-lg font-bold transition ${filter === 'resolved' ? 'bg-[#002D72] text-white shadow-lg' : 'text-gray-500 hover:bg-gray-200'}`}>Resolvidos</button>
+                    </div>
+
+                    <div className="flex items-center gap-4 text-gray-500">
+                        {isFetching && <Loader2 className="w-4 h-4 animate-spin text-[#009CDE]" />}
+                        <span className="text-xs font-bold">
+                            {totalCount === 0 ? '0' : ((page - 1) * 20 + 1)}-{Math.min(page * 20, totalCount)} de {totalCount}
+                        </span>
+                        <div className="flex gap-1">
+                            <button
+                                disabled={page === 1 || isLoading}
+                                onClick={() => setPage(p => Math.max(1, p - 1))}
+                                className="p-1 rounded hover:bg-gray-200 disabled:opacity-30 transition"
+                            >
+                                <ChevronRight className="w-5 h-5 rotate-180" />
+                            </button>
+                            <button
+                                disabled={page >= totalPages || isLoading}
+                                onClick={() => setPage(p => p + 1)}
+                                className="p-1 rounded hover:bg-gray-200 disabled:opacity-30 transition"
+                            >
+                                <ChevronRight className="w-5 h-5" />
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="flex-1 overflow-auto">
+                    {isLoading && tickets.length === 0 ? (
+                        <div className="p-8 text-center text-gray-400">Carregando tickets...</div>
+                    ) : (
+                        <table className="w-full text-left relative">
+                            <thead className="bg-gray-50 border-b border-gray-100 sticky top-0">
+                                <tr>
+                                    <th className="px-6 py-4 font-bold text-gray-500 uppercase">Utilizador</th>
+                                    <th className="px-6 py-4 font-bold text-gray-500 uppercase">Assunto</th>
+                                    <th className="px-6 py-4 font-bold text-gray-500 uppercase">Prioridade</th>
+                                    <th className="px-6 py-4 font-bold text-gray-500 uppercase">Estado</th>
+                                    <th className="px-6 py-4 font-bold text-gray-500 uppercase text-right">Ação</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-50">
+                                {tickets.map(t => (
+                                    <tr key={t.id} className="hover:bg-blue-50/50">
+                                        <td className="px-6 py-4 font-bold text-gray-800">{t.user_email}</td>
+                                        <td className="px-6 py-4 text-gray-600">{t.subject}</td>
+                                        <td className="px-6 py-4"><span className="bg-gray-100 px-2 py-1 rounded text-xs font-bold text-gray-600 uppercase">{t.priority}</span></td>
+                                        <td className="px-6 py-4"><span className={`px-2 py-1 rounded text-xs font-bold ${t.status === 'resolved' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>{t.status}</span></td>
+                                        <td className="px-6 py-4 text-right">
+                                            {t.status === 'open' && (
+                                                <button onClick={() => handleResolve(t.id)} className="text-[#009CDE] font-bold hover:underline">Resolver</button>
+                                            )}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    )}
+                    {!isLoading && tickets.length === 0 && (
+                        <div className="p-8 text-center">
+                            <p className="text-gray-500">Não há tickets para mostrar.</p>
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );
@@ -969,6 +862,7 @@ export default function AdminDashboard() {
                 {activeTab === 'dashboard' && <DashboardView />}
                 {activeTab === 'analytics' && <AnalyticsView />}
                 {activeTab === 'events' && <EventsManager />}
+                {activeTab === 'results' && <ResultsManager />}
                 {activeTab === 'store' && <StoreManagerView />}
                 {activeTab === 'communications' && <CommunicationsView />}
                 {activeTab === 'support' && <SupportView />}

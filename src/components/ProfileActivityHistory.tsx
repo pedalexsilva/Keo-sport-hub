@@ -52,7 +52,11 @@ const ProfileActivityHistory: React.FC<ProfileActivityHistoryProps> = ({ activit
                             </div>
                         </div>
                         <div className="text-right">
-                            <p className="font-bold text-[#002D72]">{typeof activity.distance === 'number' ? activity.distance.toFixed(1) : activity.distance} km</p>
+                            <p className="font-bold text-[#002D72]">
+                                {typeof activity.distance === 'number'
+                                    ? activity.distance.toFixed(1)
+                                    : activity.distance} km
+                            </p>
                             <p className="text-xs text-gray-400 flex items-center justify-end gap-1">
                                 <MapPin className="w-3 h-3" /> {activity.type}
                             </p>

@@ -18,6 +18,26 @@ export function useEvents() {
 
             if (error) throw error;
 
+            // Collect all unique user IDs from participants to fetch profiles efficiently
+            const allUserIds = new Set<string>();
+            data.forEach((e: any) => {
+                e.event_participants.forEach((p: any) => allUserIds.add(p.user_id));
+            });
+
+            // Fetch profiles for these IDs
+            let profilesMap = new Map<string, any>();
+
+            if (allUserIds.size > 0) {
+                const { data: profiles, error: profilesError } = await supabase
+                    .from('profiles')
+                    .select('id, full_name, username, office, avatar_url')
+                    .in('id', Array.from(allUserIds));
+
+                if (profilesError) throw profilesError;
+
+                profilesMap = new Map(profiles?.map(p => [p.id, p]));
+            }
+
             return data.map((e: any) => ({
                 id: e.id,
                 title: e.title,
@@ -25,9 +45,17 @@ export function useEvents() {
                 date: e.date,
                 location: e.location,
                 type: e.type as ActivityType,
-                image: e.image_url || `https://placehold.co/600x400/e2e8f0/1e293b?text=${encodeURIComponent(e.title || 'Event')}`, // Placeholder if null
+                image: e.image_url || `https://placehold.co/600x400/e2e8f0/1e293b?text=${encodeURIComponent(e.title || 'Event')}`,
                 creatorId: e.creator_id,
-                participants: e.event_participants.map((p: any) => p.user_id),
+                participants: e.event_participants.map((p: any) => {
+                    const profile = profilesMap.get(p.user_id);
+                    return {
+                        id: p.user_id,
+                        name: profile?.full_name || profile?.username || 'Utilizador',
+                        office: profile?.office || 'KEO',
+                        avatar: profile?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile?.full_name || profile?.username || 'User')}&background=random`
+                    };
+                }),
                 maxParticipants: e.max_participants,
                 status: (new Date(e.date) < new Date() && e.status === 'open') ? 'closed' : e.status
             }));

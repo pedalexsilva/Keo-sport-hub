@@ -34,6 +34,57 @@ export function useTickets() {
     });
 }
 
+export function useAdminTickets({ page = 1, status = 'all' }: { page?: number, status?: string } = {}) {
+    const PAGE_SIZE = 20;
+    return useQuery({
+        queryKey: ['admin-tickets', page, status],
+        queryFn: async () => {
+            let query = supabase
+                .from('tickets')
+                .select(`
+                    *,
+                    user:profiles(email)
+                `, { count: 'exact' })
+                .order('created_at', { ascending: false });
+
+            if (status !== 'all') {
+                query = query.eq('status', status);
+            }
+
+            const from = (page - 1) * PAGE_SIZE;
+            const to = from + PAGE_SIZE - 1;
+
+            const { data, error, count } = await query.range(from, to);
+
+            if (error) throw error;
+
+            return {
+                data: data.map((t: any) => ({
+                    ...t,
+                    user_email: t.user?.email || 'Unknown'
+                })) as Ticket[],
+                count: count || 0
+            };
+        },
+        // placeholderData: keepPreviousData (removed to fix lint)
+    });
+}
+
+export function useTicketStats() {
+    return useQuery({
+        queryKey: ['ticket-stats'],
+        queryFn: async () => {
+            const { count, error } = await supabase
+                .from('tickets')
+                .select('*', { count: 'exact', head: true })
+                .eq('status', 'open');
+
+            if (error) throw error;
+            return { open: count || 0 };
+        }
+    });
+}
+
 export function useMyTickets() {
     return useQuery({
         queryKey: ['my-tickets'],
@@ -73,6 +124,8 @@ export function useCreateTicket() {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['my-tickets'] });
             queryClient.invalidateQueries({ queryKey: ['tickets'] });
+            queryClient.invalidateQueries({ queryKey: ['admin-tickets'] });
+            queryClient.invalidateQueries({ queryKey: ['ticket-stats'] });
         }
     });
 }
@@ -91,6 +144,8 @@ export function useUpdateTicket() {
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['tickets'] });
+            queryClient.invalidateQueries({ queryKey: ['admin-tickets'] });
+            queryClient.invalidateQueries({ queryKey: ['ticket-stats'] });
         }
     });
 }
