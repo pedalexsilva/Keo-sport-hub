@@ -1,5 +1,6 @@
 import React from 'react';
 import { Activity, Calendar, Clock, MapPin } from 'lucide-react';
+import { formatDate } from '../utils/dateUtils';
 
 // Mock data for now, ideally fetched from backend
 const MOCK_ACTIVITIES = [
@@ -41,7 +42,7 @@ const ProfileActivityHistory: React.FC<ProfileActivityHistoryProps> = ({ activit
                                 <div className="flex items-center gap-2 text-xs text-gray-500">
                                     <span className="flex items-center gap-0.5">
                                         <Calendar className="w-3 h-3" />
-                                        {new Date(activity.date).toLocaleDateString('pt-PT')}
+                                        {formatDate(activity.date)}
                                     </span>
                                     <span className="flex items-center gap-0.5">
                                         <Clock className="w-3 h-3" />

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Flame, Route, RefreshCw, AlertCircle, Calendar, MapPin, ChevronRight } from 'lucide-react';
 import OfficeBattleWidget from '../components/OfficeBattleWidget';
+import { formatDate } from '../utils/dateUtils';
 import { useNavigate } from 'react-router-dom';
 import { Event } from '../types';
 
@@ -91,7 +92,7 @@ const HomeView: React.FC<HomeViewProps> = ({ user, stats, events, stravaConnecte
                                     <div>
                                         <h4 className="font-bold text-gray-900 text-sm leading-tight mb-1">{event.title}</h4>
                                         <div className="flex items-center text-xs text-gray-500 gap-3">
-                                            <span className="flex items-center"><Calendar className="w-3 h-3 mr-1 text-[#009CDE]" /> {new Date(event.date).toLocaleDateString()}</span>
+                                            <span className="flex items-center"><Calendar className="w-3 h-3 mr-1 text-[#009CDE]" /> {formatDate(event.date)}</span>
                                             <span className="flex items-center"><MapPin className="w-3 h-3 mr-1 text-[#009CDE]" /> {event.location}</span>
                                         </div>
                                     </div>

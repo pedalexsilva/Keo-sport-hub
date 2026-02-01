@@ -9,6 +9,8 @@ import {
     Medal
 } from 'lucide-react';
 import { Event } from '../types';
+import { formatDate } from '../utils/dateUtils';
+import { EventStagesCarousel } from '../components/EventStagesCarousel';
 
 interface EventsViewProps {
     events: Event[];
@@ -48,7 +50,7 @@ const EventsView: React.FC<EventsViewProps> = ({ events, onJoin, user }) => {
                         <span className="bg-[#009CDE] px-2 py-1 rounded text-xs font-bold mb-2 inline-block">{selectedEvent.type}</span>
                         <h2 className="text-3xl font-bold leading-tight">{selectedEvent.title}</h2>
                         <div className="flex items-center gap-4 mt-2 text-sm text-gray-200">
-                            <span className="flex items-center gap-1"><Calendar className="w-4 h-4" /> {new Date(selectedEvent.date).toLocaleDateString()}</span>
+                            <span className="flex items-center gap-1"><Calendar className="w-4 h-4" /> {formatDate(selectedEvent.date)}</span>
                             <span className="flex items-center gap-1"><MapPin className="w-4 h-4" /> {selectedEvent.location}</span>
                         </div>
                     </div>
@@ -69,6 +71,9 @@ const EventsView: React.FC<EventsViewProps> = ({ events, onJoin, user }) => {
                             <p className="text-gray-600 mb-6 leading-relaxed">
                                 {selectedEvent.description || "Junta-te aos teus colegas para este evento desportivo da KEO. Fortalece o espírito de equipa e melhora a tua saúde!"}
                             </p>
+
+                            {/* Stages Carousel */}
+                            <EventStagesCarousel eventId={selectedEvent.id} />
 
                             <h3 className="text-lg font-bold text-[#002D72] mb-4 flex items-center gap-2">
                                 <Users className="w-5 h-5" /> Participantes ({selectedEvent.participants.length})
@@ -140,7 +145,7 @@ const EventsView: React.FC<EventsViewProps> = ({ events, onJoin, user }) => {
                                 {tab === 'past' && <Trophy className="w-5 h-5 text-yellow-500" />}
                             </div>
                             <div className="space-y-2 mb-4">
-                                <div className="flex items-center text-gray-500 text-sm"><Calendar className="w-4 h-4 mr-2 text-[#009CDE]" />{new Date(event.date).toLocaleDateString()}</div>
+                                <div className="flex items-center text-gray-500 text-sm"><Calendar className="w-4 h-4 mr-2 text-[#009CDE]" />{formatDate(event.date)}</div>
                                 <div className="flex items-center text-gray-500 text-sm"><MapPin className="w-4 h-4 mr-2 text-[#009CDE]" />{event.location}</div>
                             </div>
 

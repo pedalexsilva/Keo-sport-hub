@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
+import { List, Loader2, Plus, Search, ImageIcon, Calendar, MapPin, Edit2, Trash2, X } from 'lucide-react';
 import { useEvents, useCreateEvent, useUpdateEvent, useDeleteEvent, uploadEventMedia } from '../../hooks/useEvents';
-import { Calendar, Search, MapPin, Trash2, Edit2, Plus, Users, Image as ImageIcon, Loader2, X } from 'lucide-react';
 import { ActivityType, Event } from '../../types';
+import { StageManager } from './StageManager';
+import { formatDate } from '../../utils/dateUtils';
 
 export const EventsManager = () => {
     const { data: events, isLoading } = useEvents();
@@ -10,6 +12,7 @@ export const EventsManager = () => {
     const deleteEvent = useDeleteEvent();
 
     const [showModal, setShowModal] = useState(false);
+    const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [filterStatus, setFilterStatus] = useState('All');
     const [searchText, setSearchText] = useState('');
@@ -93,13 +96,13 @@ export const EventsManager = () => {
         }
     };
 
-    const sortedEvents = (events || [])
+    const sortedEvents = React.useMemo(() => (events || [])
         .filter(e => {
             const matchesSearch = e.title.toLowerCase().includes(searchText.toLowerCase());
             const matchesStatus = filterStatus === 'All' || e.status === filterStatus.toLowerCase();
             return matchesSearch && matchesStatus;
         })
-        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()), [events, searchText, filterStatus]);
 
     if (isLoading) return <div className="p-8 flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-[#002D72]" /></div>;
 
@@ -181,7 +184,7 @@ export const EventsManager = () => {
                                 </td>
                                 <td className="px-6 py-4">
                                     <div className="flex items-center gap-1 text-sm text-gray-600 mb-1">
-                                        <Calendar className="w-3 h-3" /> {new Date(evt.date).toLocaleDateString()}
+                                        <Calendar className="w-3 h-3" /> {formatDate(evt.date)}
                                     </div>
                                     <div className="flex items-center gap-1 text-xs text-gray-500">
                                         <MapPin className="w-3 h-3" /> {evt.location}
@@ -205,6 +208,9 @@ export const EventsManager = () => {
                                 </td>
                                 <td className="px-6 py-4 text-right">
                                     <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <button onClick={() => setSelectedEventId(evt.id)} className="p-2 text-gray-400 hover:text-[#009CDE] hover:bg-blue-50 rounded-lg transition" title="Gerir Etapas">
+                                            <List className="w-4 h-4" />
+                                        </button>
                                         <button onClick={() => handleEdit(evt)} className="p-2 text-gray-400 hover:text-[#002D72] hover:bg-blue-50 rounded-lg transition" title="Editar">
                                             <Edit2 className="w-4 h-4" />
                                         </button>
@@ -225,6 +231,11 @@ export const EventsManager = () => {
                     </tbody>
                 </table>
             </div>
+
+            {/* Stage Manager Modal */}
+            {selectedEventId && (
+                <StageManager eventId={selectedEventId} onClose={() => setSelectedEventId(null)} />
+            )}
 
             {/* Modal */}
             {showModal && (

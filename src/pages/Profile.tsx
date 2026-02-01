@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { User, ActivityType } from '../types';
 import Button from '../components/Button';
 import { Camera, Edit2, Save, X, Medal, Clock, Map, Zap, CheckCircle, Calendar, Activity, RefreshCw } from 'lucide-react';
+import { formatDate } from '../utils/dateUtils';
 import { ConnectStravaButton } from '../features/strava/components/ConnectStravaButton';
 import { syncStravaActivities } from '../features/strava/services/strava';
 
@@ -227,7 +228,7 @@ const Profile: React.FC<ProfileProps> = ({ user, updateUser }) => {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center gap-2">
                           <Calendar size={14} className="text-gray-400" />
-                          {new Date(act.date).toLocaleDateString('pt-PT')}
+                          {formatDate(act.date)}
                         </div>
                       </td>
                       <td className="px-6 py-4">

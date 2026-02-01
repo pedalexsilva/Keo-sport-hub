@@ -3,6 +3,7 @@ import { Activity, Zap, TrendingUp, Award, Calendar as CalendarIcon } from 'luci
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { User, Activity as IActivity } from '../types';
 import Button from '../components/Button';
+import { formatDate } from '../utils/dateUtils';
 
 interface DashboardProps {
   user: User;
@@ -15,13 +16,13 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
   const handleConnectStrava = () => {
     setIsConnecting(true);
     // Redirect to Strava Auth
-    import('../features/strava/services/strava').then(({ getStravaAuthUrl }) => {
-      window.location.href = getStravaAuthUrl();
+    import('../features/strava/services/strava').then(async ({ getStravaAuthUrl }) => {
+      window.location.href = await getStravaAuthUrl();
     });
   };
 
   const chartData = user.activities.map(a => ({
-    name: new Date(a.date).toLocaleDateString('pt-PT', { weekday: 'short' }),
+    name: formatDate(a.date),
     points: a.points
   })).reverse();
 

@@ -39,8 +39,10 @@ import {
     LifeBuoy,      // New for Support
     CheckSquare,   // New for Resolving Tickets
     Filter,
-    Menu           // New for Menu Management
+    Menu,           // New for Menu Management
+    Medal
 } from 'lucide-react';
+import { formatDate } from '../utils/dateUtils';
 
 // --- MOCK DATA ---
 const INITIAL_STATS = [
@@ -115,6 +117,7 @@ const Sidebar = ({ activeTab, setActiveTab }: { activeTab: string, setActiveTab:
         { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
         { id: 'analytics', label: 'Analytics & ROI', icon: PieChart },
         { id: 'events', label: 'Gestão de Eventos', icon: Calendar },
+        { id: 'results', label: 'Resultados', icon: Medal }, // New
         { id: 'store', label: 'Loja & Prémios', icon: ShoppingBag },
         { id: 'communications', label: 'Comunicações', icon: MessageSquare }, // New
         { id: 'support', label: 'Suporte / Helpdesk', icon: LifeBuoy },       // New
@@ -497,7 +500,7 @@ const StoreManagerView = () => {
                         <tbody className="divide-y divide-gray-50">
                             {orders.map((order) => (
                                 <tr key={order.id} className="hover:bg-blue-50/30">
-                                    <td className="px-6 py-4"><div className="font-bold text-sm text-gray-900">{order.user_email}</div><div className="text-xs text-gray-400">{new Date(order.created_at).toLocaleDateString()}</div></td>
+                                    <td className="px-6 py-4"><div className="font-bold text-sm text-gray-900">{order.user_email}</div><div className="text-xs text-gray-400">{formatDate(order.created_at)}</div></td>
                                     <td className="px-6 py-4 text-sm text-gray-700">{order.product?.name}</td>
                                     <td className="px-6 py-4"><span className={`px-2 py-1 rounded text-xs font-bold ${order.status === 'completed' ? 'bg-green-100 text-green-700' : order.status === 'pending' ? 'bg-orange-100 text-orange-700' : 'bg-red-100 text-red-700'}`}>{order.status}</span></td>
                                     <td className="px-6 py-4 text-right">
@@ -643,7 +646,7 @@ const CommunicationsView = () => {
                     <div className="flex-1 overflow-y-auto space-y-4 max-h-[400px]">
                         {(notifications || []).map((msg) => (
                             <div key={msg.id} className="p-4 bg-gray-50 rounded-xl border border-gray-100">
-                                <div className="flex justify-between items-start mb-2"><h4 className="font-bold text-gray-800">{msg.title}</h4><span className="text-xs text-gray-400">{new Date(msg.created_at).toLocaleDateString()}</span></div>
+                                <div className="flex justify-between items-start mb-2"><h4 className="font-bold text-gray-800">{msg.title}</h4><span className="text-xs text-gray-400">{formatDate(msg.created_at)}</span></div>
                                 <p className="text-sm text-gray-600 mb-2">{msg.message}</p>
                                 <span className={`text-[10px] uppercase font-bold px-2 py-1 rounded ${msg.type === 'warning' ? 'bg-red-100 text-red-600' : msg.type === 'success' ? 'bg-green-100 text-green-600' : 'bg-blue-100 text-blue-600'}`}>{msg.type}</span>
                             </div>
