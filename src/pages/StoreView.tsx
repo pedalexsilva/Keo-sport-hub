@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Gift, ShoppingBag, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
 import { useStore, Product } from '../hooks/useStore';
+import { getOptimizedImageUrl } from '../utils/imageOptimizer';
 
 interface StoreViewProps {
     points: number;
@@ -54,7 +55,12 @@ const StoreView: React.FC<StoreViewProps> = ({ points, handlePurchase: onParentP
                     <div key={item.id} className={`bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col h-full group ${item.stock === 0 ? 'opacity-60' : ''}`}>
                         <div className="relative h-32 overflow-hidden bg-gray-50">
                             {item.image_url ? (
-                                <img src={item.image_url} alt={item.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                                <img
+                                    src={getOptimizedImageUrl(item.image_url, 400, 320)}
+                                    alt={item.name}
+                                    loading="lazy"
+                                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                />
                             ) : (
                                 <div className="w-full h-full flex items-center justify-center text-gray-300"><ShoppingBag className="w-8 h-8" /></div>
                             )}
@@ -70,10 +76,10 @@ const StoreView: React.FC<StoreViewProps> = ({ points, handlePurchase: onParentP
                                     onClick={() => onPurchaseClick(item)}
                                     disabled={points < item.cost || item.stock === 0 || purchasing !== null}
                                     className={`w-8 h-8 rounded-full flex items-center justify-center transition-all cursor-pointer ${purchasing === item.id
-                                            ? 'bg-green-500 text-white animate-bounce'
-                                            : points >= item.cost && item.stock > 0
-                                                ? 'bg-[#009CDE] text-white hover:bg-[#002D72]'
-                                                : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                                        ? 'bg-green-500 text-white animate-bounce'
+                                        : points >= item.cost && item.stock > 0
+                                            ? 'bg-[#009CDE] text-white hover:bg-[#002D72]'
+                                            : 'bg-gray-200 text-gray-400 cursor-not-allowed'
                                         }`}
                                 >
                                     {purchasing === item.id ? <CheckCircle2 className="w-4 h-4" /> : <ShoppingBag className="w-4 h-4" />}

@@ -10,6 +10,7 @@ export interface Product {
     category: string;
     image_url: string;
     active: boolean;
+    is_featured?: boolean;
 }
 
 export interface Order {

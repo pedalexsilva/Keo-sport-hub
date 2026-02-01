@@ -34,7 +34,7 @@ interface SocialViewProps {
 }
 
 const SocialView: React.FC<SocialViewProps> = ({ currentUser }) => {
-    const [subTab, setSubTab] = useState<'feed' | 'ranking'>('feed');
+    const [subTab, setSubTab] = useState<'feed' | 'ranking'>('ranking');
     const [posts, setPosts] = useState(INITIAL_POSTS);
     const { data: leaderboardData, isLoading } = useLeaderboard();
 
@@ -61,8 +61,8 @@ const SocialView: React.FC<SocialViewProps> = ({ currentUser }) => {
                 </button>
             </div>
             <div className="flex p-1 bg-gray-200 rounded-xl mb-6">
-                <button onClick={() => setSubTab('feed')} className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all cursor-pointer ${subTab === 'feed' ? 'bg-white text-[#002D72] shadow-sm' : 'text-gray-500'}`}>Momentos</button>
                 <button onClick={() => setSubTab('ranking')} className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all cursor-pointer ${subTab === 'ranking' ? 'bg-white text-[#002D72] shadow-sm' : 'text-gray-500'}`}>Ranking</button>
+                <button onClick={() => setSubTab('feed')} className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all cursor-pointer ${subTab === 'feed' ? 'bg-white text-[#002D72] shadow-sm' : 'text-gray-500'}`}>Momentos</button>
             </div>
 
             {subTab === 'feed' ? (

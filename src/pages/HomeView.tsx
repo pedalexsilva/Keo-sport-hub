@@ -1,7 +1,9 @@
 import React from 'react';
-import { Flame, Route, RefreshCw, AlertCircle, Calendar, MapPin, ChevronRight } from 'lucide-react';
+import { Flame, Route, RefreshCw, AlertCircle, Calendar, MapPin, ChevronRight, ShoppingBag, Gift } from 'lucide-react';
 import OfficeBattleWidget from '../components/OfficeBattleWidget';
 import { formatDate } from '../utils/dateUtils';
+import { getOptimizedImageUrl } from '../utils/imageOptimizer';
+import { useStore } from '../hooks/useStore';
 import { useNavigate } from 'react-router-dom';
 import { Event } from '../types';
 
@@ -20,6 +22,7 @@ interface HomeViewProps {
 
 const HomeView: React.FC<HomeViewProps> = ({ user, stats, events, stravaConnected, isSyncing, onSync, onConnect }) => {
     const navigate = useNavigate();
+    const { products } = useStore();
 
     const myUpcomingEvents = events
         .filter(e => e.participants.includes(user.id) && new Date(e.date) >= new Date())
@@ -104,24 +107,60 @@ const HomeView: React.FC<HomeViewProps> = ({ user, stats, events, stravaConnecte
                 </div>
             )}
 
-            <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-bold text-[#002D72]">Destaques da Loja</h3>
-                <span
-                    onClick={() => navigate('/app/store')}
-                    className="text-xs text-[#009CDE] font-bold cursor-pointer"
-                >
-                    Ver Loja
-                </span>
-            </div>
-            <div className="bg-gradient-to-r from-gray-900 to-[#002D72] rounded-2xl p-5 text-white shadow-lg relative overflow-hidden mb-8">
-                <div className="relative z-10 w-2/3">
-                    <span className="bg-[#009CDE] text-[10px] font-bold px-2 py-1 rounded text-white mb-2 inline-block">NOVO</span>
-                    <h4 className="font-bold text-lg leading-tight mb-2">Hoodie KEO 2026</h4>
-                    <p className="text-xs text-gray-300 mb-3">Edição limitada para os atletas mais dedicados.</p>
-                    <button onClick={() => navigate('/app/store')} className="text-xs font-bold border-b border-white pb-0.5 cursor-pointer">Ver detalhes</button>
+            {products.some(p => p.is_featured) && (
+                <div className="mb-8">
+                    <div className="flex justify-between items-center mb-4">
+                        <h3 className="text-lg font-bold text-[#002D72]">Destaques da Loja</h3>
+                        <span
+                            onClick={() => navigate('/app/store')}
+                            className="text-xs text-[#009CDE] font-bold cursor-pointer"
+                        >
+                            Ver Loja
+                        </span>
+                    </div>
+
+                    <div className="space-y-4">
+                        {products.filter(p => p.is_featured).slice(0, 1).map(item => (
+                            <div key={item.id} className="bg-[#002D72] rounded-2xl p-5 text-white shadow-lg relative overflow-hidden group">
+                                {/* Decorative circle */}
+                                <div className="absolute -right-6 -bottom-6 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
+
+                                <div className="relative z-10 flex gap-4">
+                                    <div className="flex-1">
+                                        <span className="bg-[#009CDE] text-white text-[10px] font-bold px-2 py-1 rounded-md mb-2 inline-block">NOVO</span>
+                                        <h4 className="text-lg font-bold mb-1 leading-tight">{item.name}</h4>
+                                        <p className="text-xs text-blue-100 mb-3 line-clamp-2">{item.description}</p>
+
+                                        <div className="flex items-center gap-3">
+                                            <button
+                                                onClick={() => navigate('/app/store')}
+                                                className="text-xs font-bold underline decoration-2 underline-offset-4 hover:text-[#009CDE] transition-colors"
+                                            >
+                                                Ver detalhes
+                                            </button>
+                                            <span className="text-xs font-bold text-[#009CDE]">{item.cost} pts</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="w-24 h-24 flex-shrink-0 bg-white/10 rounded-xl overflow-hidden backdrop-blur-sm border border-white/10">
+                                        {item.image_url ? (
+                                            <img
+                                                src={getOptimizedImageUrl(item.image_url, 200, 200)}
+                                                alt={item.name}
+                                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                                            />
+                                        ) : (
+                                            <div className="w-full h-full flex items-center justify-center">
+                                                <ShoppingBag className="w-8 h-8 text-white/50" />
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
                 </div>
-                <img src="https://images.unsplash.com/photo-1556906781-9a412961d289?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80" className="absolute -right-4 -bottom-4 w-32 h-32 object-cover rounded-full border-4 border-white/20" alt="Hoodie" />
-            </div>
+            )}
         </div>
     );
 };

@@ -434,7 +434,7 @@ const StoreManagerView = () => {
     const [editingProduct, setEditingProduct] = useState<any>(null);
     const [isUploading, setIsUploading] = useState(false);
     const [newProduct, setNewProduct] = useState({
-        name: '', description: '', cost: 0, stock: 0, category: 'Merch', image_url: ''
+        name: '', description: '', cost: 0, stock: 0, category: 'Merch', image_url: '', is_featured: false
     });
 
     const handleSaveProduct = async () => {
@@ -445,7 +445,7 @@ const StoreManagerView = () => {
         }
         setShowProductModal(false);
         setEditingProduct(null);
-        setNewProduct({ name: '', description: '', cost: 0, stock: 0, category: 'Merch', image_url: '' });
+        setNewProduct({ name: '', description: '', cost: 0, stock: 0, category: 'Merch', image_url: '', is_featured: false });
     };
 
     const openEditModal = (product: any) => {
@@ -456,14 +456,15 @@ const StoreManagerView = () => {
             cost: product.cost,
             stock: product.stock,
             category: product.category,
-            image_url: product.image_url
+            image_url: product.image_url,
+            is_featured: product.is_featured || false
         });
         setShowProductModal(true);
     };
 
     const openCreateModal = () => {
         setEditingProduct(null);
-        setNewProduct({ name: '', description: '', cost: 0, stock: 0, category: 'Merch', image_url: '' });
+        setNewProduct({ name: '', description: '', cost: 0, stock: 0, category: 'Merch', image_url: '', is_featured: false });
         setShowProductModal(true);
     };
 
@@ -521,7 +522,10 @@ const StoreManagerView = () => {
                             <div key={prod.id} className="flex gap-3 items-center p-3 border border-gray-100 rounded-xl hover:shadow-md transition bg-white">
                                 <img src={prod.image_url} className="w-12 h-12 rounded-lg object-cover bg-gray-100" />
                                 <div className="flex-1">
-                                    <p className="font-bold text-sm text-gray-800">{prod.name}</p>
+                                    <p className="font-bold text-sm text-gray-800 flex items-center gap-2">
+                                        {prod.name}
+                                        {prod.is_featured && <span className="bg-yellow-100 text-yellow-700 text-[10px] px-1.5 py-0.5 rounded font-bold uppercase">Destaque</span>}
+                                    </p>
                                     <div className="flex justify-between mt-1"><span className="text-xs font-bold text-[#009CDE]">{prod.cost} pts</span><span className="text-xs text-gray-500">Stock: {prod.stock}</span></div>
                                 </div>
                                 <div className="flex gap-2">
@@ -545,6 +549,20 @@ const StoreManagerView = () => {
                                 <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Custo (Pts)</label><input type="number" className="w-full p-3 bg-gray-50 rounded-lg border border-gray-200" value={newProduct.cost} onChange={e => setNewProduct({ ...newProduct, cost: parseInt(e.target.value) })} /></div>
                                 <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Stock</label><input type="number" className="w-full p-3 bg-gray-50 rounded-lg border border-gray-200" value={newProduct.stock} onChange={e => setNewProduct({ ...newProduct, stock: parseInt(e.target.value) })} /></div>
                             </div>
+
+                            <div className="flex items-center gap-2 p-3 bg-blue-50 rounded-lg border border-blue-100">
+                                <input
+                                    type="checkbox"
+                                    id="is_featured"
+                                    className="w-4 h-4 text-[#002D72] rounded focus:ring-[#002D72]"
+                                    checked={newProduct.is_featured}
+                                    onChange={e => setNewProduct({ ...newProduct, is_featured: e.target.checked })}
+                                />
+                                <label htmlFor="is_featured" className="text-sm font-bold text-[#002D72] cursor-pointer selection:bg-none">
+                                    Destacar este produto na loja
+                                </label>
+                            </div>
+
                             <div>
                                 <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Imagem</label>
                                 <div className="space-y-3">
