@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Camera, Heart, MessageCircle, MoreHorizontal, TrendingUp, Trophy } from 'lucide-react';
 import { useLeaderboard } from '../hooks/useLeaderboard';
+import { useOfficeLeaderboard } from '../hooks/useOfficeLeaderboard';
 import { User } from '../types';
 
 const INITIAL_POSTS = [
@@ -46,6 +47,11 @@ const SocialView: React.FC<SocialViewProps> = ({ currentUser }) => {
         }));
     };
 
+    const { data: officeData, isLoading: isLoadingOffice } = useOfficeLeaderboard();
+    const topOffice = officeData?.[0]; // Get first place
+    const secondOfficePoints = officeData?.[1]?.total_points || 0;
+    const pointsDifference = topOffice ? topOffice.total_points - secondOfficePoints : 0;
+
     return (
         <div className="px-6 pb-24 pt-6 animate-fade-in bg-gray-50 min-h-full">
             <div className="flex items-center justify-between mb-6">
@@ -86,7 +92,19 @@ const SocialView: React.FC<SocialViewProps> = ({ currentUser }) => {
                 <div className="space-y-4">
                     <div className="bg-[#002D72] rounded-2xl p-4 text-white mb-4">
                         <div className="flex items-center gap-2 mb-2"><TrendingUp className="w-4 h-4 text-[#009CDE]" /><span className="text-xs font-bold uppercase tracking-wider">Top Escritório</span></div>
-                        <div className="flex justify-between items-end"><div><span className="text-2xl font-bold">Porto Office</span><p className="text-xs text-blue-200">Liderando por 1.200 pts</p></div><Trophy className="w-8 h-8 text-yellow-400" /></div>
+                        {isLoadingOffice ? (
+                            <div className="text-center py-4 text-blue-200 text-sm">A carregar topo escritório...</div>
+                        ) : topOffice ? (
+                            <div className="flex justify-between items-end">
+                                <div>
+                                    <span className="text-2xl font-bold">{topOffice.office}</span>
+                                    {pointsDifference > 0 && <p className="text-xs text-blue-200">Liderando por {pointsDifference} pts</p>}
+                                </div>
+                                <Trophy className="w-8 h-8 text-yellow-400" />
+                            </div>
+                        ) : (
+                            <div className="flex justify-between items-end"><div><span className="text-2xl font-bold">Sem dados</span></div><Trophy className="w-8 h-8 text-gray-400" /></div>
+                        )}
                     </div>
 
                     {isLoading ? (
@@ -98,7 +116,12 @@ const SocialView: React.FC<SocialViewProps> = ({ currentUser }) => {
                                 <div key={person.user_id} className={`flex items-center p-4 rounded-2xl transition-all duration-500 ${isMe ? 'bg-white border-2 border-[#009CDE] shadow-md' : 'bg-white border border-gray-100'}`}>
                                     <div className={`font-bold text-lg w-8 ${isMe ? 'text-[#002D72]' : 'text-gray-400'}`}>{person.rank}</div>
                                     <img src={person.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(person.full_name || 'User')}`} alt={person.full_name || 'User'} className="w-10 h-10 rounded-full border-2 border-white/20 mr-4 bg-gray-200 object-cover" />
-                                    <div className="flex-1"><h4 className={`font-bold text-sm text-gray-900`}>{person.full_name} {isMe && '(Tu)'}</h4><p className="text-xs text-gray-400">Membro KEO</p></div>
+                                    <div className="flex-1">
+                                        <h4 className={`font-bold text-sm text-gray-900`}>{person.full_name} {isMe && '(Tu)'}</h4>
+                                        <p className="text-xs text-gray-400">
+                                            {person.office ? `${person.office} • ` : ''} Membro KEO
+                                        </p>
+                                    </div>
                                     <div className="text-right"><p className="font-bold text-[#002D72]">{person.total_points}</p><p className="text-[10px] text-gray-400">pts</p></div>
                                 </div>
                             );

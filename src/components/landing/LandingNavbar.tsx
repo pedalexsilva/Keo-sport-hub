@@ -14,16 +14,16 @@ const LandingNavbar: React.FC = () => {
     ];
 
     return (
-        <nav className="w-full z-50 bg-white shadow-sm">
+        <nav className="w-full z-50 bg-white shadow-sm relative">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="flex justify-between items-center h-24">
+                <div className="flex justify-between items-center h-20 md:h-24">
                     {/* Left: Branding */}
                     <div className="flex items-center">
                         <Link to="/" className="flex items-center gap-2">
-                            <div className="bg-[#002D72] text-white px-3 py-1 rounded-[2px] shadow-sm">
-                                <span className="text-2xl font-bold tracking-widest font-sans">KEO</span>
+                            <div className="bg-[#002D72] text-white px-2 py-1 md:px-3 rounded-[2px] shadow-sm">
+                                <span className="text-xl md:text-2xl font-bold tracking-widest font-sans">KEO</span>
                             </div>
-                            <span className="text-[#009CDE] text-xl font-light tracking-wider">ACTIVE</span>
+                            <span className="text-[#009CDE] text-lg md:text-xl font-light tracking-wider">ACTIVE</span>
                         </Link>
                     </div>
 
@@ -54,8 +54,8 @@ const LandingNavbar: React.FC = () => {
                     </div>
 
                     {/* Mobile menu button (Only visible on small screens) */}
-                    <div className="md:hidden flex items-center absolute right-4">
-                        <button onClick={toggleMenu} className="text-gray-600 hover:text-[#002D72] focus:outline-none">
+                    <div className="md:hidden flex items-center">
+                        <button onClick={toggleMenu} className="text-gray-600 hover:text-[#002D72] focus:outline-none p-2">
                             {isOpen ? <X className="w-8 h-8" /> : <Menu className="w-8 h-8" />}
                         </button>
                     </div>
@@ -66,23 +66,24 @@ const LandingNavbar: React.FC = () => {
             {/* Mobile Menu */}
             {
                 isOpen && (
-                    <div className="md:hidden bg-white shadow-lg absolute w-full border-t border-gray-100">
-                        <div className="flex flex-col py-4">
+                    <div className="md:hidden fixed inset-0 top-[80px] z-40 bg-white/95 backdrop-blur-sm overflow-y-auto">
+                        <div className="flex flex-col py-4 h-full border-t border-gray-100">
                             {navLinks.map((link) => (
                                 <a
                                     key={link.name}
                                     href={link.href}
                                     onClick={toggleMenu}
-                                    className="px-6 py-4 text-sm font-bold text-gray-600 hover:bg-gray-50 hover:text-[#002D72] uppercase tracking-wider border-b border-gray-50"
+                                    className="px-6 py-6 text-lg font-bold text-gray-700 hover:bg-gray-50 hover:text-[#002D72] uppercase tracking-wider border-b border-gray-100 flex items-center justify-between"
                                 >
                                     {link.name}
+                                    {/* Chevron or indicator if needed, for simple links text is enough */}
                                 </a>
                             ))}
-                            <div className="p-6">
+                            <div className="p-6 mt-auto mb-20">
                                 <Link
                                     to="/login"
                                     onClick={toggleMenu}
-                                    className="block text-center bg-[#002D72] text-white py-3 rounded-full font-bold uppercase tracking-wide text-sm"
+                                    className="block text-center bg-[#002D72] text-white py-4 rounded-xl font-bold uppercase tracking-wide text-base shadow-lg hover:bg-[#001e4d] transition"
                                 >
                                     Login / Download App
                                 </Link>

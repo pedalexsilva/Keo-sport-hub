@@ -2,8 +2,16 @@ import React from 'react';
 import { getStravaAuthUrl } from '../services/strava';
 
 export const ConnectStravaButton = () => {
-    const handleConnect = () => {
-        window.location.href = getStravaAuthUrl();
+    const handleConnect = async () => {
+        try {
+            const url = await getStravaAuthUrl();
+            if (url) {
+                window.location.href = url;
+            }
+        } catch (error) {
+            console.error("Failed to initiate Strava connection:", error);
+            alert("Could not connect to Strava. Please try again.");
+        }
     };
 
     return (

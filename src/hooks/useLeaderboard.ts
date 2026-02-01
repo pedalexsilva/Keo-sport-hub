@@ -8,6 +8,7 @@ interface LeaderboardEntry {
     total_points: number;
     activity_count: number;
     rank: number;
+    office?: string;
 }
 
 export function useLeaderboard() {
@@ -16,7 +17,7 @@ export function useLeaderboard() {
         queryFn: async (): Promise<LeaderboardEntry[]> => {
             const { data, error } = await supabase
                 .from('leaderboard')
-                .select('*')
+                .select('user_id, full_name, avatar_url, total_points, activity_count, office')
                 .limit(50); // Top 50
 
             if (error) throw error;

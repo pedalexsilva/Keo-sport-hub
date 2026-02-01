@@ -27,7 +27,7 @@ import OnboardingPage from './pages/OnboardingPage';
 
 const AppLayout: React.FC = () => {
   const { user: authUser } = useAuth();
-  const { data: userProfile, isLoading: isProfileLoading } = useProfile(authUser?.id);
+  const { data: userProfile, isLoading: isProfileLoading, isFetching: isProfileFetching } = useProfile(authUser?.id);
   const { data: eventsData, isLoading: isEventsLoading } = useEvents();
   const joinEventMutation = useJoinEvent();
   const navigate = useNavigate();
@@ -47,7 +47,7 @@ const AppLayout: React.FC = () => {
 
   // Check for onboarding and redirect if needed
   useEffect(() => {
-    if (!isProfileLoading && userProfile && !userProfile.onboardingCompleted) {
+    if (!isProfileLoading && !isProfileFetching && userProfile && !userProfile.onboardingCompleted) {
       // We're inside AppLayout, which is under /app/* path.
       // However, we probably want Onboarding to be its own top-level route or inside App but full screen.
       // The current structure has AppLayout rendering Navigation/Header etc.
@@ -55,7 +55,7 @@ const AppLayout: React.FC = () => {
       // But if we navigate to /onboarding, we need that route to exist outside AppLayout if we want a clean screen.
       navigate('/onboarding');
     }
-  }, [userProfile, isProfileLoading, navigate]);
+  }, [userProfile, isProfileLoading, isProfileFetching, navigate]);
 
   const handlePurchase = (item: any) => {
     if (points >= item.cost) {

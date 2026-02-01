@@ -13,7 +13,18 @@ serve(async (req) => {
     }
 
     try {
-        const body = await req.json()
+        if (req.method !== 'POST') {
+            throw new Error('Method not allowed')
+        }
+
+        let body;
+        try {
+            body = await req.json()
+        } catch (e) {
+            console.error("JSON Parse Error:", e);
+            throw new Error('Invalid JSON body')
+        }
+
         const { code, type } = body
 
         // Environment Variables
@@ -24,8 +35,18 @@ serve(async (req) => {
         const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
 
         if (!STRAVA_CLIENT_ID || !STRAVA_CLIENT_SECRET || !STRAVA_ENCRYPTION_KEY || !SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
-            console.error("Missing Env Vars")
-            throw new Error('Server misconfiguration: Missing secrets or environment variables.')
+            console.error("Missing Env Vars: ", {
+                hasClientId: !!STRAVA_CLIENT_ID,
+                hasClientSecret: !!STRAVA_CLIENT_SECRET,
+                hasEncryptionKey: !!STRAVA_ENCRYPTION_KEY,
+                hasSupabaseUrl: !!SUPABASE_URL,
+                hasServiceKey: !!SUPABASE_SERVICE_ROLE_KEY
+            })
+            // Return 500 for server config error
+            return new Response(JSON.stringify({ error: 'Server configuration error' }), {
+                status: 500,
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            })
         }
 
         // Initialize Admin Client

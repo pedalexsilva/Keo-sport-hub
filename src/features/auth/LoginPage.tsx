@@ -40,6 +40,11 @@ export default function LoginPage() {
 
     const handleSignUp = async () => {
         // Client-side validation
+        if (!email || !password) {
+            setError("Por favor preencha email e palavra-passe.");
+            return;
+        }
+
         if (password.length < 6) {
             setError("Password must be at least 6 characters long.");
             return;
@@ -177,7 +182,7 @@ export default function LoginPage() {
                         <button
                             type="button"
                             onClick={handleSignUp}
-                            disabled={loading || !email || !password}
+                            disabled={loading}
                             className="group relative flex w-full justify-center rounded-full bg-white px-4 py-3.5 text-sm font-bold text-[#002D72] ring-2 ring-inset ring-[#002D72] hover:bg-blue-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#002D72] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                         >
                             Criar Conta Nova

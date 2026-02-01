@@ -14,8 +14,8 @@ const MissionSection: React.FC = () => {
                         />
                     </div>
                     <div className="lg:w-1/2">
-                        <h4 className="text-[#009CDE] font-bold uppercase tracking-widest mb-2">A Nossa Cultura</h4>
-                        <h2 className="text-4xl font-bold text-[#002D72] mb-6">Inovação além do Escritório</h2>
+                        <h4 className="text-[#009CDE] font-bold uppercase tracking-widest mb-2 text-sm md:text-base">A Nossa Cultura</h4>
+                        <h2 className="text-3xl md:text-4xl font-bold text-[#002D72] mb-6">Inovação além do Escritório</h2>
                         <p className="text-gray-600 mb-6 leading-relaxed">
                             Na KEO, desenhamos cidades sustentáveis e moldamos o futuro. A app <strong>KEO Active</strong> é a extensão dessa filosofia para a nossa saúde.
                         </p>
