@@ -40,26 +40,31 @@ const Navigation: React.FC = () => {
     ];
 
     return (
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-4 py-3 flex justify-between items-center z-50 md:max-w-md md:mx-auto md:rounded-b-3xl">
+        <nav
+            className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-4 py-3 flex justify-between items-center z-50 md:max-w-2xl lg:max-w-4xl md:mx-auto"
+            role="navigation"
+            aria-label="Navegação principal"
+        >
             {tabs.map((tab) => {
                 const Icon = ICON_MAP[tab.icon] || Home; // Fallback icon
                 return (
                     <NavLink
                         key={tab.id}
                         to={tab.path}
+                        aria-label={tab.label}
                         className={({ isActive }) => `flex flex-col items-center space-y-1 transition-colors duration-200 w-1/5 ${isActive ? 'text-[#002D72]' : 'text-gray-400 hover:text-gray-600'
                             }`}
                     >
                         {({ isActive }) => (
                             <>
-                                <Icon className={`w-5 h-5 ${isActive ? 'fill-current' : ''}`} strokeWidth={isActive ? 2.5 : 2} />
+                                <Icon className={`w-5 h-5 ${isActive ? 'fill-current' : ''}`} strokeWidth={isActive ? 2.5 : 2} aria-hidden="true" />
                                 <span className="text-[10px] font-medium">{tab.label}</span>
                             </>
                         )}
                     </NavLink>
                 );
             })}
-        </div>
+        </nav>
     );
 };
 

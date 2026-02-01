@@ -27,7 +27,7 @@ const HomeView: React.FC<HomeViewProps> = ({ user, stats, events, stravaConnecte
     return (
         <div className="px-6 pb-24 pt-6 animate-fade-in">
             <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold text-[#002D72]">Resumo Diário</h2>
+                <h2 className="text-2xl font-bold text-[#002D72]">Resumo Semanal</h2>
                 <button
                     onClick={stravaConnected ? onSync : onConnect}
                     disabled={isSyncing}

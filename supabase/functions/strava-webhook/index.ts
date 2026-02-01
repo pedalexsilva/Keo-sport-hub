@@ -132,10 +132,31 @@ serve(async (req) => {
 
             // Handle 'deauthorize' (revoke access)
             if (object_type === 'athlete' && aspect_type === 'update' && payload.updates?.authorized === 'false') {
-                // Cleanup user tokens
-                // Find user by owner_id and delete from strava_tokens
-                // This requires a reverse lookup or utilizing device_connections
-                // ... implementation skipped for brevity, but recommended.
+                console.log(`Deauthorization event received for Strava User ID: ${owner_id}`)
+
+                // 1. Find the user associated with this Strava ID
+                const { data: connection } = await supabase
+                    .from('device_connections')
+                    .select('user_id')
+                    .eq('platform', 'strava')
+                    .eq('provider_user_id', owner_id.toString())
+                    .single()
+
+                if (connection) {
+                    const userId = connection.user_id
+                    console.log(`Cleaning up connection for User ID: ${userId}`)
+
+                    // 2. Remove tokens
+                    await supabase.from('strava_tokens').delete().eq('user_id', userId);
+
+                    // 3. Mark connection inactive
+                    await supabase.from('device_connections')
+                        .update({ is_active: false })
+                        .eq('user_id', userId)
+                        .eq('platform', 'strava');
+                } else {
+                    console.log("No matching user found for deauthorization.")
+                }
             }
 
             return new Response('EVENT_RECEIVED', {

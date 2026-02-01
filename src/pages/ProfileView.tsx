@@ -35,13 +35,18 @@ const ProfileView: React.FC<ProfileViewProps> = ({ user, points, inventory, stra
         setTicket({ subject: '', description: '', priority: 'normal' });
     };
 
+    const [isConnecting, setIsConnecting] = useState(false);
+
     const handleConnectStrava = async () => {
+        if (isConnecting) return;
+        setIsConnecting(true);
         try {
             const url = await getStravaAuthUrl();
             if (url) window.location.href = url;
         } catch (error) {
             console.error("Failed to initiate connection", error);
             alert("Erro ao iniciar conexão com Strava. Verifique se o servidor está configurado.");
+            setIsConnecting(false);
         }
     };
 
@@ -148,9 +153,10 @@ const ProfileView: React.FC<ProfileViewProps> = ({ user, points, inventory, stra
                     ) : (
                         <button
                             onClick={handleConnectStrava}
-                            className="bg-[#0F172A] text-white px-6 py-2 rounded-lg font-bold text-sm hover:bg-black transition shadow-sm"
+                            disabled={isConnecting}
+                            className={`bg-[#0F172A] text-white px-6 py-2 rounded-lg font-bold text-sm hover:bg-black transition shadow-sm ${isConnecting ? 'opacity-75 cursor-wait' : ''}`}
                         >
-                            Conectar
+                            {isConnecting ? 'A Conectar...' : 'Conectar'}
                         </button>
                     )}
                 </div>

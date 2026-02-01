@@ -144,19 +144,22 @@ const AppLayout: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 font-sans text-gray-900 pb-20 md:pb-0">
-      {/* Desktop Wrapper / Mobile Container */}
-      <div className="md:max-w-md md:mx-auto md:h-screen md:overflow-y-auto md:border-x md:border-gray-200 md:shadow-xl md:relative bg-[#F8FAFC]">
+      {/* Accessibility: Skip Link */}
+      <a href="#main-content" className="skip-link">Saltar para conteúdo principal</a>
+
+      {/* Desktop Wrapper / Responsive Container */}
+      <div className="md:max-w-2xl lg:max-w-4xl md:mx-auto md:min-h-screen md:border-x md:border-gray-200 md:shadow-xl md:relative bg-[#F8FAFC]">
 
         {/* Notification Toast */}
         {notification && (
           <div className="fixed top-4 left-4 right-4 md:absolute md:top-24 md:left-4 md:right-4 z-[100] bg-green-500 text-white text-sm font-bold p-3 rounded-xl shadow-lg animate-fade-in flex items-center justify-center gap-2 text-center">
-            <CheckCircle2 className="w-5 h-5 flex-shrink-0" /> {notification}
+            <CheckCircle2 className="w-5 h-5 flex-shrink-0" aria-hidden="true" /> {notification}
           </div>
         )}
 
         <Header user={userProfile} />
 
-        <main className="relative">
+        <main id="main-content" className="relative">
           <Routes>
             <Route path="home" element={
               <HomeView
@@ -202,8 +205,8 @@ const AppLayout: React.FC = () => {
         <Navigation />
       </div>
 
-      {/* Desktop Background Art (Optional, from prompt) */}
-      <div className="fixed -z-10 top-0 left-0 w-full h-full bg-gray-200 hidden md:block">
+      {/* Desktop Background Art */}
+      <div className="fixed -z-10 top-0 left-0 w-full h-full bg-gray-200 hidden md:block" aria-hidden="true">
         <div className="absolute top-0 left-0 w-full h-1/2 bg-[#002D72]"></div>
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-white/10 text-9xl font-bold tracking-tighter select-none">KEO ACTIVE</div>
       </div>
