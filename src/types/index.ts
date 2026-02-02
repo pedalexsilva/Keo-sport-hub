@@ -57,3 +57,16 @@ export interface Challenge {
   targetPoints: number;
   rewardBadges: string[];
 }
+
+export type NotificationType = 'event_invite' | 'event_update' | 'new_event' | 'system' | 'challenge_alert';
+
+export interface Notification {
+  id: string;
+  user_id: string;
+  type: NotificationType;
+  title: string;
+  message: string;
+  read: boolean;
+  metadata?: any;
+  created_at: string;
+}

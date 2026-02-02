@@ -1,6 +1,6 @@
 import React from 'react';
-import { MapPin, Bell } from 'lucide-react';
-import { User } from '../types';
+import { MapPin } from 'lucide-react';
+import { NotificationBell } from './notifications/NotificationBell';
 
 interface HeaderProps {
   user: {
@@ -23,13 +23,10 @@ const Header: React.FC<HeaderProps> = ({ user }) => (
         </div>
       </div>
       <div className="flex gap-3">
-        <button
+        <NotificationBell
           className="p-2 bg-white/10 rounded-full hover:bg-white/20 transition backdrop-blur-sm relative cursor-pointer"
-          aria-label="Notificações - 1 nova"
-        >
-          <Bell className="w-5 h-5 text-white" aria-hidden="true" />
-          <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border border-[#002D72]" aria-hidden="true"></span>
-        </button>
+          iconClassName="w-5 h-5 text-white"
+        />
       </div>
     </div>
   </header>
