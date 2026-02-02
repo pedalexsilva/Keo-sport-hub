@@ -25,6 +25,14 @@ serve(async (req) => {
 
         const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!)
 
+        const logs: string[] = []
+        function log(msg: string) {
+            console.log(msg)
+            logs.push(msg)
+        }
+
+        log(`Starting process for stage_id: ${stage_id}`)
+
         // 2. Fetch Stage Details
         const { data: stage, error: stageError } = await supabase
             .from('event_stages')
@@ -32,7 +40,11 @@ serve(async (req) => {
             .eq('id', stage_id)
             .single()
 
-        if (stageError || !stage) throw new Error('Stage not found')
+        if (stageError || !stage) {
+            log(`Error fetching stage: ${stageError?.message}`)
+            throw new Error('Stage not found')
+        }
+        log(`Found stage: ${stage.name} on ${stage.date}`)
 
         // 3. Fetch Event Participants
         const { data: participants, error: partError } = await supabase
@@ -40,13 +52,18 @@ serve(async (req) => {
             .select('user_id')
             .eq('event_id', stage.event_id)
 
-        if (partError) throw new Error('Failed to fetch participants')
+        if (partError) {
+             log(`Error fetching participants: ${partError.message}`)
+             throw new Error('Failed to fetch participants')
+        }
+        log(`Found ${participants?.length || 0} participants`)
 
         const results = []
 
         // 4. Process Each Participant
-        for (const p of participants) {
+        for (const p of participants || []) {
             try {
+                log(`Processing user ${p.user_id}...`)
                 // A. Get Tokens
                 const { data: tokens, error: tokenError } = await supabase.rpc('get_strava_tokens', {
                     p_user_id: p.user_id,
@@ -54,7 +71,7 @@ serve(async (req) => {
                 })
 
                 if (tokenError || !tokens || tokens.length === 0) {
-                    console.log(`No tokens for user ${p.user_id}, skipping`)
+                    log(`-> No tokens found (or RPC error: ${tokenError?.message}). Skipping.`)
                     continue;
                 }
 
@@ -62,7 +79,7 @@ serve(async (req) => {
 
                 // B. Refresh Token if needed
                 if (new Date(expires_at).getTime() < Date.now()) {
-                    console.log(`Refreshing token for user ${p.user_id}`)
+                    log(`-> Token expired at ${expires_at}. Refreshing...`)
                     const refreshRes = await fetch('https://www.strava.com/oauth/token', {
                         method: 'POST',
                         body: new URLSearchParams({
@@ -74,7 +91,7 @@ serve(async (req) => {
                     })
                     const refreshData = await refreshRes.json()
                     if (!refreshRes.ok) {
-                        console.error(`Failed to refresh token for ${p.user_id}`, refreshData)
+                        log(`-> Failed to refresh token: ${JSON.stringify(refreshData)}`)
                         continue;
                     }
 
@@ -90,28 +107,39 @@ serve(async (req) => {
                         p_expires_at: expires_at,
                         p_encryption_key: STRAVA_ENCRYPTION_KEY
                     })
+                    log(`-> Token refreshed successfully.`)
                 }
 
                 // C. Find Activity on Stage Date
+                // Important: Set time to 00:00:00 and 23:59:59 of the stage date
+                // Note: 'date' in DB is YYYY-MM-DD string. new Date('YYYY-MM-DD') assumes UTC usually.
                 const stageDate = new Date(stage.date)
                 const after = Math.floor(stageDate.setHours(0, 0, 0, 0) / 1000)
                 const before = Math.floor(stageDate.setHours(23, 59, 59, 999) / 1000)
+                
+                log(`-> Fetching activities between ${after} (00:00) and ${before} (23:59)`)
 
                 const activitiesRes = await fetch(`https://www.strava.com/api/v3/athlete/activities?after=${after}&before=${before}`, {
                     headers: { 'Authorization': `Bearer ${access_token}` }
                 })
 
-                if (!activitiesRes.ok) continue;
+                if (!activitiesRes.ok) {
+                    log(`-> Strava API error: ${activitiesRes.status} ${await activitiesRes.text()}`)
+                    continue;
+                }
 
                 const activities = await activitiesRes.json()
+                log(`-> Found ${activities.length} activities.`)
+                
                 if (activities.length === 0) {
-                    // Mark DNF? Or just skip? Let's skip for now, maybe mark DNF if explicitly requested
+                    log(`-> No matching activities found in time window.`)
                     continue;
                 }
 
                 // Pick the longest activity if multiple? Or match by type?
                 // For now, take the first one.
                 const activitySummary = activities[0]
+                log(`-> Selected activity: ${activitySummary.id} (${activitySummary.name})`)
 
                 // D. Fetch Detailed Activity (for Segments)
                 const detailRes = await fetch(`https://www.strava.com/api/v3/activities/${activitySummary.id}?include_all_efforts=true`, {
@@ -150,11 +178,15 @@ serve(async (req) => {
                         updated_at: new Date().toISOString()
                     }, { onConflict: 'stage_id, user_id' })
 
-                if (upsertError) console.error(`Error saving result for ${p.user_id}`, upsertError)
-                else results.push({ user_id: p.user_id, time: elapsedTime, points: mountainPoints })
+                if (upsertError) {
+                    log(`-> Error saving result: ${upsertError.message}`)
+                } else {
+                    results.push({ user_id: p.user_id, time: elapsedTime, points: mountainPoints })
+                    log(`-> Result saved successfully.`)
+                }
 
             } catch (err) {
-                console.error(`Error processing user ${p.user_id}:`, err)
+                log(`Error processing user ${p.user_id}: ${err.message}`)
             }
         }
 
@@ -164,7 +196,8 @@ serve(async (req) => {
         return new Response(JSON.stringify({ 
             success: true, 
             processed: results.length,
-            message: "Results synced as 'Pending'. Please review in Google Sheets."
+            message: "Results synced as 'Pending'. Please review in Google Sheets.",
+            logs: logs 
         }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         })

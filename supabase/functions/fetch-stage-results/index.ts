@@ -63,6 +63,8 @@ serve(async (req) => {
     if (resultsError) throw resultsError
 
     // SMART FETCH: If no results found, try to process them automatically
+    let processLogs = undefined;
+    
     if (!rawResults || rawResults.length === 0) {
         console.log('[Info] No results found. Triggering auto-process via strava-process-stage...')
         
@@ -78,6 +80,13 @@ serve(async (req) => {
                 },
                 body: JSON.stringify({ stage_id: stageId })
             })
+
+            const processData = await processRes.json().catch(() => ({}))
+            
+            // Capture logs if available
+            if (processData.logs) {
+                processLogs = processData.logs
+            }
 
             if (!processRes.ok) {
                 console.error('[Error] Auto-process failed:', await processRes.text())
@@ -124,7 +133,10 @@ serve(async (req) => {
             stage_name: stageData.name,
             event_title: stageData.event.title
         },
-        results: results
+        results: results,
+        debug_info: {
+            process_logs: processLogs
+        }
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
