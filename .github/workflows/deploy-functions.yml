@@ -10,6 +10,12 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    
+    # Prevent parallel runs of the same workflow to avoid API rate limits
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}
+      cancel-in-progress: true
+
     env:
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
       PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
@@ -21,17 +27,5 @@ jobs:
         with:
           version: latest
 
-      - name: Deploy strava-auth
-        run: supabase functions deploy strava-auth --project-ref $PROJECT_ID --no-verify-jwt
-
-      - name: Deploy strava-webhook
-        run: supabase functions deploy strava-webhook --project-ref $PROJECT_ID --no-verify-jwt
-
-      - name: Deploy strava-sync
-        run: supabase functions deploy strava-sync --project-ref $PROJECT_ID --no-verify-jwt
-
-      - name: Deploy strava-process-stage
-        run: supabase functions deploy strava-process-stage --project-ref $PROJECT_ID --no-verify-jwt
-
-      - name: Deploy strava-manage-webhook
-        run: supabase functions deploy strava-manage-webhook --project-ref $PROJECT_ID --no-verify-jwt
+      - name: Deploy all functions
+        run: supabase functions deploy --project-ref $PROJECT_ID --no-verify-jwt
