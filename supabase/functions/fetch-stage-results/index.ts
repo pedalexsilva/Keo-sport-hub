@@ -23,25 +23,22 @@ serve(async (req) => {
     // Initialize Supabase Client
     const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? ''
     const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY') ?? ''
+    
+    // HARD FIX: Ignore incoming Auth Header for now to prevent JWT errors.
+    // We force Public/Anon access.
+    const authHeader = null 
+    
+    /* 
+    // Previous Code (Commented out):
     let authHeader = req.headers.get('Authorization')
-
-    console.log(`[Debug] Incoming Auth Header: '${authHeader}'`)
-
-    // Validate Auth Header: Ignore if explicitly 'null', 'undefined', or just 'Bearer '
-    if (authHeader && (
-        authHeader.trim() === 'Bearer' || 
-        authHeader.includes('null') || 
-        authHeader.includes('undefined') ||
-        authHeader.length < 20 // Basic sanity check for JWT length
-    )) {
-      console.log('[Debug] Invalid Auth Header detected. Falling back to Anon Key.')
-      authHeader = null
-    }
+    if (authHeader && (...)) { authHeader = null }
+    */
 
     const supabase = createClient(
       supabaseUrl,
       supabaseAnonKey,
-      authHeader ? { global: { headers: { Authorization: authHeader } } } : undefined
+      // authHeader is forced to null, so this third arg is always undefined
+      undefined 
     )
 
     // 1. Fetch Stage & Event Details
