@@ -53,15 +53,32 @@ serve(async (req) => {
     
     if (stageError) throw stageError
 
-    // 2. Fetch Results with User Profile
-    const { data: results, error: resultsError } = await supabase
+    // 2. Fetch Results (without join first to avoid schema errors)
+    const { data: rawResults, error: resultsError } = await supabase
         .from('stage_results')
-        .select(`
-            *,
-            user:profiles(full_name, office)
-        `)
+        .select('*')
         .eq('stage_id', stageId)
         .order('elapsed_time_seconds', { ascending: true })
+
+    if (resultsError) throw resultsError
+
+    // 3. Manually fetch profiles for these results
+    const userIds = rawResults.map(r => r.user_id)
+    const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, full_name, office')
+        .in('id', userIds)
+
+    if (profilesError) throw profilesError
+
+    // 4. Merge profiles into results
+    const results = rawResults.map(r => {
+        const profile = profiles.find(p => p.id === r.user_id)
+        return {
+            ...r,
+            user: profile ? { full_name: profile.full_name, office: profile.office } : { full_name: 'Unknown', office: '' }
+        }
+    })
 
     if (resultsError) throw resultsError
 
