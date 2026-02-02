@@ -31,9 +31,9 @@ export function useGeneralClassification(eventId?: string) {
                 .from('general_classification')
                 .select(`
                     *,
-                    profile:auth.users!user_id(
+                    profile:profiles!user_id(
                         email,
-                        raw_user_meta_data
+                        full_name
                     )
                 `)
                 .eq('event_id', eventId)
@@ -44,7 +44,7 @@ export function useGeneralClassification(eventId?: string) {
             return data.map((d: any) => ({
                 ...d,
                 profile: {
-                    name: d.profile?.raw_user_meta_data?.name || d.profile?.email || 'Unknown',
+                    name: d.profile?.full_name || d.profile?.email || 'Unknown',
                     email: d.profile?.email
                 }
             })) as GCResult[];
@@ -62,9 +62,9 @@ export function useMountainClassification(eventId?: string) {
                 .from('mountain_classification')
                 .select(`
                     *,
-                    profile:auth.users!user_id(
+                    profile:profiles!user_id(
                         email,
-                        raw_user_meta_data
+                        full_name
                     )
                 `)
                 .eq('event_id', eventId)
@@ -74,7 +74,7 @@ export function useMountainClassification(eventId?: string) {
             return data.map((d: any) => ({
                 ...d,
                 profile: {
-                    name: d.profile?.raw_user_meta_data?.name || d.profile?.email || 'Unknown',
+                    name: d.profile?.full_name || d.profile?.email || 'Unknown',
                     email: d.profile?.email
                 }
             })) as MountainResult[];
