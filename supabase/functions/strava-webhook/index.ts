@@ -169,29 +169,16 @@ serve(async (req) => {
                                     user_id: userId,
                                     elapsed_time: elapsedTime,
                                     mountain_points: mountainPoints,
-                                    strava_activity_id: act.id.toString()
+                                    strava_activity_id: act.id.toString(),
+                                    status: 'pending' // Default to pending for review
                                 }, { onConflict: 'stage_id, user_id' })
 
                             if (resultError) {
                                 console.error('Error saving result:', resultError)
                             } else {
-                                // Update Leaderboard
-                                await supabase.rpc('update_event_leaderboard', {
-                                    p_event_id: stage.event_id
-                                })
-
-                                // NOTIFICATION (COMPETITIVE)
-                                await supabase.from('notifications').insert({
-                                    user_id: userId,
-                                    title: 'Resultado Disponível! 🎉',
-                                    message: `A tua atividade na etapa "${stage.name}" foi processada via Strava. Tempo: ${new Date(elapsedTime * 1000).toISOString().substr(11, 8)}.`,
-                                    type: 'stage_result',
-                                    metadata: {
-                                        event_id: stage.event_id,
-                                        stage_id: stage.id,
-                                        activity_id: act.id
-                                    }
-                                })
+                                console.log(`Result saved as PENDING for ${stage.name}.`)
+                                // REMOVED: Immediate Leaderboard Update
+                                // REMOVED: Immediate Notification (moved to Finalize)
                             }
                         }
                     } else {

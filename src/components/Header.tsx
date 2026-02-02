@@ -10,9 +10,11 @@ interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = ({ user }) => (
-  <header className="pt-12 pb-6 px-6 bg-[#002D72] text-white rounded-b-[2rem] shadow-lg relative overflow-hidden transition-all duration-300">
-    <div className="absolute top-0 right-0 w-32 h-32 bg-[#009CDE] rounded-full opacity-20 -mr-10 -mt-10 blur-xl" aria-hidden="true"></div>
-    <div className="absolute bottom-0 left-0 w-24 h-24 bg-purple-500 rounded-full opacity-20 -ml-10 -mb-10 blur-xl" aria-hidden="true"></div>
+  <header className="pt-12 pb-6 px-6 bg-[#002D72] text-white rounded-b-[2rem] shadow-lg relative transition-all duration-300">
+    <div className="absolute inset-0 overflow-hidden rounded-b-[2rem]">
+      <div className="absolute top-0 right-0 w-32 h-32 bg-[#009CDE] rounded-full opacity-20 -mr-10 -mt-10 blur-xl" aria-hidden="true"></div>
+      <div className="absolute bottom-0 left-0 w-24 h-24 bg-purple-500 rounded-full opacity-20 -ml-10 -mb-10 blur-xl" aria-hidden="true"></div>
+    </div>
 
     <div className="relative z-10 flex justify-between items-start mb-6">
       <div>

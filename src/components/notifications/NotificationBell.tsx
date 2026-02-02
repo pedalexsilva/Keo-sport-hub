@@ -42,7 +42,7 @@ export const NotificationBell = ({ className, iconClassName }: NotificationBellP
             </button>
 
             {isOpen && (
-                <div className="absolute right-0 mt-2 w-80 md:w-96 bg-white rounded-xl shadow-2xl border border-gray-100 z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200 origin-top-right">
+                <div className="absolute right-0 mt-2 w-80 md:w-96 max-w-[90vw] bg-white rounded-xl shadow-2xl border border-gray-100 z-50 overflow-hidden animate-scale-in origin-top-right">
                     <NotificationList onClose={() => setIsOpen(false)} />
                 </div>
             )}

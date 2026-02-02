@@ -136,7 +136,7 @@ serve(async (req) => {
                     }
                 }
 
-                // F. Save Stage Result
+                // F. Save Stage Result (PENDING)
                 const { error: upsertError } = await supabase
                     .from('stage_results')
                     .upsert({
@@ -146,8 +146,9 @@ serve(async (req) => {
                         elapsed_time_seconds: elapsedTime,
                         mountain_points: mountainPoints,
                         is_dnf: false,
+                        status: 'pending', // FORCE PENDING for human review
                         updated_at: new Date().toISOString()
-                    })
+                    }, { onConflict: 'stage_id, user_id' })
 
                 if (upsertError) console.error(`Error saving result for ${p.user_id}`, upsertError)
                 else results.push({ user_id: p.user_id, time: elapsedTime, points: mountainPoints })
@@ -157,52 +158,14 @@ serve(async (req) => {
             }
         }
 
-        // 5. Update Leaderboards (GC & Mountain)
-        // This is heavy, maybe move to a separate RPC or keep here.
-        // We need to sum up all stages for this event.
+        // 5. NO AUTOMATIC LEADERBOARD UPDATE
+        // We now rely on the "Finalize" step in Google Sheets.
 
-        // Fetch all stage results for this event
-        const { data: allResults } = await supabase
-            .from('stage_results')
-            .select(`
-                user_id,
-                elapsed_time_seconds,
-                mountain_points,
-                event_stages!inner(event_id)
-            `)
-            .eq('event_stages.event_id', stage.event_id)
-            .eq('is_dnf', false)
-
-        if (allResults) {
-            // Aggregate by User
-            const userAgg = {}
-            for (const r of allResults) {
-                if (!userAgg[r.user_id]) userAgg[r.user_id] = { time: 0, points: 0 }
-                userAgg[r.user_id].time += r.elapsed_time_seconds
-                userAgg[r.user_id].points += r.mountain_points
-            }
-
-            // Update Tables
-            for (const [uid, stats] of Object.entries(userAgg)) {
-                // GC
-                await supabase.from('general_classification').upsert({
-                    event_id: stage.event_id,
-                    user_id: uid,
-                    total_time_seconds: (stats as any).time,
-                    updated_at: new Date().toISOString()
-                }, { onConflict: 'event_id, user_id' })
-
-                // Mountain
-                await supabase.from('mountain_classification').upsert({
-                    event_id: stage.event_id,
-                    user_id: uid,
-                    total_points: (stats as any).points,
-                    updated_at: new Date().toISOString()
-                }, { onConflict: 'event_id, user_id' })
-            }
-        }
-
-        return new Response(JSON.stringify({ success: true, processed: results.length }), {
+        return new Response(JSON.stringify({ 
+            success: true, 
+            processed: results.length,
+            message: "Results synced as 'Pending'. Please review in Google Sheets."
+        }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         })
 
