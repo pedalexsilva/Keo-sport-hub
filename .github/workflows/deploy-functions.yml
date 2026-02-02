@@ -29,3 +29,9 @@ jobs:
 
       - name: Deploy strava-sync
         run: supabase functions deploy strava-sync --project-ref $PROJECT_ID --no-verify-jwt
+
+      - name: Deploy strava-process-stage
+        run: supabase functions deploy strava-process-stage --project-ref $PROJECT_ID --no-verify-jwt
+
+      - name: Deploy strava-manage-webhook
+        run: supabase functions deploy strava-manage-webhook --project-ref $PROJECT_ID --no-verify-jwt

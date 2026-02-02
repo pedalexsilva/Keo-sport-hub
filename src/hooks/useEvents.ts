@@ -89,10 +89,7 @@ export function useCreateEvent() {
 
             if (error) throw error;
 
-            // Auto-join creator?
-            await supabase
-                .from('event_participants')
-                .insert({ event_id: data.id, user_id: user.id });
+            // Removed auto-join creator logic as per requirement
 
             return data;
         },

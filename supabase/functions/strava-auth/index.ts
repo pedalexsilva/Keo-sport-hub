@@ -60,7 +60,19 @@ serve(async (req) => {
 
             const redirectUri = `${req.headers.get('origin')}/strava/callback`
             const scope = 'read,activity:read_all,profile:read_all'
-            const url = `https://www.strava.com/oauth/authorize?client_id=${STRAVA_CLIENT_ID}&response_type=code&redirect_uri=${redirectUri}&approval_prompt=force&scope=${scope}&state=${state}`
+            
+            const params = new URLSearchParams({
+                client_id: STRAVA_CLIENT_ID,
+                response_type: 'code',
+                redirect_uri: redirectUri,
+                approval_prompt: 'force',
+                scope: scope,
+                state: state
+            })
+
+            const url = `https://www.strava.com/oauth/authorize?${params.toString()}`
+
+            console.log('Generated Auth URL with redirect:', redirectUri) // Debug log
 
             return new Response(JSON.stringify({ url }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
         }
