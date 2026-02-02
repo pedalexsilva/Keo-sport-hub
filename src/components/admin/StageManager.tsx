@@ -75,8 +75,8 @@ export const StageManager = ({ eventId, onClose }: StageManagerProps) => {
         if (!confirm("Isto irá processar os resultados desta etapa via Strava API. Continuar?")) return;
         setProcessingId(stageId);
         try {
-            await processStage.mutateAsync(stageId);
-            alert("Resultados processados com sucesso!");
+            const result = await processStage.mutateAsync(stageId);
+            alert(`Processamento concluído! ${result.processed} resultados encontrados e salvos.`);
         } catch (error: any) {
             alert("Erro: " + error.message);
         } finally {
