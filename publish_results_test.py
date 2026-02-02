@@ -44,14 +44,8 @@ def test_publish_results(stage_id, result_id, time_seconds=3600):
         print(f"An error occurred: {e}")
 
 if __name__ == "__main__":
-    if len(sys.argv) > 2:
-        s_id = sys.argv[1]
-        r_id = sys.argv[2]
-        test_publish_results(s_id, r_id)
-    else:
-        print("Usage: python publish_results_test.py <STAGE_ID> <RESULT_ID>")
-        s_id = input("Enter Stage ID: ").strip()
-        r_id = input("Enter Result ID (from fetch test): ").strip()
-        
-        if s_id and r_id:
-            test_publish_results(s_id, r_id)
+    # Hardcoded IDs for testing
+    STAGE_ID = "22f210c3-72ba-4ecb-8a54-43268401053f"
+    RESULT_ID = "5fdc87c5-aab8-4021-bfdc-8a10b1bdfe4d"
+    
+    test_publish_results(STAGE_ID, RESULT_ID)

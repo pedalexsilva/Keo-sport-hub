@@ -18,6 +18,62 @@ interface EventsViewProps {
     user: any;
 }
 
+// Add missing imports
+import { useEventLeaderboard } from '../hooks/useEventLeaderboard';
+import { useAuth } from '../features/auth/AuthContext';
+
+const EventResultsSummary = ({ eventId }: { eventId: string }) => {
+    const { data: leaderboard, isLoading } = useEventLeaderboard(eventId, 'gc');
+    const { user } = useAuth();
+
+    if (isLoading) return <div className="text-sm text-gray-500">A carregar resultados...</div>;
+
+    if (!leaderboard || leaderboard.length === 0) {
+        return (
+            <div>
+                <h3 className="text-lg font-bold text-[#002D72] mb-4 flex items-center gap-2">
+                    <Trophy className="w-5 h-5 text-gray-400" /> Classificação
+                </h3>
+                <p className="text-gray-500 italic text-sm">Os resultados oficiais ainda não estão disponíveis.</p>
+            </div>
+        );
+    }
+
+    return (
+        <div className="mb-8">
+            <h3 className="text-lg font-bold text-[#002D72] mb-4 flex items-center gap-2">
+                <Trophy className="w-5 h-5 text-yellow-500" /> Classificação Oficial
+            </h3>
+
+            <div className="space-y-3 bg-gray-50 p-4 rounded-xl border border-gray-100">
+                {leaderboard.slice(0, 3).map((result) => (
+                    <div key={result.user_id} className={`flex items-center justify-between ${result.rank === 1 ? 'font-bold text-[#002D72]' : 'text-gray-700'}`}>
+                        <div className="flex items-center gap-3">
+                            <span className={`w-6 h-6 flex items-center justify-center rounded-full text-xs ${result.rank === 1 ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-200 text-gray-600'}`}>
+                                {result.rank}
+                            </span>
+                            <div className="flex items-center gap-2">
+                                <span className="text-sm">{result.user?.full_name || 'Atleta'}</span>
+                                {result.user_id === user?.id && <span className="text-[10px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full">VOCÊ</span>}
+                            </div>
+                        </div>
+                        <span className="font-mono text-sm">
+                            {result.rank === 1 ?
+                                new Date(result.total_time_seconds * 1000).toISOString().substr(11, 8) :
+                                `+ ${new Date(result.gap_seconds! * 1000).toISOString().substr(11, 8)}`
+                            }
+                        </span>
+                    </div>
+                ))}
+            </div>
+
+            <div className="mt-4 text-right">
+                <a href="/leaderboard" className="text-sm font-bold text-[#009CDE] hover:underline">Ver classificação completa →</a>
+            </div>
+        </div>
+    );
+};
+
 // Helper to determine if an event is in the past
 const isPastEvent = (date: string) => new Date(date) < new Date();
 
@@ -59,12 +115,7 @@ const EventsView: React.FC<EventsViewProps> = ({ events, onJoin, user }) => {
                 <div className="px-6 py-6">
                     {isPast ? (
                         <div>
-                            <h3 className="text-lg font-bold text-[#002D72] mb-4 flex items-center gap-2">
-                                <Trophy className="w-5 h-5 text-yellow-500" /> Classificação (Simulada)
-                            </h3>
-                            <div className="space-y-3">
-                                <p className="text-gray-500 italic text-sm">Os resultados detalhados ainda não estão disponíveis.</p>
-                            </div>
+                            <EventResultsSummary eventId={selectedEvent.id} />
                         </div>
                     ) : (
                         <div>
