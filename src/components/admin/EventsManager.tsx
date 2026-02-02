@@ -25,6 +25,7 @@ export const EventsManager = () => {
         description: '',
         image: '',
         maxParticipants: 0,
+        mode: 'competitive',
         status: 'open'
     });
 
@@ -47,6 +48,7 @@ export const EventsManager = () => {
             description: '',
             image: '',
             maxParticipants: undefined,
+            mode: 'competitive',
             status: 'open'
         });
         setImageFile(null);
@@ -271,6 +273,18 @@ export const EventsManager = () => {
                                         onChange={e => setCurrentEvent({ ...currentEvent, type: e.target.value as ActivityType })}
                                     >
                                         {Object.values(ActivityType).map(t => <option key={t} value={t}>{t}</option>)}
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Modo de Evento</label>
+                                    <select
+                                        className="w-full p-3 bg-gray-50 rounded-lg border border-gray-200 outline-none"
+                                        value={currentEvent.mode || 'competitive'}
+                                        onChange={e => setCurrentEvent({ ...currentEvent, mode: e.target.value as any })}
+                                    >
+                                        <option value="competitive">Competitivo (Rankings + Etapas)</option>
+                                        <option value="social">Social (Apenas Presença)</option>
                                     </select>
                                 </div>
 

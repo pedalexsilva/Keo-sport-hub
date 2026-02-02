@@ -131,32 +131,32 @@ serve(async (req) => {
                 }
 
                 // =========================================================================
-                // AUTOMATION: CHECK FOR STAGE MATCH
+                // AUTOMATION: CHECK FOR STAGE MATCH (COMPETITIVE) OR SOCIAL EVENT
                 // =========================================================================
                 try {
                     const activityDate = new Date(act.start_date).toISOString().split('T')[0] // YYYY-MM-DD
 
-                    // Find stages happening on this date
+                    // 1. Find matching stages
                     const { data: matchingStages, error: stageError } = await supabase
                         .from('event_stages')
                         .select('id, name, event_id, mountain_segment_ids')
                         .eq('date', activityDate)
 
                     if (!stageError && matchingStages && matchingStages.length > 0) {
+                        console.log(`Found ${matchingStages.length} matching stages for date ${activityDate}`)
+
                         for (const stage of matchingStages) {
-                            console.log(`Matching Stage found: ${stage.name} (${stage.id})`)
+                            // Calculate elapsed time (moving_time)
+                            const elapsedTime = act.moving_time;
 
-                            // Calculate Results for this stage
-                            const elapsedTime = act.elapsed_time
-                            let mountainPoints = 0
-
+                            // Calculate Mountain Points
+                            let mountainPoints = 0;
                             if (stage.mountain_segment_ids && stage.mountain_segment_ids.length > 0) {
-                                const efforts = act.segment_efforts || []
-                                const targetSegments = new Set(stage.mountain_segment_ids)
-
-                                for (const effort of efforts) {
-                                    if (targetSegments.has(effort.segment.id.toString())) {
-                                        mountainPoints += 10 // Default points (revise logic if needed)
+                                const efforts = act.segment_efforts || [];
+                                for (const segmentId of stage.mountain_segment_ids) {
+                                    const matchedEffort = efforts.find((e: any) => e.segment.id === segmentId);
+                                    if (matchedEffort) {
+                                        mountainPoints += 10; // Default 10 pts per segment
                                     }
                                 }
                             }
@@ -167,38 +167,64 @@ serve(async (req) => {
                                 .upsert({
                                     stage_id: stage.id,
                                     user_id: userId,
-                                    strava_activity_id: act.id.toString(),
-                                    elapsed_time_seconds: elapsedTime,
+                                    elapsed_time: elapsedTime,
                                     mountain_points: mountainPoints,
-                                    is_dnf: false,
-                                    updated_at: new Date().toISOString()
+                                    strava_activity_id: act.id.toString()
+                                }, { onConflict: 'stage_id, user_id' })
+
+                            if (resultError) {
+                                console.error('Error saving result:', resultError)
+                            } else {
+                                // Update Leaderboard
+                                await supabase.rpc('update_event_leaderboard', {
+                                    p_event_id: stage.event_id
                                 })
 
-                            if (!resultError) {
-                                console.log(`Stage result saved for user ${userId} in stage ${stage.id}`)
-
-                                // OPTIONAL: Trigger Leaderboard Calculation (if not handled by cron/triggers)
-                                // Only update for this event to save resources
-                                await supabase.rpc('update_event_leaderboard', { p_event_id: stage.event_id }).catch(e => console.error("Leaderboard update failed", e))
-
-                                // NOTIFICATION
+                                // NOTIFICATION (COMPETITIVE)
                                 await supabase.from('notifications').insert({
                                     user_id: userId,
                                     title: 'Resultado Disponível! 🎉',
                                     message: `A tua atividade na etapa "${stage.name}" foi processada via Strava. Tempo: ${new Date(elapsedTime * 1000).toISOString().substr(11, 8)}.`,
                                     type: 'stage_result',
-                                    metadata: { 
-                                        event_id: stage.event_id, 
-                                        stage_id: stage.id, 
-                                        activity_id: act.id 
+                                    metadata: {
+                                        event_id: stage.event_id,
+                                        stage_id: stage.id,
+                                        activity_id: act.id
                                     }
                                 })
-                            } else {
-                                console.error(`Failed to save stage result: ${resultError.message}`)
                             }
                         }
                     } else {
-                        console.log(`No stages found for date ${activityDate}`)
+                        // 2. NO STAGE FOUND - CHECK FOR SOCIAL EVENTS
+                        console.log(`No stages for ${activityDate}. Checking for SOCIAL events...`);
+                        
+                        const startOfDay = `${activityDate}T00:00:00`;
+                        const endOfDay = `${activityDate}T23:59:59`;
+
+                        const { data: socialEvents } = await supabase
+                            .from('events')
+                            .select('id, title')
+                            .eq('mode', 'social')
+                            .gte('date', startOfDay)
+                            .lte('date', endOfDay);
+
+                        if (socialEvents && socialEvents.length > 0) {
+                            for (const event of socialEvents) {
+                                console.log(`Processing Social Event: ${event.title}`);
+                                
+                                // NOTIFICATION (SOCIAL)
+                                await supabase.from('notifications').insert({
+                                    user_id: userId,
+                                    title: 'Participação Detetada! 👋',
+                                    message: `A tua atividade conta para o evento "${event.title}". Obrigado por participares!`,
+                                    type: 'success', 
+                                    metadata: {
+                                        event_id: event.id,
+                                        activity_id: act.id
+                                    }
+                                })
+                            }
+                        }
                     }
                 } catch (autoError) {
                     console.error("Automation Logic Error:", autoError)

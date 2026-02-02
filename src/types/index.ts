@@ -43,6 +43,7 @@ export interface Event {
   date: string;
   location: string;
   type: ActivityType;
+  mode: 'social' | 'competitive';
   participants: Participant[]; // Updated to store full objects
   image: string;
   creatorId: string;
