@@ -20,10 +20,15 @@ serve(async (req) => {
     }
 
     // Initialize Supabase Client
+    // Initialize Supabase Client
+    const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? ''
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY') ?? ''
+    const authHeader = req.headers.get('Authorization')
+
     const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      { global: { headers: { Authorization: req.headers.get('Authorization')! } } }
+      supabaseUrl,
+      supabaseAnonKey,
+      authHeader ? { global: { headers: { Authorization: authHeader } } } : undefined
     )
 
     // 1. Fetch Stage & Event Details
