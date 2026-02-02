@@ -29,7 +29,8 @@ create policy "Users can insert own activities"
   with check ( auth.uid() = user_id );
 
 -- Create Leaderboard View (Joining with Profiles)
-create or replace view leaderboard as
+drop view if exists leaderboard;
+create view leaderboard as
   select 
     p.id as user_id,
     p.full_name,
