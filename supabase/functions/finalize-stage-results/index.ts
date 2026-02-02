@@ -25,22 +25,30 @@ serve(async (req) => {
     )
 
     // 1. Process Updates
-    const updates = results.map((r: any) => ({
-        id: r.result_id,
-        stage_id: stage_id, // Safety check
-        official_time_seconds: r.official_time_seconds,
-        official_mountain_points: r.mountain_points,
-        status: r.status,
-        updated_at: new Date().toISOString()
-    }))
+    // 1. Process Updates
+    // We cannot use UPSERT easily because we are missing 'user_id' which is required for new rows,
+    // and even for updates, if we don't provide all PK columns or if the inference fails, it tries to Insert.
+    // Since we have the unique PK 'id' (UUID) of the result row, we can just UPDATE by ID.
+    // Supabase JS doesn't support bulk update with different values easily in one query without RPC.
+    // So we loop. It's fine for small batches (<100).
+    
+    for (const r of results) {
+        const { error: updateError } = await supabase
+            .from('stage_results')
+            .update({
+                official_time_seconds: r.official_time_seconds,
+                official_mountain_points: r.mountain_points,
+                status: r.status,
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', r.result_id)
+            .eq('stage_id', stage_id) // Safety check
 
-    // Upsert batch (assuming 'id' is primary key of stage_results, but we can only update by id)
-    // Actually, upsert is good.
-    const { error: updateError } = await supabase
-        .from('stage_results')
-        .upsert(updates)
-
-    if (updateError) throw updateError 
+        if (updateError) {
+             console.error(`Failed to update result ${r.result_id}:`, updateError)
+             throw updateError
+        }
+    } 
 
     // 2. Trigger Leaderboard Recalculation
     // Need to find event_id from stage_id
