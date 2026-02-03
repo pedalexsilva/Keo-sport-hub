@@ -1,6 +1,6 @@
 import { supabase } from '../../../lib/supabase';
 
-export const getStravaAuthUrl = async () => {
+export const getStravaAuthUrl = async (returnUrl?: string) => {
     // 1. Call secure backend to get URL (with state)
     // For simpler UX in this step, we can construct the URL here if we don't strictly enforce state yet,
     // BUT to follow the plan, we should ask the backend.
@@ -9,7 +9,10 @@ export const getStravaAuthUrl = async () => {
 
     // Note: To use the 'authorize_url' action in our function:
     const { data, error } = await supabase.functions.invoke('strava-auth', {
-        body: { type: 'authorize_url' }
+        body: { 
+            type: 'authorize_url',
+            return_url: returnUrl // Pass the return URL to be encoded in state
+        }
     });
 
     if (error || !data?.url) {

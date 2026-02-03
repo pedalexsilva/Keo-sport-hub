@@ -112,11 +112,9 @@ export const SegmentManager = ({ stageId, stageName, onClose }: SegmentManagerPr
                         'Would you like to connect now? (You will be redirected to Strava)'
                     );
                     if (connectStrava) {
-                        // Ideally we would return to the exact modal open, but simple return to admin is safer for now
-                        localStorage.setItem('strava_return_url', window.location.pathname + window.location.search);
-
                         const { getStravaAuthUrl } = await import('../../features/strava/services/strava');
-                        window.location.href = await getStravaAuthUrl();
+                        const currentUrl = window.location.pathname + window.location.search;
+                        window.location.href = await getStravaAuthUrl(currentUrl);
                     }
                     return;
                 }

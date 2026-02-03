@@ -56,7 +56,17 @@ serve(async (req) => {
         // ACTION: AUTHORIZE (Generate URL with Secure State)
         // ==============================================================================
         if (type === 'authorize_url') {
-            const state = crypto.randomUUID()
+            // Get optional return URL from request body
+            const { return_url } = body;
+            
+            // Create state object with both random UUID and return URL
+            const stateData = {
+                uuid: crypto.randomUUID(),
+                return_url: return_url || '/app/profile' // default fallback
+            };
+            
+            // Encode state as base64
+            const state = btoa(JSON.stringify(stateData));
 
             const redirectUri = `${req.headers.get('origin')}/strava/callback`
             const scope = 'read,activity:read_all,profile:read_all'
@@ -73,6 +83,7 @@ serve(async (req) => {
             const url = `https://www.strava.com/oauth/authorize?${params.toString()}`
 
             console.log('Generated Auth URL with redirect:', redirectUri) // Debug log
+            console.log('State contains return_url:', return_url) // Debug log
 
             return new Response(JSON.stringify({ url }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
         }

@@ -47,29 +47,41 @@ export default function StravaCallback() {
                 await syncActivities();
                 console.log('✅ Activities synced');
 
-                const returnUrl = localStorage.getItem('strava_return_url');
-                console.log('📍 Return URL from localStorage:', returnUrl);
-                if (returnUrl) {
-                    localStorage.removeItem('strava_return_url'); // Clean up
-                    console.log('➡️ Redirecting to:', returnUrl);
-                    setStatus('Sucesso! A redirecionar para a página anterior...');
-                    setTimeout(() => navigate(returnUrl), 1500);
+                // Decode state parameter to get return URL
+                let returnUrl = '/app/profile'; // default fallback
+                const stateParam = searchParams.get('state');
+
+                if (stateParam) {
+                    try {
+                        const stateData = JSON.parse(atob(stateParam));
+                        returnUrl = stateData.return_url || returnUrl;
+                        console.log('📍 Return URL from OAuth state:', returnUrl);
+                    } catch (e) {
+                        console.warn('⚠️ Failed to decode state parameter, using fallback');
+                    }
                 } else {
-                    console.log('⚠️ No return URL found, using fallback /app/profile');
-                    setStatus('Sucesso! A redirecionar...');
-                    setTimeout(() => navigate('/app/profile'), 1500);
+                    console.log('⚠️ No state parameter found, using fallback /app/profile');
                 }
+
+                console.log('➡️ Redirecting to:', returnUrl);
+                setStatus('Sucesso! A redirecionar...');
+                setTimeout(() => navigate(returnUrl), 1500);
             } catch (e: any) {
                 console.error('Strava connection error:', e);
                 const msg = e?.message || 'Erro desconhecido';
                 setStatus(`Falha na conexão: ${msg}`);
 
-                // If it was an admin flow, better return to admin even on error?
-                const returnUrl = localStorage.getItem('strava_return_url');
-                if (returnUrl) {
-                    localStorage.removeItem('strava_return_url');
-                    setTimeout(() => navigate(returnUrl), 3000);
-                    return;
+                // Try to get return URL from state even on error
+                let returnUrl = '/app/profile';
+                const stateParam = searchParams.get('state');
+
+                if (stateParam) {
+                    try {
+                        const stateData = JSON.parse(atob(stateParam));
+                        returnUrl = stateData.return_url || returnUrl;
+                    } catch (e) {
+                        // ignore decode errors
+                    }
                 }
 
                 // If token invalid, force logout might be needed, or just warn
@@ -77,8 +89,9 @@ export default function StravaCallback() {
                     setStatus('Sessão expirada. Por favor faça login novamente.');
                     setTimeout(() => navigate('/login'), 2000);
                 } else {
-                    // General error, go back to profile
-                    setTimeout(() => navigate('/app/profile'), 3000);
+                    // General error, go back to return URL or profile
+                    console.log('⚠️ Error, redirecting to:', returnUrl);
+                    setTimeout(() => navigate(returnUrl), 3000);
                 }
             }
         };

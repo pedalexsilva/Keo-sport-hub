@@ -1023,17 +1023,13 @@ const SettingsView = () => {
     const handleConnectStrava = async () => {
         setConnectingStrava(true);
         try {
-            // Save return URL so callback knows where to send us back
-            localStorage.setItem('strava_return_url', '/admin');
-            console.log('✅ Admin: Set return URL to /admin');
-            console.log('📦 localStorage check:', localStorage.getItem('strava_return_url'));
+            console.log('✅ Admin: Requesting Strava auth with return URL: /admin');
 
             const { getStravaAuthUrl } = await import('../features/strava/services/strava');
-            window.location.href = await getStravaAuthUrl();
+            window.location.href = await getStravaAuthUrl('/admin');
         } catch (e) {
             alert('Error connecting to Strava');
             setConnectingStrava(false);
-            localStorage.removeItem('strava_return_url');
         }
     };
 
