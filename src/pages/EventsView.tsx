@@ -75,15 +75,37 @@ const EventResultsSummary = ({ eventId }: { eventId: string }) => {
 };
 
 // Helper to determine if an event is in the past
-const isPastEvent = (date: string) => new Date(date) < new Date();
+// Helper to determine if an event is in the past
+const isPastEvent = (date: string) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const eventDate = new Date(date);
+    eventDate.setHours(0, 0, 0, 0);
+    return eventDate < today;
+};
 
 const EventsView: React.FC<EventsViewProps> = ({ events, onJoin, user }) => {
     const [tab, setTab] = useState<'upcoming' | 'past'>('upcoming');
-    const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+    const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
 
-    const now = new Date();
-    const upcomingEvents = events.filter(e => new Date(e.date) >= now).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-    const pastEvents = events.filter(e => new Date(e.date) < now).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    // Derive selectedEvent from props to ensure reactivity
+    const selectedEvent = selectedEventId ? events.find(e => e.id === selectedEventId) || null : null;
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Normalize event dates to midnight for comparison
+    const upcomingEvents = events.filter(e => {
+        const d = new Date(e.date);
+        d.setHours(0, 0, 0, 0);
+        return d >= today;
+    }).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+    const pastEvents = events.filter(e => {
+        const d = new Date(e.date);
+        d.setHours(0, 0, 0, 0);
+        return d < today;
+    }).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
     const displayedEvents = tab === 'upcoming' ? upcomingEvents : pastEvents;
 
@@ -97,7 +119,7 @@ const EventsView: React.FC<EventsViewProps> = ({ events, onJoin, user }) => {
                     <img src={selectedEvent.image} className="w-full h-full object-cover" alt="Event" />
                     <div className="absolute inset-0 bg-black/40"></div>
                     <button
-                        onClick={() => setSelectedEvent(null)}
+                        onClick={() => setSelectedEventId(null)}
                         className="absolute top-6 left-6 bg-white/20 backdrop-blur-md p-2 rounded-full text-white hover:bg-white/30 cursor-pointer"
                     >
                         <ArrowLeft className="w-6 h-6" />
@@ -148,13 +170,31 @@ const EventsView: React.FC<EventsViewProps> = ({ events, onJoin, user }) => {
                                 ))}
                             </div>
 
-                            <div className="fixed bottom-24 left-6 right-6 md:absolute md:bottom-6 md:w-auto">
-                                <button
-                                    onClick={() => onJoin(selectedEvent.id)}
-                                    className={`w-full py-4 rounded-2xl text-lg font-bold shadow-xl transition-transform active:scale-95 flex items-center justify-center gap-2 cursor-pointer ${joined ? 'bg-green-500 text-white' : 'bg-[#002D72] text-white'}`}
-                                >
-                                    {joined ? <><CheckCircle2 className="w-5 h-5" /> Registered</> : 'Register for Event'}
-                                </button>
+                            <div className="fixed bottom-24 left-6 right-6 md:absolute md:bottom-6 md:w-auto flex flex-col gap-3">
+                                {joined ? (
+                                    <>
+                                        <button
+                                            disabled
+                                            className="w-full py-3 rounded-2xl text-lg font-bold bg-green-100 text-green-700 flex items-center justify-center gap-2 cursor-default border border-green-200"
+                                        >
+                                            <CheckCircle2 className="w-5 h-5" />
+                                            Registered
+                                        </button>
+                                        <button
+                                            onClick={() => onJoin(selectedEvent.id)}
+                                            className="w-full py-2 text-sm font-medium text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                        >
+                                            Cancel Registration
+                                        </button>
+                                    </>
+                                ) : (
+                                    <button
+                                        onClick={() => onJoin(selectedEvent.id)}
+                                        className="w-full py-4 rounded-2xl text-lg font-bold shadow-xl transition-transform active:scale-95 flex items-center justify-center gap-2 cursor-pointer bg-[#002D72] text-white hover:bg-[#002359]"
+                                    >
+                                        Register for Event
+                                    </button>
+                                )}
                             </div>
                         </div>
                     )}
@@ -184,7 +224,7 @@ const EventsView: React.FC<EventsViewProps> = ({ events, onJoin, user }) => {
 
             <div className="space-y-6">
                 {displayedEvents.map((event) => (
-                    <div key={event.id} onClick={() => setSelectedEvent(event)} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden group cursor-pointer active:scale-98 transition-transform">
+                    <div key={event.id} onClick={() => setSelectedEventId(event.id)} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden group cursor-pointer active:scale-98 transition-transform">
                         <div className="relative h-32">
                             <img src={event.image || 'https://images.unsplash.com/photo-1552674605-5d28c4e1902c?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80'} alt={event.title} className="w-full h-full object-cover group-hover:scale-105 transition duration-700" />
                             <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-lg text-xs font-bold text-[#002D72] shadow-sm">{event.type}</div>
