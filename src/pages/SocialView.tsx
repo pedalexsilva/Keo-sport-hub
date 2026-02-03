@@ -9,8 +9,8 @@ const INITIAL_POSTS = [
         id: 1,
         user: "Ana Silva",
         avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Ana",
-        time: "2h atrás",
-        content: "Corrida matinal antes do trabalho! O Porto está lindo hoje. 🏃‍♀️🌉",
+        time: "2h ago",
+        content: "Morning run before work! Porto is beautiful today. 🏃‍♀️🌉",
         image: "https://images.unsplash.com/photo-1596464716127-f9a0639b5831?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
         likes: 24,
         liked: false,
@@ -18,10 +18,10 @@ const INITIAL_POSTS = [
     },
     {
         id: 2,
-        user: "Equipa BIM",
+        user: "BIM Team",
         avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=BIM",
-        time: "4h atrás",
-        content: "Almoço saudável para recuperar energias! 🥗 #KEOWellness",
+        time: "4h ago",
+        content: "Healthy lunch to recharge! 🥗 #KEOWellness",
         image: "https://images.unsplash.com/photo-1543362906-ac1b9642f56b?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
         likes: 15,
         liked: true,
@@ -55,14 +55,14 @@ const SocialView: React.FC<SocialViewProps> = ({ currentUser }) => {
     return (
         <div className="px-6 pb-24 pt-6 animate-fade-in bg-gray-50 min-h-full">
             <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-[#002D72]">Comunidade</h2>
+                <h2 className="text-2xl font-bold text-[#002D72]">Community</h2>
                 <button className="bg-[#009CDE] p-2 rounded-full text-white shadow-lg hover:bg-blue-600 transition cursor-pointer">
                     <Camera className="w-5 h-5" />
                 </button>
             </div>
             <div className="flex p-1 bg-gray-200 rounded-xl mb-6">
                 <button onClick={() => setSubTab('ranking')} className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all cursor-pointer ${subTab === 'ranking' ? 'bg-white text-[#002D72] shadow-sm' : 'text-gray-500'}`}>Ranking</button>
-                <button onClick={() => setSubTab('feed')} className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all cursor-pointer ${subTab === 'feed' ? 'bg-white text-[#002D72] shadow-sm' : 'text-gray-500'}`}>Momentos</button>
+                <button onClick={() => setSubTab('feed')} className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all cursor-pointer ${subTab === 'feed' ? 'bg-white text-[#002D72] shadow-sm' : 'text-gray-500'}`}>Moments</button>
             </div>
 
             {subTab === 'feed' ? (
@@ -91,24 +91,24 @@ const SocialView: React.FC<SocialViewProps> = ({ currentUser }) => {
             ) : (
                 <div className="space-y-4">
                     <div className="bg-[#002D72] rounded-2xl p-4 text-white mb-4">
-                        <div className="flex items-center gap-2 mb-2"><TrendingUp className="w-4 h-4 text-[#009CDE]" /><span className="text-xs font-bold uppercase tracking-wider">Top Escritório</span></div>
+                        <div className="flex items-center gap-2 mb-2"><TrendingUp className="w-4 h-4 text-[#009CDE]" /><span className="text-xs font-bold uppercase tracking-wider">Top Office</span></div>
                         {isLoadingOffice ? (
-                            <div className="text-center py-4 text-blue-200 text-sm">A carregar topo escritório...</div>
+                            <div className="text-center py-4 text-blue-200 text-sm">Loading top office...</div>
                         ) : topOffice ? (
                             <div className="flex justify-between items-end">
                                 <div>
                                     <span className="text-2xl font-bold">{topOffice.office}</span>
-                                    {pointsDifference > 0 && <p className="text-xs text-blue-200">Liderando por {pointsDifference} pts</p>}
+                                    {pointsDifference > 0 && <p className="text-xs text-blue-200">Leading by {pointsDifference} pts</p>}
                                 </div>
                                 <Trophy className="w-8 h-8 text-yellow-400" />
                             </div>
                         ) : (
-                            <div className="flex justify-between items-end"><div><span className="text-2xl font-bold">Sem dados</span></div><Trophy className="w-8 h-8 text-gray-400" /></div>
+                            <div className="flex justify-between items-end"><div><span className="text-2xl font-bold">No data</span></div><Trophy className="w-8 h-8 text-gray-400" /></div>
                         )}
                     </div>
 
                     {isLoading ? (
-                        <div className="text-center py-4 text-gray-400">A carregar ranking...</div>
+                        <div className="text-center py-4 text-gray-400">Loading ranking...</div>
                     ) : (
                         leaderboardData?.map((person, index) => {
                             const isMe = currentUser && person.user_id === currentUser.id;
@@ -117,9 +117,9 @@ const SocialView: React.FC<SocialViewProps> = ({ currentUser }) => {
                                     <div className={`font-bold text-lg w-8 ${isMe ? 'text-[#002D72]' : 'text-gray-400'}`}>{person.rank}</div>
                                     <img src={person.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(person.full_name || 'User')}`} alt={person.full_name || 'User'} className="w-10 h-10 rounded-full border-2 border-white/20 mr-4 bg-gray-200 object-cover" />
                                     <div className="flex-1">
-                                        <h4 className={`font-bold text-sm text-gray-900`}>{person.full_name} {isMe && '(Tu)'}</h4>
+                                        <h4 className={`font-bold text-sm text-gray-900`}>{person.full_name} {isMe && '(You)'}</h4>
                                         <p className="text-xs text-gray-400">
-                                            {person.office ? `${person.office} • ` : ''} Membro KEO
+                                            {person.office ? `${person.office} • ` : ''} KEO Member
                                         </p>
                                     </div>
                                     <div className="text-right"><p className="font-bold text-[#002D72]">{person.total_points}</p><p className="text-[10px] text-gray-400">pts</p></div>

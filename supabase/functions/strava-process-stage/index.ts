@@ -6,6 +6,14 @@ const corsHeaders = {
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+interface StageSegment {
+    id: string;
+    strava_segment_id: string;
+    name: string;
+    points_scale: number[];
+    category: string;
+}
+
 serve(async (req) => {
     // 1. Handle CORS
     if (req.method === 'OPTIONS') {
@@ -46,7 +54,34 @@ serve(async (req) => {
         }
         log(`Found stage: ${stage.name} on ${stage.date}`)
 
-        // 3. Fetch Event Participants
+        // 3. Fetch Stage Segments (new system)
+        const { data: segments, error: segmentsError } = await supabase
+            .from('stage_segments')
+            .select('*')
+            .eq('stage_id', stage_id)
+            .order('segment_order')
+
+        if (segmentsError) {
+            log(`Error fetching segments: ${segmentsError.message}`)
+        }
+        
+        const stageSegments: StageSegment[] = segments || []
+        log(`Found ${stageSegments.length} configured segments`)
+        
+        // Build set of Strava segment IDs to look for
+        const targetSegmentIds = new Set<string>()
+        
+        // Add from new segment system
+        stageSegments.forEach(s => targetSegmentIds.add(s.strava_segment_id))
+        
+        // Also add from legacy mountain_segment_ids for backward compatibility
+        if (stage.mountain_segment_ids && stage.mountain_segment_ids.length > 0) {
+            stage.mountain_segment_ids.forEach((id: string) => targetSegmentIds.add(id))
+        }
+        
+        log(`Total target segments: ${targetSegmentIds.size}`)
+
+        // 4. Fetch Event Participants
         const { data: participants, error: partError } = await supabase
             .from('event_participants')
             .select('user_id')
@@ -58,9 +93,10 @@ serve(async (req) => {
         }
         log(`Found ${participants?.length || 0} participants`)
 
-        const results = []
+        const results: any[] = []
+        const segmentResults: any[] = []
 
-        // 4. Process Participants (Parallel with Concurrency Limit)
+        // 5. Process Participants (Parallel with Concurrency Limit)
         const CONCURRENCY_LIMIT = 5
         const queue = [...(participants || [])]
         const activePromises: Promise<void>[] = []
@@ -136,36 +172,64 @@ serve(async (req) => {
 
                 const activitySummary = activities[0]
 
-                // D. Fetch Detailed Activity
+                // D. Fetch Detailed Activity (with segment efforts)
                 const detailRes = await fetch(`https://www.strava.com/api/v3/activities/${activitySummary.id}?include_all_efforts=true`, {
                     headers: { 'Authorization': `Bearer ${access_token}` }
                 })
                 const detailActivity = await detailRes.json()
 
-                // E. Metrics
+                // E. Process Activity Time for stage_results (legacy/GC)
                 const elapsedTime = detailActivity.elapsed_time
-                let mountainPoints = 0
+                let totalMountainPoints = 0
 
-                if (stage.mountain_segment_ids && stage.mountain_segment_ids.length > 0) {
-                    const efforts = detailActivity.segment_efforts || []
-                    const targetSegments = new Set(stage.mountain_segment_ids)
+                const efforts = detailActivity.segment_efforts || []
+
+                // F. Process each configured segment
+                for (const segment of stageSegments) {
+                    const effort = efforts.find((e: any) => 
+                        e.segment.id.toString() === segment.strava_segment_id
+                    )
+                    
+                    if (effort) {
+                        log(`-> Found segment effort for ${segment.name}: ${effort.elapsed_time}s`)
+                        
+                        // Save to segment_results
+                        const { error: segmentUpsertError } = await supabase
+                            .from('segment_results')
+                            .upsert({
+                                stage_id: stage_id,
+                                segment_id: segment.id,
+                                user_id: p.user_id,
+                                strava_effort_id: effort.id.toString(),
+                                elapsed_time_seconds: effort.elapsed_time,
+                                status: 'pending',
+                                updated_at: new Date().toISOString()
+                            }, { onConflict: 'segment_id, user_id' })
+
+                        if (segmentUpsertError) {
+                            log(`-> Segment result error: ${segmentUpsertError.message}`)
+                        } else {
+                            segmentResults.push({
+                                user_id: p.user_id,
+                                segment_name: segment.name,
+                                time: effort.elapsed_time
+                            })
+                        }
+                    } else {
+                        log(`-> No effort found for segment ${segment.name}`)
+                    }
+                }
+
+                // G. Calculate mountain points for legacy system (backward compatibility)
+                if (targetSegmentIds.size > 0) {
                     for (const effort of efforts) {
-                        if (targetSegments.has(effort.segment.id.toString())) {
-                            mountainPoints += 10
+                        if (targetSegmentIds.has(effort.segment.id.toString())) {
+                            totalMountainPoints += 10 // Legacy fixed points
                         }
                     }
                 }
 
-                // F. Save Result (UPSERT)
-                // Check if result already exists to preserve 'official' status if it was already set? 
-                // Plan says: "Novos resultados ficarão marcados como 'Pendentes'". 
-                // Existing logic forces 'pending'. We should probably respect existing status IF it exists, 
-                // OR just upsert and let the user re-verify. 
-                // For safety and per "Human-in-the-loop" design, we reset to 'pending' on new sync 
-                // UNLESS we want to keep official ones.
-                // Decision: For now, keep logic as is (force pending) or maybe Check? 
-                // To keep it simple and safe: Reset to pending so admin sees something changed.
-                
+                // H. Save Stage Result (for GC - legacy system)
                 const { error: upsertError } = await supabase
                     .from('stage_results')
                     .upsert({
@@ -173,7 +237,7 @@ serve(async (req) => {
                         user_id: p.user_id,
                         strava_activity_id: detailActivity.id.toString(),
                         elapsed_time_seconds: elapsedTime,
-                        mountain_points: mountainPoints,
+                        mountain_points: totalMountainPoints,
                         is_dnf: false,
                         status: 'pending', 
                         updated_at: new Date().toISOString()
@@ -187,7 +251,7 @@ serve(async (req) => {
                 }
 
             } catch (err) {
-                log(`Error ${p.user_id}: ${err.message}`)
+                log(`Error ${p.user_id}: ${(err as Error).message}`)
             }
         }
     
@@ -209,17 +273,49 @@ serve(async (req) => {
         }
         await Promise.all(activePromises)
 
+        // I. Calculate positions and points for segment_results
+        log(`Calculating segment positions...`)
+        for (const segment of stageSegments) {
+            // Get all results for this segment, ordered by time
+            const { data: segResults, error: segResultsError } = await supabase
+                .from('segment_results')
+                .select('id, elapsed_time_seconds')
+                .eq('segment_id', segment.id)
+                .order('elapsed_time_seconds', { ascending: true })
+
+            if (segResultsError) {
+                log(`-> Error fetching segment results: ${segResultsError.message}`)
+                continue
+            }
+
+            // Update positions and points
+            for (let i = 0; i < (segResults?.length || 0); i++) {
+                const result = segResults![i]
+                const points = segment.points_scale[i] || 0
+                
+                await supabase
+                    .from('segment_results')
+                    .update({
+                        position: i + 1,
+                        points_earned: points
+                    })
+                    .eq('id', result.id)
+            }
+            log(`-> Updated ${segResults?.length || 0} positions for ${segment.name}`)
+        }
+
         return new Response(JSON.stringify({ 
             success: true, 
             processed: results.length,
-            message: `Sync complete. ${results.length} participants processed.`,
+            segments_processed: segmentResults.length,
+            message: `Sync complete. ${results.length} participants, ${segmentResults.length} segment efforts.`,
             logs: logs 
         }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         })
 
     } catch (error) {
-        return new Response(JSON.stringify({ error: error.message }), {
+        return new Response(JSON.stringify({ error: (error as Error).message }), {
             status: 400,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         })

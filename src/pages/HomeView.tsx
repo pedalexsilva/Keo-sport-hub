@@ -31,7 +31,7 @@ const HomeView: React.FC<HomeViewProps> = ({ user, stats, events, stravaConnecte
     return (
         <div className="px-6 pb-24 pt-6 animate-fade-in">
             <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold text-[#002D72]">Resumo Semanal</h2>
+                <h2 className="text-2xl font-bold text-[#002D72]">Weekly Summary</h2>
                 <button
                     onClick={stravaConnected ? onSync : onConnect}
                     disabled={isSyncing}
@@ -43,9 +43,9 @@ const HomeView: React.FC<HomeViewProps> = ({ user, stats, events, stravaConnecte
                     {isSyncing ? (
                         <RefreshCw className="w-3.5 h-3.5 animate-spin" />
                     ) : stravaConnected ? (
-                        <><RefreshCw className="w-3.5 h-3.5" /> Sincronizar</>
+                        <><RefreshCw className="w-3.5 h-3.5" /> Sync</>
                     ) : (
-                        <><AlertCircle className="w-3.5 h-3.5" /> Conectar Strava</>
+                        <><AlertCircle className="w-3.5 h-3.5" /> Connect Strava</>
                     )}
                 </button>
             </div>
@@ -73,12 +73,12 @@ const HomeView: React.FC<HomeViewProps> = ({ user, stats, events, stravaConnecte
             {myUpcomingEvents.length > 0 && (
                 <div className="mb-8">
                     <div className="flex justify-between items-center mb-4">
-                        <h3 className="text-lg font-bold text-[#002D72]">Os meus Eventos</h3>
+                        <h3 className="text-lg font-bold text-[#002D72]">My Events</h3>
                         <span
                             onClick={() => navigate('/app/events')}
                             className="text-xs text-[#009CDE] font-bold cursor-pointer"
                         >
-                            Ver todos
+                            View all
                         </span>
                     </div>
                     <div className="space-y-4">
@@ -110,12 +110,12 @@ const HomeView: React.FC<HomeViewProps> = ({ user, stats, events, stravaConnecte
             {products.some(p => p.is_featured) && (
                 <div className="mb-8">
                     <div className="flex justify-between items-center mb-4">
-                        <h3 className="text-lg font-bold text-[#002D72]">Destaques da Loja</h3>
+                        <h3 className="text-lg font-bold text-[#002D72]">Store Highlights</h3>
                         <span
                             onClick={() => navigate('/app/store')}
                             className="text-xs text-[#009CDE] font-bold cursor-pointer"
                         >
-                            Ver Loja
+                            Visit Store
                         </span>
                     </div>
 
@@ -127,7 +127,7 @@ const HomeView: React.FC<HomeViewProps> = ({ user, stats, events, stravaConnecte
 
                                 <div className="relative z-10 flex gap-4">
                                     <div className="flex-1">
-                                        <span className="bg-[#009CDE] text-white text-[10px] font-bold px-2 py-1 rounded-md mb-2 inline-block">NOVO</span>
+                                        <span className="bg-[#009CDE] text-white text-[10px] font-bold px-2 py-1 rounded-md mb-2 inline-block">NEW</span>
                                         <h4 className="text-lg font-bold mb-1 leading-tight">{item.name}</h4>
                                         <p className="text-xs text-blue-100 mb-3 line-clamp-2">{item.description}</p>
 
@@ -136,7 +136,7 @@ const HomeView: React.FC<HomeViewProps> = ({ user, stats, events, stravaConnecte
                                                 onClick={() => navigate('/app/store')}
                                                 className="text-xs font-bold underline decoration-2 underline-offset-4 hover:text-[#009CDE] transition-colors"
                                             >
-                                                Ver detalhes
+                                                View details
                                             </button>
                                             <span className="text-xs font-bold text-[#009CDE]">{item.cost} pts</span>
                                         </div>

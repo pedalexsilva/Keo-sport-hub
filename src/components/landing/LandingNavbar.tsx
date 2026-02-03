@@ -8,9 +8,9 @@ const LandingNavbar: React.FC = () => {
     const toggleMenu = () => setIsOpen(!isOpen);
 
     const navLinks = [
-        { name: 'Missão', href: '#missao' },
-        { name: 'Eventos', href: '#eventos' },
-        { name: 'Galeria', href: '#galeria' },
+        { name: 'Mission', href: '#missao' },
+        { name: 'Events', href: '#eventos' },
+        { name: 'Gallery', href: '#galeria' },
     ];
 
     return (

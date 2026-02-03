@@ -16,9 +16,9 @@ const OfficeBattleWidget: React.FC = () => {
             <div className="flex items-center justify-between mb-3 relative z-10">
                 <div className="flex items-center gap-2">
                     <Trophy className="w-4 h-4 text-yellow-500 fill-current" />
-                    <span className="font-bold text-[#002D72] text-sm">Batalha de Escritórios</span>
+                    <span className="font-bold text-[#002D72] text-sm">Office Battle</span>
                 </div>
-                <span className="text-xs font-bold text-gray-400">Março</span>
+                <span className="text-xs font-bold text-gray-400">March</span>
             </div>
             <div className="space-y-3 relative z-10">
                 <div>

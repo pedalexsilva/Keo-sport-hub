@@ -38,18 +38,39 @@ export default function StravaCallback() {
 
         const process = async () => {
             try {
+                console.log('🔄 Starting Strava token exchange...');
                 await exchangeToken(code);
                 // Tokens are saved securely on the server during exchange
 
                 setStatus('Conexão bem sucedida via Strava! A sincronizar atividades...');
+                console.log('✅ Token exchange successful, syncing activities...');
                 await syncActivities();
+                console.log('✅ Activities synced');
 
-                setStatus('Sucesso! A redirecionar...');
-                setTimeout(() => navigate('/app/profile'), 1500);
+                const returnUrl = localStorage.getItem('strava_return_url');
+                console.log('📍 Return URL from localStorage:', returnUrl);
+                if (returnUrl) {
+                    localStorage.removeItem('strava_return_url'); // Clean up
+                    console.log('➡️ Redirecting to:', returnUrl);
+                    setStatus('Sucesso! A redirecionar para a página anterior...');
+                    setTimeout(() => navigate(returnUrl), 1500);
+                } else {
+                    console.log('⚠️ No return URL found, using fallback /app/profile');
+                    setStatus('Sucesso! A redirecionar...');
+                    setTimeout(() => navigate('/app/profile'), 1500);
+                }
             } catch (e: any) {
                 console.error('Strava connection error:', e);
                 const msg = e?.message || 'Erro desconhecido';
                 setStatus(`Falha na conexão: ${msg}`);
+
+                // If it was an admin flow, better return to admin even on error?
+                const returnUrl = localStorage.getItem('strava_return_url');
+                if (returnUrl) {
+                    localStorage.removeItem('strava_return_url');
+                    setTimeout(() => navigate(returnUrl), 3000);
+                    return;
+                }
 
                 // If token invalid, force logout might be needed, or just warn
                 if (msg.includes('Invalid Refresh Token') || msg.includes('Not Found')) {

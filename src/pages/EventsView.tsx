@@ -26,15 +26,15 @@ const EventResultsSummary = ({ eventId }: { eventId: string }) => {
     const { data: leaderboard, isLoading } = useEventLeaderboard(eventId, 'gc');
     const { user } = useAuth();
 
-    if (isLoading) return <div className="text-sm text-gray-500">A carregar resultados...</div>;
+    if (isLoading) return <div className="text-sm text-gray-500">Loading results...</div>;
 
     if (!leaderboard || leaderboard.length === 0) {
         return (
             <div>
                 <h3 className="text-lg font-bold text-[#002D72] mb-4 flex items-center gap-2">
-                    <Trophy className="w-5 h-5 text-gray-400" /> Classificação
+                    <Trophy className="w-5 h-5 text-gray-400" /> Leaderboard
                 </h3>
-                <p className="text-gray-500 italic text-sm">Os resultados oficiais ainda não estão disponíveis.</p>
+                <p className="text-gray-500 italic text-sm">Official results are not yet available.</p>
             </div>
         );
     }
@@ -42,7 +42,7 @@ const EventResultsSummary = ({ eventId }: { eventId: string }) => {
     return (
         <div className="mb-8">
             <h3 className="text-lg font-bold text-[#002D72] mb-4 flex items-center gap-2">
-                <Trophy className="w-5 h-5 text-yellow-500" /> Classificação Oficial
+                <Trophy className="w-5 h-5 text-yellow-500" /> Official Leaderboard
             </h3>
 
             <div className="space-y-3 bg-gray-50 p-4 rounded-xl border border-gray-100">
@@ -53,8 +53,8 @@ const EventResultsSummary = ({ eventId }: { eventId: string }) => {
                                 {result.rank}
                             </span>
                             <div className="flex items-center gap-2">
-                                <span className="text-sm">{result.user?.full_name || 'Atleta'}</span>
-                                {result.user_id === user?.id && <span className="text-[10px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full">VOCÊ</span>}
+                                <span className="text-sm">{result.user?.full_name || 'Athlete'}</span>
+                                {result.user_id === user?.id && <span className="text-[10px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full">YOU</span>}
                             </div>
                         </div>
                         <span className="font-mono text-sm">
@@ -68,7 +68,7 @@ const EventResultsSummary = ({ eventId }: { eventId: string }) => {
             </div>
 
             <div className="mt-4 text-right">
-                <a href="/leaderboard" className="text-sm font-bold text-[#009CDE] hover:underline">Ver classificação completa →</a>
+                <a href="/leaderboard" className="text-sm font-bold text-[#009CDE] hover:underline">View full leaderboard →</a>
             </div>
         </div>
     );
@@ -120,14 +120,14 @@ const EventsView: React.FC<EventsViewProps> = ({ events, onJoin, user }) => {
                     ) : (
                         <div>
                             <p className="text-gray-600 mb-6 leading-relaxed">
-                                {selectedEvent.description || "Junta-te aos teus colegas para este evento desportivo da KEO. Fortalece o espírito de equipa e melhora a tua saúde!"}
+                                {selectedEvent.description || "Join your colleagues for this KEO sports event. Strengthen team spirit and improve your health!"}
                             </p>
 
                             {/* Stages Carousel */}
                             <EventStagesCarousel eventId={selectedEvent.id} />
 
                             <h3 className="text-lg font-bold text-[#002D72] mb-4 flex items-center gap-2">
-                                <Users className="w-5 h-5" /> Participantes ({selectedEvent.participants.length})
+                                <Users className="w-5 h-5" /> Participants ({selectedEvent.participants.length})
                             </h3>
 
                             <div className="space-y-3 mb-8">
@@ -153,7 +153,7 @@ const EventsView: React.FC<EventsViewProps> = ({ events, onJoin, user }) => {
                                     onClick={() => onJoin(selectedEvent.id)}
                                     className={`w-full py-4 rounded-2xl text-lg font-bold shadow-xl transition-transform active:scale-95 flex items-center justify-center gap-2 cursor-pointer ${joined ? 'bg-green-500 text-white' : 'bg-[#002D72] text-white'}`}
                                 >
-                                    {joined ? <><CheckCircle2 className="w-5 h-5" /> Inscrito</> : 'Inscrever no Evento'}
+                                    {joined ? <><CheckCircle2 className="w-5 h-5" /> Registered</> : 'Register for Event'}
                                 </button>
                             </div>
                         </div>
@@ -165,20 +165,20 @@ const EventsView: React.FC<EventsViewProps> = ({ events, onJoin, user }) => {
 
     return (
         <div className="px-6 pb-24 pt-6 animate-fade-in">
-            <h2 className="text-2xl font-bold text-[#002D72] mb-4">Eventos KEO</h2>
+            <h2 className="text-2xl font-bold text-[#002D72] mb-4">KEO Events</h2>
 
             <div className="flex p-1 bg-gray-200 rounded-xl mb-6">
                 <button
                     onClick={() => setTab('upcoming')}
                     className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all cursor-pointer ${tab === 'upcoming' ? 'bg-white text-[#002D72] shadow-sm' : 'text-gray-500'}`}
                 >
-                    Próximos
+                    Upcoming
                 </button>
                 <button
                     onClick={() => setTab('past')}
                     className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all cursor-pointer ${tab === 'past' ? 'bg-white text-[#002D72] shadow-sm' : 'text-gray-500'}`}
                 >
-                    Passados
+                    Past
                 </button>
             </div>
 
@@ -190,7 +190,7 @@ const EventsView: React.FC<EventsViewProps> = ({ events, onJoin, user }) => {
                             <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-lg text-xs font-bold text-[#002D72] shadow-sm">{event.type}</div>
                             {tab === 'past' && (
                                 <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                                    <span className="border-2 border-white text-white px-4 py-1 rounded-full text-xs font-bold uppercase tracking-widest">Concluído</span>
+                                    <span className="border-2 border-white text-white px-4 py-1 rounded-full text-xs font-bold uppercase tracking-widest">Completed</span>
                                 </div>
                             )}
                         </div>
@@ -218,14 +218,14 @@ const EventsView: React.FC<EventsViewProps> = ({ events, onJoin, user }) => {
                                             </div>
                                         )}
                                     </div>
-                                    <span className="text-xs font-bold text-[#009CDE]">Ver detalhes →</span>
+                                    <span className="text-xs font-bold text-[#009CDE]">View details →</span>
                                 </div>
                             )}
                         </div>
                     </div>
                 ))}
                 {displayedEvents.length === 0 && (
-                    <div className="text-center p-8 text-gray-400 text-sm">Não há eventos para mostrar.</div>
+                    <div className="text-center p-8 text-gray-400 text-sm">No events to show.</div>
                 )}
             </div>
         </div>

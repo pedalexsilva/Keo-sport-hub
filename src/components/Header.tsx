@@ -18,7 +18,7 @@ const Header: React.FC<HeaderProps> = ({ user }) => (
 
     <div className="relative z-10 flex justify-between items-start mb-6">
       <div>
-        <p className="text-blue-200 text-sm font-medium">Olá, {user.name}</p>
+        <p className="text-blue-200 text-sm font-medium">Hello, {user.name}</p>
         <div className="flex items-center gap-2">
           <MapPin className="w-3 h-3 text-blue-300" aria-hidden="true" />
           <span className="text-xs text-blue-300">{user.location || 'Porto Office'}</span>

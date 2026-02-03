@@ -25,9 +25,9 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, closeSidebar }) => {
 
   const navItems = [
     { name: 'Dashboard', path: '/app', icon: LayoutDashboard },
-    { name: 'Eventos', path: '/app/events', icon: Calendar },
+    { name: 'Events', path: '/app/events', icon: Calendar },
     { name: 'Leaderboard', path: '/app/leaderboard', icon: BarChart2 },
-    { name: 'Perfil', path: '/app/profile', icon: User },
+    { name: 'Profile', path: '/app/profile', icon: User },
   ];
 
   const isActive = (path: string) => location.pathname === path;
@@ -44,7 +44,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, closeSidebar }) => {
 
       <aside className={`fixed inset-y-0 left-0 z-50 w-64 transform bg-white border-r border-gray-200 transition-transform duration-200 ease-in-out md:static md:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="flex h-16 items-center justify-center border-b border-gray-100 px-6">
-          <span className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Menu Principal</span>
+          <span className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Main Menu</span>
         </div>
 
         <nav className="flex-1 space-y-1 px-3 py-4">
@@ -70,7 +70,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, closeSidebar }) => {
             className="group flex w-full items-center rounded-md px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50"
           >
             <LogOut className="mr-3 h-5 w-5 text-red-500" />
-            Sair
+            Logout
           </button>
         </div>
       </aside>

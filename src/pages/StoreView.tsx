@@ -33,14 +33,14 @@ const StoreView: React.FC<StoreViewProps> = ({ points, handlePurchase: onParentP
     };
 
     if (loading) return <div className="flex justify-center p-12"><Loader2 className="animate-spin text-[#002D72]" /></div>;
-    if (error) return <div className="p-8 text-center text-red-500">Erro ao carregar loja: {error}</div>;
+    if (error) return <div className="p-8 text-center text-red-500">Error loading store: {error}</div>;
 
     return (
         <div className="px-6 pb-24 pt-6 animate-fade-in">
             <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-bold text-[#002D72]">KEO Store</h2>
                 <div className="bg-yellow-50 text-yellow-700 px-3 py-1 rounded-full text-xs font-bold border border-yellow-100 flex items-center gap-1">
-                    <Gift className="w-3 h-3" /> Recompensas
+                    <Gift className="w-3 h-3" /> Rewards
                 </div>
             </div>
 
@@ -64,8 +64,8 @@ const StoreView: React.FC<StoreViewProps> = ({ points, handlePurchase: onParentP
                             ) : (
                                 <div className="w-full h-full flex items-center justify-center text-gray-300"><ShoppingBag className="w-8 h-8" /></div>
                             )}
-                            {item.stock < 5 && item.stock > 0 && (<div className="absolute top-2 left-2 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">ÚLTIMAS UNIDADES</div>)}
-                            {item.stock === 0 && (<div className="absolute inset-0 bg-white/60 flex items-center justify-center font-bold text-gray-500 uppercase tracking-widest text-xs">Esgotado</div>)}
+                            {item.stock < 5 && item.stock > 0 && (<div className="absolute top-2 left-2 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">LAST UNITS</div>)}
+                            {item.stock === 0 && (<div className="absolute inset-0 bg-white/60 flex items-center justify-center font-bold text-gray-500 uppercase tracking-widest text-xs">Sold Out</div>)}
                         </div>
                         <div className="p-3 flex flex-col flex-1">
                             <h3 className="font-bold text-sm text-gray-900 leading-tight mb-2 mt-1 flex-1">{item.name}</h3>
@@ -93,7 +93,7 @@ const StoreView: React.FC<StoreViewProps> = ({ points, handlePurchase: onParentP
             {products.length === 0 && (
                 <div className="text-center p-12 text-gray-400">
                     <ShoppingBag className="w-12 h-12 mx-auto mb-3 opacity-20" />
-                    <p>A loja está vazia neste momento.</p>
+                    <p>The store is empty at the moment.</p>
                 </div>
             )}
         </div>

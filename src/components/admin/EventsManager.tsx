@@ -56,7 +56,7 @@ export const EventsManager = () => {
     };
 
     const handleDelete = async (id: string) => {
-        if (confirm("Tem a certeza que deseja eliminar este evento?")) {
+        if (confirm("Are you sure you want to delete this event?")) {
             await deleteEvent.mutateAsync(id);
         }
     };
@@ -92,7 +92,7 @@ export const EventsManager = () => {
             setShowModal(false);
         } catch (error) {
             console.error(error);
-            alert("Erro ao guardar evento.");
+            alert("Error saving event.");
         } finally {
             setIsSubmitting(false);
         }
@@ -112,11 +112,11 @@ export const EventsManager = () => {
         <div className="p-8 animate-fade-in relative h-full flex flex-col gap-6">
             <div className="flex justify-between items-center">
                 <div>
-                    <h2 className="text-2xl font-bold text-gray-800">Gestão de Eventos</h2>
-                    <p className="text-gray-500 text-sm">Crie, edite e gira os eventos e inscrições.</p>
+                    <h2 className="text-2xl font-bold text-gray-800">Event Management</h2>
+                    <p className="text-gray-500 text-sm">Create, edit, and manage events and registrations.</p>
                 </div>
                 <button onClick={handleCreate} className="bg-[#002D72] text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 hover:bg-blue-900 transition shadow-lg">
-                    <Plus className="w-5 h-5" /> Novo Evento
+                    <Plus className="w-5 h-5" /> New Event
                 </button>
             </div>
 
@@ -126,7 +126,7 @@ export const EventsManager = () => {
                     <Search className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
                     <input
                         type="text"
-                        placeholder="Pesquisar eventos..."
+                        placeholder="Search events..."
                         className="w-full pl-10 pr-4 py-2 bg-gray-50 rounded-lg border-none focus:ring-2 focus:ring-[#009CDE] outline-none"
                         value={searchText}
                         onChange={(e) => setSearchText(e.target.value)}
@@ -151,11 +151,11 @@ export const EventsManager = () => {
                 <table className="w-full text-left hidden md:table">
                     <thead className="bg-gray-50 border-b border-gray-100 sticky top-0 z-10">
                         <tr>
-                            <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Evento</th>
+                            <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Event</th>
                             <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Status</th>
-                            <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Data & Local</th>
-                            <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Inscritos</th>
-                            <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-right">Ações</th>
+                            <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Date & Location</th>
+                            <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Enrolled</th>
+                            <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-right">Actions</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-50">
@@ -216,13 +216,13 @@ export const EventsManager = () => {
                                 </td>
                                 <td className="px-6 py-4 text-right">
                                     <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <button onClick={() => setSelectedEventId(evt.id)} className="p-2 text-gray-400 hover:text-[#009CDE] hover:bg-blue-50 rounded-lg transition" title="Gerir Etapas">
+                                        <button onClick={() => setSelectedEventId(evt.id)} className="p-2 text-gray-400 hover:text-[#009CDE] hover:bg-blue-50 rounded-lg transition" title="Manage Stages">
                                             <List className="w-4 h-4" />
                                         </button>
-                                        <button onClick={() => handleEdit(evt)} className="p-2 text-gray-400 hover:text-[#002D72] hover:bg-blue-50 rounded-lg transition" title="Editar">
+                                        <button onClick={() => handleEdit(evt)} className="p-2 text-gray-400 hover:text-[#002D72] hover:bg-blue-50 rounded-lg transition" title="Edit">
                                             <Edit2 className="w-4 h-4" />
                                         </button>
-                                        <button onClick={() => handleDelete(evt.id)} className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition" title="Apagar">
+                                        <button onClick={() => handleDelete(evt.id)} className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition" title="Delete">
                                             <Trash2 className="w-4 h-4" />
                                         </button>
                                     </div>
@@ -232,7 +232,7 @@ export const EventsManager = () => {
                         {sortedEvents.length === 0 && (
                             <tr>
                                 <td colSpan={5} className="p-8 text-center text-gray-400">
-                                    Nenhum evento encontrado.
+                                    No events found.
                                 </td>
                             </tr>
                         )}
@@ -267,7 +267,7 @@ export const EventsManager = () => {
                             <div className="grid grid-cols-2 gap-2 text-xs text-gray-500">
                                 <div>
                                     <span className="font-bold uppercase block text-[10px] text-gray-400">Data</span>
-                                    <span className="font-bold uppercase block text-[10px] text-gray-400">Data</span>
+                                    <span className="font-bold uppercase block text-[10px] text-gray-400">Date</span>
                                     {(() => {
                                         const start = formatDate(evt.date);
                                         const end = evt.endDate ? formatDate(evt.endDate) : start;
@@ -275,14 +275,14 @@ export const EventsManager = () => {
                                     })()}
                                 </div>
                                 <div>
-                                    <span className="font-bold uppercase block text-[10px] text-gray-400">Inscritos</span>
+                                    <span className="font-bold uppercase block text-[10px] text-gray-400">Enrolled</span>
                                     {evt.participants?.length || 0} / {evt.maxParticipants || '∞'}
                                 </div>
                             </div>
 
                             <div className="flex gap-2 pt-2 border-t border-gray-50">
-                                <button onClick={() => setSelectedEventId(evt.id)} className="flex-1 bg-blue-50 text-blue-700 py-2 rounded-lg font-bold text-xs flex items-center justify-center gap-1"><List className="w-3 h-3" /> Etapas</button>
-                                <button onClick={() => handleEdit(evt)} className="flex-1 bg-gray-50 text-gray-700 py-2 rounded-lg font-bold text-xs flex items-center justify-center gap-1"><Edit2 className="w-3 h-3" /> Editar</button>
+                                <button onClick={() => setSelectedEventId(evt.id)} className="flex-1 bg-blue-50 text-blue-700 py-2 rounded-lg font-bold text-xs flex items-center justify-center gap-1"><List className="w-3 h-3" /> Stages</button>
+                                <button onClick={() => handleEdit(evt)} className="flex-1 bg-gray-50 text-gray-700 py-2 rounded-lg font-bold text-xs flex items-center justify-center gap-1"><Edit2 className="w-3 h-3" /> Edit</button>
                                 <button onClick={() => handleDelete(evt.id)} className="p-2 bg-red-50 text-red-600 rounded-lg"><Trash2 className="w-4 h-4" /></button>
                             </div>
                         </div>
@@ -301,7 +301,7 @@ export const EventsManager = () => {
                     <form onSubmit={handleSubmit} className="bg-white rounded-2xl w-full max-w-2xl shadow-2xl flex flex-col max-h-full">
                         <div className="p-6 border-b border-gray-100 flex justify-between items-center">
                             <h3 className="text-xl font-bold text-[#002D72]">
-                                {currentEvent.id ? 'Editar Evento' : 'Novo Evento'}
+                                {currentEvent.id ? 'Edit Event' : 'New Event'}
                             </h3>
                             <button type="button" onClick={() => setShowModal(false)} className="text-gray-400 hover:text-gray-600">
                                 <X className="w-6 h-6" />
@@ -311,7 +311,7 @@ export const EventsManager = () => {
                         <div className="p-6 overflow-y-auto space-y-4 flex-1">
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="col-span-2">
-                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Título</label>
+                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Title</label>
                                     <input
                                         type="text"
                                         required
@@ -322,7 +322,7 @@ export const EventsManager = () => {
                                 </div>
 
                                 <div>
-                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Tipo de Atividade</label>
+                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Activity Type</label>
                                     <select
                                         className="w-full p-3 bg-gray-50 rounded-lg border border-gray-200 outline-none"
                                         value={currentEvent.type}
@@ -333,14 +333,14 @@ export const EventsManager = () => {
                                 </div>
 
                                 <div>
-                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Modo de Evento</label>
+                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Event Mode</label>
                                     <select
                                         className="w-full p-3 bg-gray-50 rounded-lg border border-gray-200 outline-none"
                                         value={currentEvent.mode || 'competitive'}
                                         onChange={e => setCurrentEvent({ ...currentEvent, mode: e.target.value as any })}
                                     >
-                                        <option value="competitive">Competitivo (Rankings + Etapas)</option>
-                                        <option value="social">Social (Apenas Presença)</option>
+                                        <option value="competitive">Competitive (Rankings + Stages)</option>
+                                        <option value="social">Social (Presence Only)</option>
                                     </select>
                                 </div>
 
@@ -351,15 +351,15 @@ export const EventsManager = () => {
                                         value={currentEvent.status}
                                         onChange={e => setCurrentEvent({ ...currentEvent, status: e.target.value as any })}
                                     >
-                                        <option value="open">Open (Inscrições Abertas)</option>
-                                        <option value="closed">Closed (Inscrições Fechadas)</option>
+                                        <option value="open">Open (Reg. Open)</option>
+                                        <option value="closed">Closed (Reg. Closed)</option>
                                         <option value="cancelled">Cancelled</option>
                                         <option value="completed">Completed</option>
                                     </select>
                                 </div>
 
                                 <div>
-                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Data e Hora</label>
+                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Date and Time</label>
                                     <input
                                         type="datetime-local"
                                         required
@@ -370,7 +370,7 @@ export const EventsManager = () => {
                                 </div>
 
                                 <div>
-                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Máx. Participantes (0 = Ilimitado)</label>
+                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Max Participants (0 = Unlimited)</label>
                                     <input
                                         type="number"
                                         min="0"
@@ -381,7 +381,7 @@ export const EventsManager = () => {
                                 </div>
 
                                 <div className="col-span-2">
-                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Localização</label>
+                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Location</label>
                                     <input
                                         type="text"
                                         required
@@ -392,7 +392,7 @@ export const EventsManager = () => {
                                 </div>
 
                                 <div className="col-span-2">
-                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Descrição</label>
+                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Description</label>
                                     <textarea
                                         rows={3}
                                         className="w-full p-3 bg-gray-50 rounded-lg border border-gray-200 outline-none"
@@ -402,7 +402,7 @@ export const EventsManager = () => {
                                 </div>
 
                                 <div className="col-span-2">
-                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Imagem de Capa</label>
+                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Cover Image</label>
                                     <div className="flex gap-4 items-start">
                                         <div className="flex-1">
                                             <input
@@ -420,7 +420,7 @@ export const EventsManager = () => {
                                                     file:bg-blue-50 file:text-[#002D72]
                                                     hover:file:bg-blue-100"
                                             />
-                                            <p className="text-xs text-gray-400 mt-1">Carregar nova imagem para substituir a atual.</p>
+                                            <p className="text-xs text-gray-400 mt-1">Upload new image to replace current one.</p>
                                         </div>
                                         {(currentEvent.image || imageFile) && (
                                             <div className="w-20 h-20 rounded-lg border border-gray-200 overflow-hidden bg-gray-50">
@@ -441,14 +441,14 @@ export const EventsManager = () => {
                                 onClick={() => setShowModal(false)}
                                 className="flex-1 py-3 bg-white border border-gray-200 text-gray-600 rounded-xl font-bold hover:bg-gray-50 transition"
                             >
-                                Cancelar
+                                Cancel
                             </button>
                             <button
                                 type="submit"
                                 disabled={isSubmitting}
                                 className="flex-1 py-3 bg-[#002D72] text-white rounded-xl font-bold hover:bg-blue-900 transition flex items-center justify-center gap-2 disabled:opacity-50"
                             >
-                                {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : (currentEvent.id ? 'Guardar Alterações' : 'Criar Evento')}
+                                {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : (currentEvent.id ? 'Save Changes' : 'Create Event')}
                             </button>
                         </div>
                     </form>

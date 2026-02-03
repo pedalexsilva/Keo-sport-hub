@@ -15,8 +15,8 @@ const UpcomingEvents: React.FC = () => {
         <section id="eventos" className="py-20 bg-white">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="text-center mb-16">
-                    <h2 className="text-4xl font-bold text-[#002D72] mb-4">Próximos Eventos</h2>
-                    <p className="text-gray-600 max-w-2xl mx-auto">Inscreve-te através da App e garante o teu lugar nas atividades exclusivas para colaboradores KEO.</p>
+                    <h2 className="text-4xl font-bold text-[#002D72] mb-4">Upcoming Events</h2>
+                    <p className="text-gray-600 max-w-2xl mx-auto">Sign up through the App and secure your spot in exclusive activities for KEO employees.</p>
                 </div>
 
                 {isLoading ? (
@@ -53,7 +53,7 @@ const UpcomingEvents: React.FC = () => {
 
                                         <div className="pt-4 mt-auto border-t border-gray-100">
                                             <Link to="/login" className="inline-flex items-center text-[#002D72] font-semibold hover:text-[#009CDE] transition-colors group/link">
-                                                Ver detalhes <ArrowRight className="ml-2 w-4 h-4 transform group-hover/link:translate-x-1 transition-transform" />
+                                                View details <ArrowRight className="ml-2 w-4 h-4 transform group-hover/link:translate-x-1 transition-transform" />
                                             </Link>
                                         </div>
                                     </div>
@@ -64,8 +64,8 @@ const UpcomingEvents: React.FC = () => {
                 ) : (
                     <div className="text-center py-10 bg-gray-50 rounded-2xl border border-dashed border-gray-300">
                         <Calendar className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                        <h3 className="text-lg font-medium text-gray-900">Sem eventos agendados</h3>
-                        <p className="text-gray-500">Fica atento, novidades em breve!</p>
+                        <h3 className="text-lg font-medium text-gray-900">No events scheduled</h3>
+                        <p className="text-gray-500">Stay tuned, news coming soon!</p>
                     </div>
                 )}
             </div>

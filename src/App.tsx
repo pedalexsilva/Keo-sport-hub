@@ -45,9 +45,14 @@ const AppLayout: React.FC = () => {
     }
   }, [userProfile]);
 
-  // Check for onboarding and redirect if needed
+  // Check for onboarding and redirect if needed (but not for admins)
   useEffect(() => {
     if (!isProfileLoading && !isProfileFetching && userProfile && !userProfile.onboardingCompleted) {
+      // Skip onboarding for admin users
+      if (userProfile.role === 'admin') {
+        return;
+      }
+
       // We're inside AppLayout, which is under /app/* path.
       // However, we probably want Onboarding to be its own top-level route or inside App but full screen.
       // The current structure has AppLayout rendering Navigation/Header etc.
@@ -61,7 +66,7 @@ const AppLayout: React.FC = () => {
     if (points >= item.cost) {
       setPoints(prev => prev - item.cost);
       setInventory(prev => [item, ...prev]);
-      setNotification(`Trocaste ${item.cost}pts por ${item.name}!`);
+      setNotification(`You exchanged ${item.cost}pts for ${item.name}!`);
       setTimeout(() => setNotification(null), 3000);
     }
   };
@@ -77,7 +82,7 @@ const AppLayout: React.FC = () => {
       isJoining: !isJoined
     }, {
       onSuccess: () => {
-        setNotification(!isJoined ? "Inscrição confirmada!" : "Inscrição cancelada.");
+        setNotification(!isJoined ? "Registration confirmed!" : "Registration canceled.");
         setTimeout(() => setNotification(null), 3000);
       }
     });
@@ -89,7 +94,7 @@ const AppLayout: React.FC = () => {
       window.location.href = url;
     } catch (e) {
       console.error(e);
-      setNotification("Erro ao iniciar conexão com Strava.");
+      setNotification("Error initiating Strava connection.");
     }
   };
 
@@ -99,14 +104,14 @@ const AppLayout: React.FC = () => {
     try {
       await import('./features/strava/services/strava').then(m => m.disconnectStrava(userProfile.id));
 
-      setNotification("Desconectado com sucesso.");
+      setNotification("Successfully disconnected.");
 
       // Simple way to refresh state without prop drilling QueryClient
       window.location.reload();
 
     } catch (error) {
       console.error(error);
-      setNotification("Erro ao desconectar.");
+      setNotification("Error disconnecting.");
     } finally {
       setTimeout(() => setNotification(null), 3000);
     }
@@ -115,7 +120,7 @@ const AppLayout: React.FC = () => {
   const handleSyncData = async () => {
     if (!userProfile) return;
     setIsSyncing(true);
-    setNotification("Sincronizando atividades...");
+    setNotification("Syncing activities...");
 
     try {
       const result = await syncStravaActivities(userProfile.id);
@@ -127,7 +132,7 @@ const AppLayout: React.FC = () => {
       }
     } catch (error) {
       console.error(error);
-      setNotification("Erro ao sincronizar Strava.");
+      setNotification("Error syncing Strava.");
     } finally {
       setIsSyncing(false);
       setTimeout(() => setNotification(null), 3000);
@@ -140,7 +145,7 @@ const AppLayout: React.FC = () => {
     return <div className="flex h-screen items-center justify-center"><div className="w-8 h-8 animate-spin rounded-full border-4 border-[#002D72] border-t-transparent"></div></div>;
   }
 
-  if (!userProfile) return <div>Erro ao carregar perfil.</div>;
+  if (!userProfile) return <div>Error loading profile.</div>;
 
   // Derived Stats
   const userStats = {
@@ -151,7 +156,7 @@ const AppLayout: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50 font-sans text-gray-900 pb-20 md:pb-0">
       {/* Accessibility: Skip Link */}
-      <a href="#main-content" className="skip-link">Saltar para conteúdo principal</a>
+      <a href="#main-content" className="skip-link">Skip to main content</a>
 
       {/* Desktop Wrapper / Responsive Container */}
       <div className="md:max-w-2xl lg:max-w-4xl md:mx-auto md:min-h-screen md:border-x md:border-gray-200 md:shadow-xl md:relative bg-[#F8FAFC]">

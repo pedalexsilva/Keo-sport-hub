@@ -3,6 +3,7 @@ import { User } from '../types';
 import { Medal, Trophy, Mountain, Timer, AlertCircle } from 'lucide-react';
 import { useEventLeaderboard } from '../hooks/useEventLeaderboard';
 import { useEvents } from '../hooks/useEvents';
+import { KOMLeaderboard } from '../components/KOMLeaderboard';
 
 interface LeaderboardProps {
   currentUser: User;
@@ -85,80 +86,87 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ currentUser }) => {
         </button>
       </div>
 
-      {/* Podium Cards */}
-      <div className="grid gap-6 lg:grid-cols-3 items-end">
-        {rankedUsers.slice(0, 3).map((u) => (
-          <div key={u.user_id} className={`relative flex flex-col items-center rounded-xl p-6 shadow-sm border ${u.rank === 1 ? 'bg-yellow-50 border-yellow-200 order-2 lg:order-2 scale-105 z-10' : 'bg-white border-gray-100 lg:order-1'}`}>
-            <div className={`mb-4 flex items-center justify-center h-16 w-16 rounded-full border-4 overflow-hidden bg-white ${u.rank === 1 ? 'border-yellow-400' : u.rank === 2 ? 'border-gray-300' : 'border-amber-600'}`}>
-              {u.user?.avatar_url ? (
-                <img src={u.user.avatar_url} alt={u.user.full_name} className="h-full w-full object-cover" />
-              ) : (
-                <span className="text-xs font-bold">{u.user?.full_name?.substring(0, 2)}</span>
-              )}
-            </div>
-            <div className="mb-1">{getRankIcon(u.rank)}</div>
-            <h3 className="text-lg font-bold text-gray-900 text-center line-clamp-1 w-full">{u.user?.full_name || 'Anonymous'}</h3>
-            <p className="text-xs text-gray-500 mb-1">{u.user?.office}</p>
-            <p className={`text-xl font-bold mt-2 ${classificationType === 'gc' ? 'text-blue-600' : 'text-red-500'}`}>
-              {classificationType === 'gc' ? formatTime(u.total_time_seconds) : `${u.total_points} pts`}
-            </p>
-          </div>
-        ))}
-      </div>
+      {/* KOM Classification (New Segment-Based System) */}
+      {classificationType === 'mountain' && selectedEventId && (
+        <KOMLeaderboard eventId={selectedEventId} eventTitle={selectedEvent?.title} />
+      )}
 
-      {/* Full List */}
-      <div className="rounded-xl bg-white shadow-sm border border-gray-100 overflow-hidden">
-        {lbLoading ? (
-          <div className="p-12 text-center text-gray-500">A carregar classificações...</div>
-        ) : rankedUsers.length == 0 ? (
-          <div className="p-12 text-center text-gray-400 flex flex-col items-center gap-2">
-            <AlertCircle className="w-8 h-8 opacity-50" />
-            <p>Ainda não há resultados oficiais para este evento.</p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm text-gray-500">
-              <thead className="bg-gray-50 text-xs uppercase text-gray-700">
-                <tr>
-                  <th scope="col" className="px-6 py-3">Rank</th>
-                  <th scope="col" className="px-6 py-3">Atleta</th>
-                  {classificationType === 'gc' && <th scope="col" className="px-6 py-3 text-right">Tempo Total</th>}
-                  <th scope="col" className="px-6 py-3 text-right">{classificationType === 'gc' ? 'Gap' : 'Pontos'}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rankedUsers.map((u) => (
-                  <tr key={u.user_id} className={`border-b hover:bg-gray-50 ${u.user_id === currentUser.id ? 'bg-blue-50/50' : ''}`}>
-                    <td className="px-6 py-4 font-bold text-gray-900 w-16 text-center">
-                      {u.rank}
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-gray-100 overflow-hidden">
-                          {u.user?.avatar_url ? <img src={u.user.avatar_url} className="w-full h-full object-cover" /> : null}
+      {/* GC Podium Cards - Only show for GC */}
+      {classificationType === 'gc' && (
+        <div className="grid gap-6 lg:grid-cols-3 items-end">
+          {rankedUsers.slice(0, 3).map((u) => (
+            <div key={u.user_id} className={`relative flex flex-col items-center rounded-xl p-6 shadow-sm border ${u.rank === 1 ? 'bg-yellow-50 border-yellow-200 order-2 lg:order-2 scale-105 z-10' : 'bg-white border-gray-100 lg:order-1'}`}>
+              <div className={`mb-4 flex items-center justify-center h-16 w-16 rounded-full border-4 overflow-hidden bg-white ${u.rank === 1 ? 'border-yellow-400' : u.rank === 2 ? 'border-gray-300' : 'border-amber-600'}`}>
+                {u.user?.avatar_url ? (
+                  <img src={u.user.avatar_url} alt={u.user.full_name} className="h-full w-full object-cover" />
+                ) : (
+                  <span className="text-xs font-bold">{u.user?.full_name?.substring(0, 2)}</span>
+                )}
+              </div>
+              <div className="mb-1">{getRankIcon(u.rank)}</div>
+              <h3 className="text-lg font-bold text-gray-900 text-center line-clamp-1 w-full">{u.user?.full_name || 'Anonymous'}</h3>
+              <p className="text-xs text-gray-500 mb-1">{u.user?.office}</p>
+              <p className="text-xl font-bold mt-2 text-blue-600">
+                {formatTime(u.total_time_seconds)}
+              </p>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Full List - Only for GC */}
+      {classificationType === 'gc' && (
+        <div className="rounded-xl bg-white shadow-sm border border-gray-100 overflow-hidden">
+          {lbLoading ? (
+            <div className="p-12 text-center text-gray-500">A carregar classificações...</div>
+          ) : rankedUsers.length == 0 ? (
+            <div className="p-12 text-center text-gray-400 flex flex-col items-center gap-2">
+              <AlertCircle className="w-8 h-8 opacity-50" />
+              <p>Ainda não há resultados oficiais para este evento.</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm text-gray-500">
+                <thead className="bg-gray-50 text-xs uppercase text-gray-700">
+                  <tr>
+                    <th scope="col" className="px-6 py-3">Rank</th>
+                    <th scope="col" className="px-6 py-3">Atleta</th>
+                    <th scope="col" className="px-6 py-3 text-right">Tempo Total</th>
+                    <th scope="col" className="px-6 py-3 text-right">Gap</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {rankedUsers.map((u) => (
+                    <tr key={u.user_id} className={`border-b hover:bg-gray-50 ${u.user_id === currentUser.id ? 'bg-blue-50/50' : ''}`}>
+                      <td className="px-6 py-4 font-bold text-gray-900 w-16 text-center">
+                        {u.rank}
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full bg-gray-100 overflow-hidden">
+                            {u.user?.avatar_url ? <img src={u.user.avatar_url} className="w-full h-full object-cover" /> : null}
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="font-bold text-gray-900">{u.user?.full_name || 'Anonymous'}</span>
+                            <span className="text-xs text-gray-400">{u.user?.office}</span>
+                          </div>
+                          {u.user_id === currentUser.id && <span className="ml-2 rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-bold text-blue-800">VOCÊ</span>}
                         </div>
-                        <div className="flex flex-col">
-                          <span className="font-bold text-gray-900">{u.user?.full_name || 'Anonymous'}</span>
-                          <span className="text-xs text-gray-400">{u.user?.office}</span>
-                        </div>
-                        {u.user_id === currentUser.id && <span className="ml-2 rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-bold text-blue-800">VOCÊ</span>}
-                      </div>
-                    </td>
-                    {classificationType === 'gc' && (
+                      </td>
                       <td className="px-6 py-4 text-right font-mono font-medium text-gray-900">
                         {formatTime(u.total_time_seconds)}
                       </td>
-                    )}
-                    <td className={`px-6 py-4 text-right font-bold ${classificationType === 'gc' ? 'text-gray-500 font-mono text-xs' : 'text-red-600'}`}>
-                      {classificationType === 'gc' ? formatGap(u.gap_seconds) : u.total_points}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+                      <td className="px-6 py-4 text-right font-bold text-gray-500 font-mono text-xs">
+                        {formatGap(u.gap_seconds)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };

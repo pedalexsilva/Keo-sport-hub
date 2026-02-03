@@ -4,7 +4,7 @@ import HeroSection from '../components/landing/HeroSection';
 import StatsSection from '../components/landing/StatsSection';
 import MissionSection from '../components/landing/MissionSection';
 import UpcomingEvents from '../components/landing/UpcomingEvents';
-import AppShowcase from '../components/landing/AppShowcase';
+
 import GallerySection from '../components/landing/GallerySection';
 import LandingFooter from '../components/landing/LandingFooter';
 
@@ -16,7 +16,7 @@ const LandingPage: React.FC = () => {
             <StatsSection />
             <MissionSection />
             <UpcomingEvents />
-            <AppShowcase />
+
             <GallerySection />
             <LandingFooter />
         </div>

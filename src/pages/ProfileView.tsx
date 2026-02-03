@@ -30,7 +30,7 @@ const ProfileView: React.FC<ProfileViewProps> = ({ user, points, inventory, stra
             description: ticket.description,
             priority: ticket.priority as any
         });
-        alert("Ticke criado com sucesso!");
+        alert("Ticket created successfully!");
         setShowSupport(false);
         setTicket({ subject: '', description: '', priority: 'normal' });
     };
@@ -45,7 +45,7 @@ const ProfileView: React.FC<ProfileViewProps> = ({ user, points, inventory, stra
             if (url) window.location.href = url;
         } catch (error) {
             console.error("Failed to initiate connection", error);
-            alert("Erro ao iniciar conexão com Strava. Verifique se o servidor está configurado.");
+            alert("Error initiating Strava connection. Check if server is configured.");
             setIsConnecting(false);
         }
     };
@@ -77,12 +77,12 @@ const ProfileView: React.FC<ProfileViewProps> = ({ user, points, inventory, stra
                 <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 text-center flex flex-col items-center">
                     <div className="bg-yellow-50 p-2 rounded-full text-yellow-600 mb-2"><Trophy className="w-5 h-5" /></div>
                     <span className="text-xl font-bold text-[#002D72]">{points}</span>
-                    <span className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Pontos</span>
+                    <span className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Points</span>
                 </div>
                 <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 text-center flex flex-col items-center">
                     <div className="bg-blue-50 p-2 rounded-full text-blue-600 mb-2"><Zap className="w-5 h-5" /></div>
                     <span className="text-xl font-bold text-[#002D72]">{user.activities?.length || 0}</span>
-                    <span className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Atividades</span>
+                    <span className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Activities</span>
                 </div>
                 <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 text-center flex flex-col items-center">
                     <div className="bg-purple-50 p-2 rounded-full text-purple-600 mb-2"><ShoppingBag className="w-5 h-5" /></div>
@@ -98,7 +98,7 @@ const ProfileView: React.FC<ProfileViewProps> = ({ user, points, inventory, stra
                 >
                     <div className="flex items-center gap-3">
                         <div className="bg-blue-50 p-2 rounded-lg text-blue-600"><AlertCircle className="w-5 h-5" /></div>
-                        <span className="font-bold text-gray-700">Suporte KEO</span>
+                        <span className="font-bold text-gray-700">KEO Support</span>
                     </div>
                     <ChevronRight className="w-4 h-4 text-gray-400" />
                 </div>
@@ -109,7 +109,7 @@ const ProfileView: React.FC<ProfileViewProps> = ({ user, points, inventory, stra
                 >
                     <div className="flex items-center gap-3">
                         <div className="bg-gray-50 p-2 rounded-lg text-gray-600"><Settings className="w-5 h-5" /></div>
-                        <span className="font-bold text-gray-700">Definições</span>
+                        <span className="font-bold text-gray-700">Settings</span>
                     </div>
                     <ChevronRight className="w-4 h-4 text-gray-400" />
                 </div>
@@ -118,8 +118,8 @@ const ProfileView: React.FC<ProfileViewProps> = ({ user, points, inventory, stra
             {/* Connected Apps Section */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-6 p-6">
                 <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-lg font-bold text-[#002D72]">Aplicações Conectadas</h3>
-                    <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">INTEGRAÇÕES</span>
+                    <h3 className="text-lg font-bold text-[#002D72]">Connected Apps</h3>
+                    <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">INTEGRATIONS</span>
                 </div>
 
                 <div className="flex items-center justify-between">
@@ -132,12 +132,12 @@ const ProfileView: React.FC<ProfileViewProps> = ({ user, points, inventory, stra
                             {stravaConnected ? (
                                 <p className="text-sm font-medium text-green-500 flex items-center gap-1.5">
                                     <span className="w-2 h-2 rounded-full bg-green-500"></span>
-                                    Conectado
+                                    Connected
                                 </p>
                             ) : (
                                 <p className="text-sm font-medium text-gray-400 flex items-center gap-1.5">
                                     <span className="w-2 h-2 rounded-full border border-gray-400"></span>
-                                    Desconectado
+                                    Disconnected
                                 </p>
                             )}
                         </div>
@@ -148,7 +148,7 @@ const ProfileView: React.FC<ProfileViewProps> = ({ user, points, inventory, stra
                             onClick={onDisconnect}
                             className="px-4 py-2 rounded-lg border border-red-200 text-red-500 text-sm font-bold hover:bg-red-50 transition"
                         >
-                            Desconectar
+                            Disconnect
                         </button>
                     ) : (
                         <button
@@ -156,7 +156,7 @@ const ProfileView: React.FC<ProfileViewProps> = ({ user, points, inventory, stra
                             disabled={isConnecting}
                             className={`bg-[#0F172A] text-white px-6 py-2 rounded-lg font-bold text-sm hover:bg-black transition shadow-sm ${isConnecting ? 'opacity-75 cursor-wait' : ''}`}
                         >
-                            {isConnecting ? 'A Conectar...' : 'Conectar'}
+                            {isConnecting ? 'Connecting...' : 'Connect'}
                         </button>
                     )}
                 </div>
@@ -168,19 +168,19 @@ const ProfileView: React.FC<ProfileViewProps> = ({ user, points, inventory, stra
             {showSupport && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-6">
                     <div className="bg-white p-6 rounded-3xl w-full max-w-sm shadow-2xl animate-scale-in">
-                        <h3 className="text-xl font-bold text-[#002D72] mb-4">Novo Pedido de Suporte</h3>
-                        <p className="text-sm text-gray-500 mb-4">Descreva o problema ou sugestão. Responderemos o mais breve possível.</p>
+                        <h3 className="text-xl font-bold text-[#002D72]">New Support Request</h3>
+                        <p className="text-sm text-gray-500 mb-4">Describe the problem or suggestion. We will respond as soon as possible.</p>
 
                         <div className="space-y-3">
                             <input
                                 type="text"
-                                placeholder="Assunto (Ex: Erro no Strava)"
+                                placeholder="Subject (Ex: Strava Error)"
                                 className="w-full p-3 bg-gray-50 rounded-xl border-none outline-none focus:ring-2 focus:ring-[#009CDE]"
                                 value={ticket.subject}
                                 onChange={e => setTicket({ ...ticket, subject: e.target.value })}
                             />
                             <textarea
-                                placeholder="Descrição detalhada..."
+                                placeholder="Detailed description..."
                                 className="w-full p-3 bg-gray-50 rounded-xl border-none outline-none focus:ring-2 focus:ring-[#009CDE] h-32 resize-none"
                                 value={ticket.description}
                                 onChange={e => setTicket({ ...ticket, description: e.target.value })}
@@ -190,15 +190,15 @@ const ProfileView: React.FC<ProfileViewProps> = ({ user, points, inventory, stra
                                 value={ticket.priority}
                                 onChange={e => setTicket({ ...ticket, priority: e.target.value })}
                             >
-                                <option value="low">Prioridade Baixa</option>
-                                <option value="normal">Prioridade Normal</option>
-                                <option value="high">Prioridade Alta</option>
+                                <option value="low">Low Priority</option>
+                                <option value="normal">Normal Priority</option>
+                                <option value="high">High Priority</option>
                             </select>
                         </div>
 
                         <div className="flex gap-3 mt-6">
-                            <button onClick={() => setShowSupport(false)} className="flex-1 py-3 bg-gray-100 text-gray-500 rounded-xl font-bold">Cancelar</button>
-                            <button onClick={handleSubmitTicket} className="flex-1 py-3 bg-[#002D72] text-white rounded-xl font-bold hover:bg-blue-900">Enviar</button>
+                            <button onClick={() => setShowSupport(false)} className="flex-1 py-3 bg-gray-100 text-gray-500 rounded-xl font-bold">Cancel</button>
+                            <button onClick={handleSubmitTicket} className="flex-1 py-3 bg-[#002D72] text-white rounded-xl font-bold hover:bg-blue-900">Send</button>
                         </div>
                     </div>
                 </div>
@@ -210,7 +210,7 @@ const ProfileView: React.FC<ProfileViewProps> = ({ user, points, inventory, stra
                     className="w-full flex items-center justify-center gap-2 p-4 rounded-2xl bg-red-50 text-red-600 font-bold hover:bg-red-100 transition shadow-sm"
                 >
                     <LogOut className="w-5 h-5" />
-                    Terminar Sessão
+                    Log Out
                 </button>
             </div>
         </div>

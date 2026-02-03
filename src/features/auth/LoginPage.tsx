@@ -23,7 +23,7 @@ export default function LoginPage() {
 
         if (error) {
             if (error.message === 'Invalid login credentials') {
-                setError('Email ou palavra-passe incorretos.');
+                setError('Incorrect email or password.');
             } else {
                 setError(error.message);
             }
@@ -41,7 +41,7 @@ export default function LoginPage() {
     const handleSignUp = async () => {
         // Client-side validation
         if (!email || !password) {
-            setError("Por favor preencha email e palavra-passe.");
+            setError("Please fill in email and password.");
             return;
         }
 
@@ -97,7 +97,7 @@ export default function LoginPage() {
                         <span className="text-[#009CDE] text-2xl font-light tracking-wider">ACTIVE</span>
                     </div>
                     <p className="mt-4 text-center text-sm text-gray-500 font-medium">
-                        Bem-vindo ao teu hub de bem-estar
+                        Welcome to your wellness hub
                     </p>
                 </div>
 
@@ -120,7 +120,7 @@ export default function LoginPage() {
                         </div>
                         <div>
                             <label htmlFor="password" className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-1 ml-1">
-                                Palavra-passe
+                                Password
                             </label>
                             <input
                                 id="password"
@@ -165,9 +165,9 @@ export default function LoginPage() {
                                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                     </svg>
-                                    A entrar...
+                                    Logging in...
                                 </span>
-                            ) : 'Entrar'}
+                            ) : 'Login'}
                         </button>
 
                         <div className="relative">
@@ -175,7 +175,7 @@ export default function LoginPage() {
                                 <div className="w-full border-t border-gray-200"></div>
                             </div>
                             <div className="relative flex justify-center">
-                                <span className="bg-white px-2 text-xs text-gray-400 uppercase tracking-widest">Ou</span>
+                                <span className="bg-white px-2 text-xs text-gray-400 uppercase tracking-widest">Or</span>
                             </div>
                         </div>
 
@@ -185,7 +185,7 @@ export default function LoginPage() {
                             disabled={loading}
                             className="group relative flex w-full justify-center rounded-full bg-white px-4 py-3.5 text-sm font-bold text-[#002D72] ring-2 ring-inset ring-[#002D72] hover:bg-blue-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#002D72] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                         >
-                            Criar Conta Nova
+                            Create New Account
                         </button>
                     </div>
                 </form>

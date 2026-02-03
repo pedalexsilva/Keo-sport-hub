@@ -46,7 +46,7 @@ export const ResultsEditor = ({ stageId, onClose }: ResultsEditorProps) => {
 
         if (error) {
             console.error(error);
-            alert("Erro ao carregar resultados.");
+            alert("Error loading results.");
         } else {
             // Initialize official values with raw values if null
             const initialized = data.map((r: any) => ({
@@ -77,7 +77,7 @@ export const ResultsEditor = ({ stageId, onClose }: ResultsEditorProps) => {
     };
 
     const handlePublish = async () => {
-        if (!confirm("Tem a certeza? Isto irá tornar os resultados OFICIAIS e atualizar a classificação geral.")) return;
+        if (!confirm("Are you sure? This will make the results OFFICIAL and update the general classification.")) return;
 
         setIsSaving(true);
         try {
@@ -98,12 +98,12 @@ export const ResultsEditor = ({ stageId, onClose }: ResultsEditorProps) => {
 
             if (error) throw error;
 
-            alert("Resultados publicados com sucesso! 🏆");
+            alert("Results published successfully! 🏆");
             onClose();
 
         } catch (error: any) {
             console.error(error);
-            alert("Erro ao publicar: " + error.message);
+            alert("Error publishing: " + error.message);
         } finally {
             setIsSaving(false);
         }
@@ -119,21 +119,21 @@ export const ResultsEditor = ({ stageId, onClose }: ResultsEditorProps) => {
                     <div>
                         <h3 className="text-lg md:text-xl font-bold flex items-center gap-2">
                             <Save className="w-5 h-5 text-blue-600" />
-                            <span className="hidden md:inline">Editor de Resultados</span>
-                            <span className="md:hidden">Resultados</span>
+                            <span className="hidden md:inline">Results Editor</span>
+                            <span className="md:hidden">Results</span>
                         </h3>
-                        <p className="text-gray-500 text-xs md:text-sm hidden md:block">Valide os tempos e publique a classificação oficial.</p>
+                        <p className="text-gray-500 text-xs md:text-sm hidden md:block">Validate times and publish official classification.</p>
                     </div>
                     <div className="flex gap-2">
-                        <button onClick={onClose} className="px-3 py-2 text-gray-500 hover:bg-gray-100 rounded-lg font-bold text-sm">Cancelar</button>
+                        <button onClick={onClose} className="px-3 py-2 text-gray-500 hover:bg-gray-100 rounded-lg font-bold text-sm">Cancel</button>
                         <button
                             onClick={handlePublish}
                             disabled={isSaving}
                             className="px-4 py-2 bg-green-600 text-white rounded-lg font-bold hover:bg-green-700 shadow-md flex items-center gap-2 disabled:opacity-50 text-sm"
                         >
                             {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                            <span className="hidden md:inline">Publicar Resultados</span>
-                            <span className="md:hidden">Publicar</span>
+                            <span className="hidden md:inline">Publish Results</span>
+                            <span className="md:hidden">Publish</span>
                         </button>
                     </div>
                 </div>
@@ -142,12 +142,12 @@ export const ResultsEditor = ({ stageId, onClose }: ResultsEditorProps) => {
                 <div className="flex-1 overflow-auto bg-gray-50 p-4">
                     {/* Desktop Table Header */}
                     <div className="hidden md:grid grid-cols-7 gap-4 p-4 bg-gray-100/80 rounded-t-xl font-bold text-xs text-gray-500 uppercase sticky top-0 z-10 backdrop-blur-sm border-b border-gray-200">
-                        <div className="col-span-2">Atleta</div>
+                        <div className="col-span-2">Athlete</div>
                         <div className="col-span-1">Strava</div>
-                        <div className="col-span-1">Tempo Original</div>
-                        <div className="col-span-1 bg-blue-50/50 -mx-2 px-2 rounded">Tempo Oficial</div>
-                        <div className="col-span-1 text-center">Pts Montanha</div>
-                        <div className="col-span-1 text-center">Estado</div>
+                        <div className="col-span-1">Original Time</div>
+                        <div className="col-span-1 bg-blue-50/50 -mx-2 px-2 rounded">Official Time</div>
+                        <div className="col-span-1 text-center">Mountain Pts</div>
+                        <div className="col-span-1 text-center">Status</div>
                     </div>
 
                     <div className="space-y-4 md:space-y-1">
@@ -182,7 +182,7 @@ export const ResultsEditor = ({ stageId, onClose }: ResultsEditorProps) => {
                                         rel="noreferrer"
                                         className="inline-flex items-center gap-1 text-blue-600 hover:bg-blue-50 px-2 py-1 rounded transition"
                                     >
-                                        <ExternalLink className="w-3 h-3" /> <span className="md:hidden">Ver no Strava</span> <span className="hidden md:inline">Ver</span>
+                                        <ExternalLink className="w-3 h-3" /> <span className="md:hidden">View on Strava</span> <span className="hidden md:inline">View</span>
                                     </a>
                                 </div>
 
@@ -194,7 +194,7 @@ export const ResultsEditor = ({ stageId, onClose }: ResultsEditorProps) => {
 
                                 {/* Official Time Input */}
                                 <div className="md:col-span-1 bg-blue-50/50 -mx-2 px-2 py-2 md:py-1 rounded flex justify-between md:block items-center mb-1 md:mb-0">
-                                    <span className="text-xs font-bold text-blue-800 uppercase md:hidden">Oficial</span>
+                                    <span className="text-xs font-bold text-blue-800 uppercase md:hidden">Official</span>
                                     <div className="flex items-center gap-2">
                                         <input
                                             type="text"
@@ -213,7 +213,7 @@ export const ResultsEditor = ({ stageId, onClose }: ResultsEditorProps) => {
 
                                 {/* Mountain Points Input */}
                                 <div className="md:col-span-1 flex justify-between md:block items-center mb-1 md:mb-0 bg-gray-50 md:bg-transparent p-2 md:p-0 rounded">
-                                    <span className="text-xs font-bold text-gray-400 uppercase md:hidden">Montanha ({r.mountain_points})</span>
+                                    <span className="text-xs font-bold text-gray-400 uppercase md:hidden">Mountain ({r.mountain_points})</span>
                                     <div className="flex items-center gap-2 justify-end md:justify-center">
                                         <input
                                             type="number"
@@ -240,8 +240,8 @@ export const ResultsEditor = ({ stageId, onClose }: ResultsEditorProps) => {
                     {results.length === 0 && (
                         <div className="p-12 text-center text-gray-400 flex flex-col items-center">
                             <Clock className="w-12 h-12 mb-4 opacity-20" />
-                            <p>Ainda não existem resultados.</p>
-                            <p className="text-xs mt-2">Sincronize com o Strava primeiro.</p>
+                            <p>No results yet.</p>
+                            <p className="text-xs mt-2">Sync with Strava first.</p>
                         </div>
                     )}
                 </div>

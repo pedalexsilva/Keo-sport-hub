@@ -8,7 +8,7 @@ const LandingFooter: React.FC = () => {
                 <div className="col-span-1 md:col-span-2">
                     <h3 className="text-2xl font-bold text-white mb-4">KEO <span className="text-[#009CDE]">ACTIVE</span></h3>
                     <p className="text-sm max-w-sm mb-6">
-                        A plataforma oficial de bem-estar para os colaboradores da KEO International Consultants em Portugal e no mundo.
+                        The official wellness platform for KEO International Consultants employees in Portugal and worldwide.
                     </p>
                     <div className="flex space-x-4">
                         <a href="#" className="hover:text-white transition"><Linkedin className="w-5 h-5" /></a>
@@ -17,15 +17,15 @@ const LandingFooter: React.FC = () => {
                     </div>
                 </div>
                 <div>
-                    <h4 className="text-white font-bold mb-4 uppercase text-sm tracking-wider">Links Rápidos</h4>
+                    <h4 className="text-white font-bold mb-4 uppercase text-sm tracking-wider">Quick Links</h4>
                     <ul className="space-y-2 text-sm">
-                        <li><a href="#" className="hover:text-[#009CDE] transition">Portal do Colaborador</a></li>
-                        <li><a href="#" className="hover:text-[#009CDE] transition">Suporte Técnico</a></li>
-                        <li><a href="#" className="hover:text-[#009CDE] transition">Política de Privacidade</a></li>
+                        <li><a href="#" className="hover:text-[#009CDE] transition">Employee Portal</a></li>
+                        <li><a href="#" className="hover:text-[#009CDE] transition">Technical Support</a></li>
+                        <li><a href="#" className="hover:text-[#009CDE] transition">Privacy Policy</a></li>
                     </ul>
                 </div>
                 <div>
-                    <h4 className="text-white font-bold mb-4 uppercase text-sm tracking-wider">Contacto</h4>
+                    <h4 className="text-white font-bold mb-4 uppercase text-sm tracking-wider">Contact</h4>
                     <ul className="space-y-2 text-sm">
                         <li>KEO Porto Office</li>
                         <li>Praça da Trindade, 142</li>
@@ -35,7 +35,7 @@ const LandingFooter: React.FC = () => {
                 </div>
             </div>
             <div className="border-t border-gray-800 mt-12 pt-8 text-center text-xs text-gray-500">
-                &copy; {new Date().getFullYear()} KEO International Consultants. Todos os direitos reservados.
+                &copy; {new Date().getFullYear()} KEO International Consultants. All rights reserved.
             </div>
         </footer>
     );

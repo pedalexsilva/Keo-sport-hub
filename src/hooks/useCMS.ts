@@ -37,9 +37,9 @@ export function useCMS() {
                 // Fallback defaults if table empty
                 return {
                     heroTitle: "KEO Sports Hub",
-                    heroSubtitle: "A plataforma de bem-estar da KEO.",
+                    heroSubtitle: "The KEO wellness platform.",
                     heroImage: "https://images.unsplash.com/photo-1517649763962-0c623066013b?ixlib=rb-1.2.1&auto=format&fit=crop&w=1920&q=80",
-                    announcement: "Bem-vindo!"
+                    announcement: "Welcome!"
                 };
             }
             return data.value;
@@ -80,11 +80,11 @@ export function useAppMenu() {
             if (error) {
                 // Return default strict structure if missing
                 return [
-                    { id: 'home', label: 'Início', path: '/app/home', icon: 'Home' },
-                    { id: 'events', label: 'Eventos', path: '/app/events', icon: 'Calendar' },
-                    { id: 'store', label: 'Loja', path: '/app/store', icon: 'ShoppingBag' },
+                    { id: 'home', label: 'Home', path: '/app/home', icon: 'Home' },
+                    { id: 'events', label: 'Events', path: '/app/events', icon: 'Calendar' },
+                    { id: 'store', label: 'Store', path: '/app/store', icon: 'ShoppingBag' },
                     { id: 'social', label: 'Social', path: '/app/social', icon: 'Users' },
-                    { id: 'profile', label: 'Perfil', path: '/app/profile', icon: 'User' },
+                    { id: 'profile', label: 'Profile', path: '/app/profile', icon: 'User' },
                 ];
             }
             return data.value;

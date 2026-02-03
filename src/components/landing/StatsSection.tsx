@@ -7,19 +7,19 @@ const StatsSection: React.FC = () => {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center divide-x divide-gray-100">
                     <div className="p-4">
                         <span className="block text-3xl md:text-4xl font-bold text-[#002D72]">12</span>
-                        <span className="text-gray-500 text-xs md:text-sm uppercase tracking-wide">Escritórios Globais</span>
+                        <span className="text-gray-500 text-xs md:text-sm uppercase tracking-wide">Global Offices</span>
                     </div>
                     <div className="p-4">
                         <span className="block text-3xl md:text-4xl font-bold text-[#002D72]">50+</span>
-                        <span className="text-gray-500 text-xs md:text-sm uppercase tracking-wide">Modalidades</span>
+                        <span className="text-gray-500 text-xs md:text-sm uppercase tracking-wide">Sports</span>
                     </div>
                     <div className="p-4">
                         <span className="block text-3xl md:text-4xl font-bold text-[#002D72]">1.2k</span>
-                        <span className="text-gray-500 text-xs md:text-sm uppercase tracking-wide">Colaboradores Ativos</span>
+                        <span className="text-gray-500 text-xs md:text-sm uppercase tracking-wide">Active Employees</span>
                     </div>
                     <div className="p-4">
                         <span className="block text-3xl md:text-4xl font-bold text-[#002D72]">24/7</span>
-                        <span className="text-gray-500 text-xs md:text-sm uppercase tracking-wide">Bem-estar</span>
+                        <span className="text-gray-500 text-xs md:text-sm uppercase tracking-wide">Wellness</span>
                     </div>
                 </div>
             </div>

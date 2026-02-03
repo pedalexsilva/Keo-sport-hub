@@ -32,20 +32,20 @@ export const ResultsManager = () => {
         <div className="p-8 animate-fade-in h-full flex flex-col gap-6">
             <div className="flex justify-between items-center">
                 <div>
-                    <h2 className="text-2xl font-bold text-gray-800">Resultados</h2>
-                    <p className="text-gray-500 text-sm">Consulte as classificações e resultados dos eventos.</p>
+                    <h2 className="text-2xl font-bold text-gray-800">Results</h2>
+                    <p className="text-gray-500 text-sm">Check event rankings and results.</p>
                 </div>
             </div>
 
             {/* Event Selector */}
             <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Selecione o Evento</label>
+                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Select Event</label>
                 <select
                     className="w-full p-3 bg-gray-50 rounded-lg border border-gray-200 outline-none"
                     value={selectedEventId || ''}
                     onChange={(e) => setSelectedEventId(e.target.value || null)}
                 >
-                    <option value="">-- Selecione um evento --</option>
+                    <option value="">-- Select an event --</option>
                     {events?.map(evt => (
                         <option key={evt.id} value={evt.id}>{evt.title} ({formatDate(evt.date)})</option>
                     ))}
@@ -58,7 +58,7 @@ export const ResultsManager = () => {
                     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col">
                         <div className="p-4 border-b border-gray-50 bg-gray-50/50 flex items-center gap-2">
                             <Trophy className="w-5 h-5 text-yellow-500" />
-                            <h3 className="font-bold text-gray-800">Classificação Geral (GC)</h3>
+                            <h3 className="font-bold text-gray-800">General Classification (GC)</h3>
                         </div>
                         <div className="overflow-x-auto">
                             {/* Desktop Table */}
@@ -66,16 +66,16 @@ export const ResultsManager = () => {
                                 <thead className="bg-gray-50 border-b border-gray-100">
                                     <tr>
                                         <th className="px-6 py-3 text-xs font-bold text-gray-500 uppercase">Pos</th>
-                                        <th className="px-6 py-3 text-xs font-bold text-gray-500 uppercase">Atleta</th>
-                                        <th className="px-6 py-3 text-xs font-bold text-gray-500 uppercase text-right">Tempo</th>
-                                        <th className="px-6 py-3 text-xs font-bold text-gray-500 uppercase text-right">Diff</th>
+                                        <th className="px-6 py-3 text-xs font-bold text-gray-500 uppercase">Athlete</th>
+                                        <th className="px-6 py-3 text-xs font-bold text-gray-500 uppercase text-right">Time</th>
+                                        <th className="px-6 py-3 text-xs font-bold text-gray-500 uppercase text-right">Gap</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-50">
                                     {isLoadingGC ? (
                                         <tr><td colSpan={4} className="p-8 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto text-gray-400" /></td></tr>
                                     ) : gcResults?.length === 0 ? (
-                                        <tr><td colSpan={4} className="p-8 text-center text-gray-400">Sem resultados disponíveis.</td></tr>
+                                        <tr><td colSpan={4} className="p-8 text-center text-gray-400">No results available.</td></tr>
                                     ) : (
                                         gcResults?.map((res, idx) => (
                                             <tr key={res.user_id} className="hover:bg-yellow-50/30 transition">
@@ -119,7 +119,7 @@ export const ResultsManager = () => {
                                     ))
                                 }
                                 {!isLoadingGC && gcResults?.length === 0 && (
-                                    <div className="text-center text-gray-400 py-4">Sem resultados.</div>
+                                    <div className="text-center text-gray-400 py-4">No results.</div>
                                 )}
                             </div>
                         </div>
@@ -130,22 +130,22 @@ export const ResultsManager = () => {
                         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col">
                             <div className="p-4 border-b border-gray-50 bg-gray-50/50 flex items-center gap-2">
                                 <Mountain className="w-5 h-5 text-red-500" />
-                                <h3 className="font-bold text-gray-800">Prémio de Montanha</h3>
+                                <h3 className="font-bold text-gray-800">Mountain Prize</h3>
                             </div>
                             <div className="overflow-x-auto">
                                 <table className="w-full text-left">
                                     <thead className="bg-gray-50 border-b border-gray-100">
                                         <tr>
                                             <th className="px-6 py-3 text-xs font-bold text-gray-500 uppercase">Pos</th>
-                                            <th className="px-6 py-3 text-xs font-bold text-gray-500 uppercase">Atleta</th>
-                                            <th className="px-6 py-3 text-xs font-bold text-gray-500 uppercase text-right">Pontos</th>
+                                            <th className="px-6 py-3 text-xs font-bold text-gray-500 uppercase">Athlete</th>
+                                            <th className="px-6 py-3 text-xs font-bold text-gray-500 uppercase text-right">Points</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-gray-50">
                                         {isLoadingMountain ? (
                                             <tr><td colSpan={3} className="p-8 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto text-gray-400" /></td></tr>
                                         ) : mountainResults?.length === 0 ? (
-                                            <tr><td colSpan={3} className="p-8 text-center text-gray-400">Sem resultados de montanha.</td></tr>
+                                            <tr><td colSpan={3} className="p-8 text-center text-gray-400">No mountain results available.</td></tr>
                                         ) : (
                                             mountainResults?.map((res, idx) => (
                                                 <tr key={res.user_id} className="hover:bg-red-50/30 transition">
@@ -172,8 +172,8 @@ export const ResultsManager = () => {
             {!selectedEventId && (
                 <div className="flex flex-col items-center justify-center p-12 bg-white rounded-2xl border border-gray-100 text-center">
                     <Trophy className="w-16 h-16 text-gray-200 mb-4" />
-                    <h3 className="text-lg font-bold text-gray-800">Selecione um Evento</h3>
-                    <p className="text-gray-500">Escolha um evento acima para ver as classificações.</p>
+                    <h3 className="text-lg font-bold text-gray-800">Select an Event</h3>
+                    <p className="text-gray-500">Choose an event above to see rankings.</p>
                 </div>
             )}
         </div>

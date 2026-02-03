@@ -57,7 +57,8 @@ const Events: React.FC<EventsProps> = ({ user }) => {
       location: newEvent.location || 'TBD',
       type: newEvent.type || ActivityType.RUN,
       image: '',
-      status: 'open'
+      status: 'open',
+      mode: 'social'
     }, {
       onSuccess: () => {
         setShowModal(false);

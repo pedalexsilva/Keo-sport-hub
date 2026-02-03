@@ -4,7 +4,7 @@ const GallerySection: React.FC = () => {
     return (
         <section id="galeria" className="py-20 bg-gray-50">
             <div className="max-w-7xl mx-auto px-4 text-center">
-                <h2 className="text-3xl font-bold text-[#002D72] mb-12">Momentos KEO</h2>
+                <h2 className="text-3xl font-bold text-[#002D72] mb-12">KEO Moments</h2>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:h-96 auto-rows-[150px] md:auto-rows-auto">
                     <div className="col-span-2 row-span-2 relative group overflow-hidden rounded-2xl">
                         <img

@@ -61,34 +61,34 @@ const Sidebar = ({ activeTab, setActiveTab, isOpen, onClose }: { activeTab: stri
     // Grouped Menu Structure
     const menuGroups = [
         {
-            title: "VISÃO GERAL",
+            title: "OVERVIEW",
             items: [
                 { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
                 { id: 'analytics', label: 'Analytics & ROI', icon: PieChart },
             ]
         },
         {
-            title: "GESTÃO",
+            title: "MANAGEMENT",
             items: [
-                { id: 'events', label: 'Gestão de Eventos', icon: Calendar },
-                { id: 'results', label: 'Resultados', icon: Medal },
-                { id: 'store', label: 'Loja & Prémios', icon: ShoppingBag },
+                { id: 'events', label: 'Event Management', icon: Calendar },
+                { id: 'results', label: 'Results', icon: Medal },
+                { id: 'store', label: 'Store & Rewards', icon: ShoppingBag },
             ]
         },
         {
-            title: "UTILIZADORES",
+            title: "USERS",
             items: [
-                { id: 'users', label: 'Utilizadores', icon: Users },
-                { id: 'support', label: 'Suporte / Helpdesk', icon: LifeBuoy },
+                { id: 'users', label: 'Users', icon: Users },
+                { id: 'support', label: 'Support / Helpdesk', icon: LifeBuoy },
             ]
         },
         {
-            title: "CONFIGURAÇÕES",
+            title: "SETTINGS",
             items: [
-                { id: 'communications', label: 'Comunicações', icon: MessageSquare },
-                { id: 'app_menu', label: 'Menus da App', icon: Menu },
+                { id: 'communications', label: 'Communications', icon: MessageSquare },
+                { id: 'app_menu', label: 'App Menus', icon: Menu },
                 { id: 'cms', label: 'Landing Page', icon: Image },
-                { id: 'settings', label: 'Definições', icon: Settings },
+                { id: 'settings', label: 'Settings', icon: Settings },
             ]
         }
     ];
@@ -156,7 +156,7 @@ const Sidebar = ({ activeTab, setActiveTab, isOpen, onClose }: { activeTab: stri
                         className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-red-300 hover:bg-white/10 hover:text-red-200 transition-all text-sm font-medium mb-4"
                     >
                         <LogOut className="w-4 h-4" />
-                        Terminar Sessão
+                        Log Out
                     </button>
 
                     <div className="flex items-center gap-3">
@@ -185,21 +185,21 @@ const AnalyticsView = () => {
         <div className="p-8 animate-fade-in">
             <div className="flex justify-between items-center mb-8">
                 <div>
-                    <h2 className="text-2xl font-bold text-gray-800">Analytics & Saúde</h2>
-                    <p className="text-gray-500 text-sm">Monitorização do impacto na saúde dos colaboradores e ROI global.</p>
+                    <h2 className="text-2xl font-bold text-gray-800">Analytics & Health</h2>
+                    <p className="text-gray-500 text-sm">Monitoring employee health impact and global ROI.</p>
                 </div>
                 {/* PDF Report button placeholder */}
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 <div className="bg-gradient-to-br from-[#002D72] to-blue-900 p-6 rounded-2xl text-white shadow-lg relative overflow-hidden">
-                    <div className="relative z-10"><div className="flex items-center gap-2 mb-2 text-blue-200 text-sm font-bold uppercase tracking-wider"><TrendingUp className="w-4 h-4" /> Distância Total</div><div className="text-4xl font-bold mb-1">{stats?.totalDistance?.toLocaleString() || 0} <span className="text-lg font-normal text-blue-300">km</span></div><p className="text-xs text-blue-200">Total acumulado</p></div><MapPin className="absolute -bottom-4 -right-4 w-32 h-32 text-white opacity-5" />
+                    <div className="relative z-10"><div className="flex items-center gap-2 mb-2 text-blue-200 text-sm font-bold uppercase tracking-wider"><TrendingUp className="w-4 h-4" /> Total Distance</div><div className="text-4xl font-bold mb-1">{stats?.totalDistance?.toLocaleString() || 0} <span className="text-lg font-normal text-blue-300">km</span></div><p className="text-xs text-blue-200">Total accumulated</p></div><MapPin className="absolute -bottom-4 -right-4 w-32 h-32 text-white opacity-5" />
                 </div>
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 relative overflow-hidden"><div className="flex items-center gap-2 mb-2 text-green-600 text-sm font-bold uppercase tracking-wider"><Leaf className="w-4 h-4" /> Sustentabilidade</div><div className="text-4xl font-bold mb-1 text-gray-800">{stats?.totalCo2?.toLocaleString() || 0} <span className="text-lg font-normal text-gray-400">kg CO2</span></div><p className="text-xs text-gray-500">Poupados este mês</p></div>
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 relative overflow-hidden"><div className="flex items-center gap-2 mb-2 text-orange-500 text-sm font-bold uppercase tracking-wider"><Activity className="w-4 h-4" /> Calorias Queimadas</div><div className="text-4xl font-bold mb-1 text-gray-800">{stats?.totalCalories?.toLocaleString() || 0} <span className="text-lg font-normal text-gray-400">kcal</span></div><p className="text-xs text-gray-500">Total acumulado</p></div>
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 relative overflow-hidden"><div className="flex items-center gap-2 mb-2 text-green-600 text-sm font-bold uppercase tracking-wider"><Leaf className="w-4 h-4" /> Sustainability</div><div className="text-4xl font-bold mb-1 text-gray-800">{stats?.totalCo2?.toLocaleString() || 0} <span className="text-lg font-normal text-gray-400">kg CO2</span></div><p className="text-xs text-gray-500">Saved this month</p></div>
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 relative overflow-hidden"><div className="flex items-center gap-2 mb-2 text-orange-500 text-sm font-bold uppercase tracking-wider"><Activity className="w-4 h-4" /> Calories Burned</div><div className="text-4xl font-bold mb-1 text-gray-800">{stats?.totalCalories?.toLocaleString() || 0} <span className="text-lg font-normal text-gray-400">kcal</span></div><p className="text-xs text-gray-500">Total accumulated</p></div>
             </div>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <div className="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                    <h3 className="font-bold text-gray-800 mb-6">Atividade Semanal (Ativos)</h3>
+                    <h3 className="font-bold text-gray-800 mb-6">Weekly Activity (Active)</h3>
                     <div className="h-64 flex items-end justify-between gap-4">
                         {(stats?.weeklyActivity || [0, 0, 0, 0, 0, 0, 0]).map((val, i) => (
                             <div key={i} className="w-full bg-blue-50 rounded-t-xl relative group hover:bg-blue-100 transition-all cursor-pointer">
@@ -211,7 +211,7 @@ const AnalyticsView = () => {
                     </div>
                 </div>
                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                    <h3 className="font-bold text-gray-800 mb-6">Ranking por Departamento</h3>
+                    <h3 className="font-bold text-gray-800 mb-6">Department Ranking</h3>
                     <div className="space-y-4 max-h-[300px] overflow-y-auto">
                         {(ranking || []).map((dept, idx) => (
                             <div key={dept.office} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
@@ -219,15 +219,15 @@ const AnalyticsView = () => {
                                     <span className={`w-6 h-6 flex items-center justify-center rounded-full text-xs font-bold ${idx === 0 ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-200 text-gray-600'}`}>{idx + 1}</span>
                                     <div>
                                         <div className="font-bold text-gray-800 text-sm">{dept.office}</div>
-                                        <div className="text-xs text-gray-500">{dept.userCount} Membros</div>
+                                        <div className="text-xs text-gray-500">{dept.userCount} Members</div>
                                     </div>
                                 </div>
                                 <span className="font-bold text-[#009CDE] text-sm">{dept.totalPoints.toLocaleString()} pts</span>
                             </div>
                         ))}
-                        {(!ranking || ranking.length === 0) && <p className="text-sm text-gray-500 text-center py-4">Sem dados disponíveis</p>}
+                        {(!ranking || ranking.length === 0) && <p className="text-sm text-gray-500 text-center py-4">No data available</p>}
                     </div>
-                    <div className="mt-6 p-4 bg-gray-50 rounded-xl text-center"><p className="text-xs text-gray-500 mb-2">Departamento vencedor ganha:</p><p className="text-sm font-bold text-[#002D72] flex items-center justify-center gap-1"><Trophy className="w-4 h-4 text-yellow-500" /> Pequeno-almoço Equipa</p></div>
+                    <div className="mt-6 p-4 bg-gray-50 rounded-xl text-center"><p className="text-xs text-gray-500 mb-2">Winning department wins:</p><p className="text-sm font-bold text-[#002D72] flex items-center justify-center gap-1"><Trophy className="w-4 h-4 text-yellow-500" /> Team Breakfast</p></div>
                 </div>
             </div>
         </div>
@@ -249,15 +249,15 @@ const DashboardView = () => {
     const totalDistance = globalStats?.totalDistance || 0;
 
     const stats = [
-        { label: "Utilizadores Totais", value: totalUsers?.toString() || "0", change: "+2%", icon: Users, color: "bg-blue-500" },
-        { label: "Eventos Ativos", value: activeEvents.toString(), change: "Agora", icon: Calendar, color: "bg-[#009CDE]" },
-        { label: "Trocas Pendentes", value: pendingOrders.toString(), change: "Ação", icon: ShoppingBag, color: "bg-purple-500" },
-        { label: "Kms Totais", value: totalDistance.toLocaleString(), change: "Global", icon: MapPin, color: "bg-orange-500" },
+        { label: "Total Users", value: totalUsers?.toString() || "0", change: "+2%", icon: Users, color: "bg-blue-500" },
+        { label: "Active Events", value: activeEvents.toString(), change: "Now", icon: Calendar, color: "bg-[#009CDE]" },
+        { label: "Pending Exchanges", value: pendingOrders.toString(), change: "Action", icon: ShoppingBag, color: "bg-purple-500" },
+        { label: "Total Km", value: totalDistance.toLocaleString(), change: "Global", icon: MapPin, color: "bg-orange-500" },
     ];
 
     return (
         <div className="p-8 animate-fade-in">
-            <h2 className="text-2xl font-bold text-gray-800 mb-6">Visão Geral</h2>
+            <h2 className="text-2xl font-bold text-gray-800 mb-6">Overview</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                 {stats.map((stat, idx) => {
                     const Icon = stat.icon;
@@ -270,7 +270,7 @@ const DashboardView = () => {
             </div>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <div className="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                    <div className="flex justify-between items-center mb-6"><h3 className="font-bold text-lg text-gray-800">Atividade Recente</h3><button className="text-sm text-[#009CDE] font-bold">Ver tudo</button></div>
+                    <div className="flex justify-between items-center mb-6"><h3 className="font-bold text-lg text-gray-800">Recent Activity</h3><button className="text-sm text-[#009CDE] font-bold">See All</button></div>
                     <div className="space-y-4">
                         {(feed || []).map(item => (
                             <div key={item.id} className="flex items-center gap-4 p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition">
@@ -284,13 +284,13 @@ const DashboardView = () => {
                                 {item.status && <span className="text-[10px] font-bold uppercase bg-white px-2 py-1 rounded border border-gray-200">{item.status}</span>}
                             </div>
                         ))}
-                        {(!feed || feed.length === 0) && <p className="text-sm text-gray-500 text-center py-8">Sem atividade recente para mostrar.</p>}
+                        {(!feed || feed.length === 0) && <p className="text-sm text-gray-500 text-center py-8">No recent activity to show.</p>}
                     </div>
                 </div>
                 <div className="bg-[#002D72] text-white p-6 rounded-2xl shadow-lg relative overflow-hidden">
                     <div className="relative z-10">
-                        <h3 className="font-bold text-lg mb-4">Ações Rápidas</h3>
-                        <div className="space-y-3"><button className="w-full bg-white/10 hover:bg-white/20 p-3 rounded-xl flex items-center gap-3 transition text-sm font-medium"><Plus className="w-4 h-4" /> Criar Novo Evento</button><button className="w-full bg-white/10 hover:bg-white/20 p-3 rounded-xl flex items-center gap-3 transition text-sm font-medium"><Bell className="w-4 h-4" /> Enviar Notificação Push</button><button className="w-full bg-white/10 hover:bg-white/20 p-3 rounded-xl flex items-center gap-3 transition text-sm font-medium"><UploadCloud className="w-4 h-4" /> Exportar Dados (CSV)</button></div>
+                        <h3 className="font-bold text-lg mb-4">Quick Actions</h3>
+                        <div className="space-y-3"><button className="w-full bg-white/10 hover:bg-white/20 p-3 rounded-xl flex items-center gap-3 transition text-sm font-medium"><Plus className="w-4 h-4" /> Create New Event</button><button className="w-full bg-white/10 hover:bg-white/20 p-3 rounded-xl flex items-center gap-3 transition text-sm font-medium"><Bell className="w-4 h-4" /> Send Push Notification</button><button className="w-full bg-white/10 hover:bg-white/20 p-3 rounded-xl flex items-center gap-3 transition text-sm font-medium"><UploadCloud className="w-4 h-4" /> Export Data (CSV)</button></div>
                     </div>
                     <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-[#009CDE] rounded-full opacity-20 blur-2xl"></div>
                 </div>
@@ -356,7 +356,7 @@ const StoreManagerView = () => {
             setNewProduct({ ...newProduct, image_url: url });
         } catch (error) {
             console.error("Upload failed", error);
-            alert("Erro ao carregar imagem");
+            alert("Error uploading image");
         } finally {
             setIsUploading(false);
         }
@@ -364,20 +364,20 @@ const StoreManagerView = () => {
 
 
 
-    if (loading) return <div>Carregando loja...</div>;
+    if (loading) return <div>Loading store...</div>;
 
     return (
         <div className="p-8 animate-fade-in h-full flex flex-col gap-8">
-            <div className="flex justify-between items-center"><div><h2 className="text-2xl font-bold text-gray-800">Loja & Prémios</h2><p className="text-gray-500 text-sm">Gerir catálogo e aprovar trocas de pontos.</p></div><button onClick={openCreateModal} className="bg-[#002D72] text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 hover:bg-blue-900 transition shadow-lg"><Plus className="w-5 h-5" /> Novo Produto</button></div>
+            <div className="flex justify-between items-center"><div><h2 className="text-2xl font-bold text-gray-800">Store & Rewards</h2><p className="text-gray-500 text-sm">Manage catalog and approve point exchanges.</p></div><button onClick={openCreateModal} className="bg-[#002D72] text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 hover:bg-blue-900 transition shadow-lg"><Plus className="w-5 h-5" /> New Product</button></div>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                     <div className="p-4 border-b border-gray-50 bg-gray-50/50 flex justify-between items-center">
-                        <h3 className="font-bold text-gray-800 flex items-center gap-2"><Truck className="w-4 h-4 text-[#009CDE]" /> Pedidos de Troca Recentes</h3>
-                        <span className="text-xs bg-orange-100 text-orange-600 font-bold px-2 py-1 rounded-full">{orders.filter(o => o.status === "pending").length} Pendentes</span>
+                        <h3 className="font-bold text-gray-800 flex items-center gap-2"><Truck className="w-4 h-4 text-[#009CDE]" /> Recent Exchange Requests</h3>
+                        <span className="text-xs bg-orange-100 text-orange-600 font-bold px-2 py-1 rounded-full">{orders.filter(o => o.status === "pending").length} Pending</span>
                     </div>
                     {/* Desktop Table */}
                     <table className="w-full text-left hidden md:table">
-                        <thead className="bg-gray-50 border-b border-gray-100"><tr><th className="px-6 py-3 text-xs font-bold text-gray-500 uppercase">Colaborador</th><th className="px-6 py-3 text-xs font-bold text-gray-500 uppercase">Item</th><th className="px-6 py-3 text-xs font-bold text-gray-500 uppercase">Estado</th><th className="px-6 py-3 text-xs font-bold text-gray-500 uppercase text-right">Ação</th></tr></thead>
+                        <thead className="bg-gray-50 border-b border-gray-100"><tr><th className="px-6 py-3 text-xs font-bold text-gray-500 uppercase">Employee</th><th className="px-6 py-3 text-xs font-bold text-gray-500 uppercase">Item</th><th className="px-6 py-3 text-xs font-bold text-gray-500 uppercase">Status</th><th className="px-6 py-3 text-xs font-bold text-gray-500 uppercase text-right">Action</th></tr></thead>
                         <tbody className="divide-y divide-gray-50">
                             {orders.map((order) => (
                                 <tr key={order.id} className="hover:bg-blue-50/30">
@@ -386,8 +386,8 @@ const StoreManagerView = () => {
                                     <td className="px-6 py-4"><span className={`px-2 py-1 rounded text-xs font-bold ${order.status === 'completed' ? 'bg-green-100 text-green-700' : order.status === 'pending' ? 'bg-orange-100 text-orange-700' : 'bg-red-100 text-red-700'}`}>{order.status}</span></td>
                                     <td className="px-6 py-4 text-right">
                                         {order.status === 'pending' && (<div className="flex justify-end gap-2">
-                                            <button onClick={() => updateOrderStatus(order.id, 'completed')} className="bg-green-50 text-green-600 p-1.5 rounded hover:bg-green-100" title="Aprovar"><CheckCircle2 className="w-4 h-4" /></button>
-                                            <button onClick={() => updateOrderStatus(order.id, 'rejected')} className="bg-red-50 text-red-600 p-1.5 rounded hover:bg-red-100" title="Rejeitar"><XCircle className="w-4 h-4" /></button>
+                                            <button onClick={() => updateOrderStatus(order.id, 'completed')} className="bg-green-50 text-green-600 p-1.5 rounded hover:bg-green-100" title="Approve"><CheckCircle2 className="w-4 h-4" /></button>
+                                            <button onClick={() => updateOrderStatus(order.id, 'rejected')} className="bg-red-50 text-red-600 p-1.5 rounded hover:bg-red-100" title="Reject"><XCircle className="w-4 h-4" /></button>
                                         </div>)}
                                     </td>
                                 </tr>
@@ -412,8 +412,8 @@ const StoreManagerView = () => {
                                 </div>
                                 {order.status === 'pending' && (
                                     <div className="flex gap-2">
-                                        <button onClick={() => updateOrderStatus(order.id, 'completed')} className="flex-1 bg-green-50 text-green-600 py-2 rounded-lg font-bold text-xs flex items-center justify-center gap-1 hover:bg-green-100"><CheckCircle2 className="w-3 h-3" /> Aprovar</button>
-                                        <button onClick={() => updateOrderStatus(order.id, 'rejected')} className="flex-1 bg-red-50 text-red-600 py-2 rounded-lg font-bold text-xs flex items-center justify-center gap-1 hover:bg-red-100"><XCircle className="w-3 h-3" /> Rejeitar</button>
+                                        <button onClick={() => updateOrderStatus(order.id, 'completed')} className="flex-1 bg-green-50 text-green-600 py-2 rounded-lg font-bold text-xs flex items-center justify-center gap-1 hover:bg-green-100"><CheckCircle2 className="w-3 h-3" /> Approve</button>
+                                        <button onClick={() => updateOrderStatus(order.id, 'rejected')} className="flex-1 bg-red-50 text-red-600 py-2 rounded-lg font-bold text-xs flex items-center justify-center gap-1 hover:bg-red-100"><XCircle className="w-3 h-3" /> Reject</button>
                                     </div>
                                 )}
                             </div>
@@ -421,7 +421,7 @@ const StoreManagerView = () => {
                     </div>
                 </div>
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col">
-                    <div className="p-4 border-b border-gray-50 bg-gray-50/50"><h3 className="font-bold text-gray-800 flex items-center gap-2"><Package className="w-4 h-4 text-[#009CDE]" /> Catálogo Atual</h3></div>
+                    <div className="p-4 border-b border-gray-50 bg-gray-50/50"><h3 className="font-bold text-gray-800 flex items-center gap-2"><Package className="w-4 h-4 text-[#009CDE]" /> Current Catalog</h3></div>
                     <div className="flex-1 overflow-y-auto p-4 space-y-4">
                         {products.map(prod => (
                             <div key={prod.id} className="flex gap-3 items-center p-3 border border-gray-100 rounded-xl hover:shadow-md transition bg-white">
@@ -435,13 +435,13 @@ const StoreManagerView = () => {
                                 <div className="flex-1">
                                     <p className="font-bold text-sm text-gray-800 flex items-center gap-2">
                                         {prod.name}
-                                        {prod.is_featured && <span className="bg-yellow-100 text-yellow-700 text-[10px] px-1.5 py-0.5 rounded font-bold uppercase">Destaque</span>}
+                                        {prod.is_featured && <span className="bg-yellow-100 text-yellow-700 text-[10px] px-1.5 py-0.5 rounded font-bold uppercase">Featured</span>}
                                     </p>
                                     <div className="flex justify-between mt-1"><span className="text-xs font-bold text-[#009CDE]">{prod.cost} pts</span><span className="text-xs text-gray-500">Stock: {prod.stock}</span></div>
                                 </div>
                                 <div className="flex gap-2">
                                     <button onClick={() => openEditModal(prod)} className="text-gray-400 hover:text-[#009CDE]"><Edit2 className="w-4 h-4" /></button>
-                                    <button onClick={async () => { if (confirm('Apagar produto?')) await deleteProduct(prod.id); }} className="text-gray-400 hover:text-red-500"><Trash2 className="w-4 h-4" /></button>
+                                    <button onClick={async () => { if (confirm('Delete product?')) await deleteProduct(prod.id); }} className="text-gray-400 hover:text-red-500"><Trash2 className="w-4 h-4" /></button>
                                 </div>
                             </div>
                         ))}
@@ -452,12 +452,12 @@ const StoreManagerView = () => {
             {showProductModal && (
                 <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm rounded-3xl">
                     <div className="bg-white p-8 rounded-2xl w-full max-w-md shadow-2xl">
-                        <h3 className="text-xl font-bold text-[#002D72] mb-6">{editingProduct ? 'Editar Produto' : 'Novo Produto'}</h3>
+                        <h3 className="text-xl font-bold text-[#002D72] mb-6">{editingProduct ? 'Edit Product' : 'New Product'}</h3>
                         <div className="space-y-4">
-                            <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Nome</label><input type="text" className="w-full p-3 bg-gray-50 rounded-lg border border-gray-200" value={newProduct.name} onChange={e => setNewProduct({ ...newProduct, name: e.target.value })} /></div>
-                            <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Descrição</label><input type="text" className="w-full p-3 bg-gray-50 rounded-lg border border-gray-200" value={newProduct.description} onChange={e => setNewProduct({ ...newProduct, description: e.target.value })} /></div>
+                            <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Name</label><input type="text" className="w-full p-3 bg-gray-50 rounded-lg border border-gray-200" value={newProduct.name} onChange={e => setNewProduct({ ...newProduct, name: e.target.value })} /></div>
+                            <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Description</label><input type="text" className="w-full p-3 bg-gray-50 rounded-lg border border-gray-200" value={newProduct.description} onChange={e => setNewProduct({ ...newProduct, description: e.target.value })} /></div>
                             <div className="grid grid-cols-2 gap-4">
-                                <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Custo (Pts)</label><input type="number" className="w-full p-3 bg-gray-50 rounded-lg border border-gray-200" value={newProduct.cost} onChange={e => setNewProduct({ ...newProduct, cost: parseInt(e.target.value) })} /></div>
+                                <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Cost (Pts)</label><input type="number" className="w-full p-3 bg-gray-50 rounded-lg border border-gray-200" value={newProduct.cost} onChange={e => setNewProduct({ ...newProduct, cost: parseInt(e.target.value) })} /></div>
                                 <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Stock</label><input type="number" className="w-full p-3 bg-gray-50 rounded-lg border border-gray-200" value={newProduct.stock} onChange={e => setNewProduct({ ...newProduct, stock: parseInt(e.target.value) })} /></div>
                             </div>
 
@@ -470,12 +470,12 @@ const StoreManagerView = () => {
                                     onChange={e => setNewProduct({ ...newProduct, is_featured: e.target.checked })}
                                 />
                                 <label htmlFor="is_featured" className="text-sm font-bold text-[#002D72] cursor-pointer selection:bg-none">
-                                    Destacar este produto na loja
+                                    Feature this product in store
                                 </label>
                             </div>
 
                             <div>
-                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Imagem</label>
+                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Image</label>
                                 <div className="space-y-3">
                                     <div className="flex items-center gap-3">
                                         {newProduct.image_url && <img src={newProduct.image_url} className="w-16 h-16 rounded-lg object-cover bg-gray-100 border border-gray-200" />}
@@ -483,7 +483,7 @@ const StoreManagerView = () => {
                                             <input
                                                 type="text"
                                                 className="w-full p-3 bg-gray-50 rounded-lg border border-gray-200 text-sm mb-2"
-                                                placeholder="Ou cole um URL..."
+                                                placeholder="Or paste a URL..."
                                                 value={newProduct.image_url}
                                                 onChange={e => setNewProduct({ ...newProduct, image_url: e.target.value })}
                                             />
@@ -501,7 +501,7 @@ const StoreManagerView = () => {
                                                     className={`flex items-center justify-center gap-2 w-full p-2 bg-white border border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 hover:border-[#009CDE] transition ${isUploading ? 'opacity-50' : ''}`}
                                                 >
                                                     {isUploading ? <Loader2 className="w-4 h-4 animate-spin text-[#002D72]" /> : <UploadCloud className="w-4 h-4 text-gray-400" />}
-                                                    <span className="text-xs font-bold text-gray-500">{isUploading ? 'A Carregar...' : 'Carregar Ficheiro'}</span>
+                                                    <span className="text-xs font-bold text-gray-500">{isUploading ? 'Uploading...' : 'Upload File'}</span>
                                                 </label>
                                             </div>
                                         </div>
@@ -509,10 +509,10 @@ const StoreManagerView = () => {
                                 </div>
                             </div>
                             <div className="flex gap-4 mt-6">
-                                <button onClick={() => setShowProductModal(false)} className="flex-1 py-3 bg-gray-100 text-gray-600 rounded-xl font-bold hover:bg-gray-200">Cancelar</button>
+                                <button onClick={() => setShowProductModal(false)} className="flex-1 py-3 bg-gray-100 text-gray-600 rounded-xl font-bold hover:bg-gray-200">Cancel</button>
                                 <button onClick={handleSaveProduct} disabled={isUploading} className="flex-1 py-3 bg-[#002D72] text-white rounded-xl font-bold hover:bg-blue-900 flex items-center justify-center gap-2">
                                     {isUploading && <Loader2 className="w-4 h-4 animate-spin" />}
-                                    {editingProduct ? 'Guardar' : 'Adicionar'}
+                                    {editingProduct ? 'Save' : 'Add'}
                                 </button>
                             </div>
                         </div>
@@ -530,29 +530,29 @@ const UsersView = () => {
 
     const handleBonus = (id: string) => {
         // Implement bonus logic here or open a modal
-        alert("Funcionalidade de bónus a implementar com backend.");
+        alert("Bonus functionality to implement with backend.");
     };
 
     return (
         <div className="p-8 animate-fade-in h-full">
-            <div className="flex justify-between items-center mb-8"><div><h2 className="text-2xl font-bold text-gray-800">Utilizadores</h2><p className="text-gray-500 text-sm">Gerir colaboradores, permissões e gamificação.</p></div></div>
+            <div className="flex justify-between items-center mb-8"><div><h2 className="text-2xl font-bold text-gray-800">Users</h2><p className="text-gray-500 text-sm">Manage employees, permissions, and gamification.</p></div></div>
 
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                 {isLoading ? (
-                    <div className="p-8 text-center text-gray-500">A carregar utilizadores...</div>
+                    <div className="p-8 text-center text-gray-500">Loading users...</div>
                 ) : (
                     <>
                         {/* Desktop Table */}
                         <table className="w-full text-left hidden md:table">
-                            <thead className="bg-gray-50 border-b border-gray-100"><tr><th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase">Colaborador</th><th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase">Cargo & Escritório</th><th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase">Pontos (Saldo)</th><th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase">Estado</th><th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase text-right">Ações</th></tr></thead>
+                            <thead className="bg-gray-50 border-b border-gray-100"><tr><th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase">Employee</th><th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase">Role & Office</th><th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase">Points (Balance)</th><th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase">Status</th><th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase text-right">Actions</th></tr></thead>
                             <tbody className="divide-y divide-gray-50">
                                 {users.map((user) => (
                                     <tr key={user.id} className="hover:bg-blue-50/50 transition">
                                         <td className="px-6 py-4"><div className="flex items-center gap-3"><img src={user.avatar} className="w-8 h-8 rounded-full bg-gray-200" /><div><div className="font-bold text-gray-900">{user.name}</div><div className="text-xs text-gray-500">{user.email}</div></div></div></td>
                                         <td className="px-6 py-4"><div className="text-sm text-gray-900">{user.role}</div><div className="text-xs text-[#009CDE] font-medium">{user.office}</div></td>
                                         <td className="px-6 py-4"><div className="font-bold text-gray-700">{user.points.toLocaleString()} pts</div></td>
-                                        <td className="px-6 py-4"><span className={`px-2 py-1 rounded text-xs font-bold ${user.status === 'Ativo' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>{user.status}</span></td>
-                                        <td className="px-6 py-4 text-right flex justify-end gap-2"><button onClick={() => handleBonus(user.id)} title="Bónus" className="bg-yellow-100 text-yellow-600 p-2 rounded-lg hover:bg-yellow-200 transition"><Gift className="w-4 h-4" /></button><button title="Editar" className="bg-gray-100 text-gray-600 p-2 rounded-lg hover:bg-gray-200 transition"><Edit2 className="w-4 h-4" /></button><button title="Bloquear" className="bg-red-50 text-red-500 p-2 rounded-lg hover:bg-red-100 transition"><Ban className="w-4 h-4" /></button></td>
+                                        <td className="px-6 py-4"><span className={`px-2 py-1 rounded text-xs font-bold ${user.status === 'Ativo' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>{user.status === 'Ativo' ? 'Active' : user.status}</span></td>
+                                        <td className="px-6 py-4 text-right flex justify-end gap-2"><button onClick={() => handleBonus(user.id)} title="Bonus" className="bg-yellow-100 text-yellow-600 p-2 rounded-lg hover:bg-yellow-200 transition"><Gift className="w-4 h-4" /></button><button title="Edit" className="bg-gray-100 text-gray-600 p-2 rounded-lg hover:bg-gray-200 transition"><Edit2 className="w-4 h-4" /></button><button title="Block" className="bg-red-50 text-red-500 p-2 rounded-lg hover:bg-red-100 transition"><Ban className="w-4 h-4" /></button></td>
                                     </tr>
                                 ))}
                             </tbody>
@@ -585,8 +585,8 @@ const UsersView = () => {
                                     </div>
 
                                     <div className="flex gap-2">
-                                        <button onClick={() => handleBonus(user.id)} className="flex-1 bg-yellow-100 text-yellow-700 py-2 rounded-lg font-bold text-xs flex items-center justify-center gap-1"><Gift className="w-3 h-3" /> Bónus</button>
-                                        <button className="flex-1 bg-gray-100 text-gray-600 py-2 rounded-lg font-bold text-xs flex items-center justify-center gap-1"><Edit2 className="w-3 h-3" /> Editar</button>
+                                        <button onClick={() => handleBonus(user.id)} className="flex-1 bg-yellow-100 text-yellow-700 py-2 rounded-lg font-bold text-xs flex items-center justify-center gap-1"><Gift className="w-3 h-3" /> Bonus</button>
+                                        <button className="flex-1 bg-gray-100 text-gray-600 py-2 rounded-lg font-bold text-xs flex items-center justify-center gap-1"><Edit2 className="w-3 h-3" /> Edit</button>
                                     </div>
                                 </div>
                             ))}
@@ -614,24 +614,24 @@ const CommunicationsView = () => {
             type: newMessage.type
         });
         setNewMessage({ title: '', message: '', type: 'info' });
-        alert("Enviado com sucesso!");
+        alert("Sent successfully!");
     };
 
     return (
         <div className="p-8 animate-fade-in h-full flex flex-col gap-8">
-            <div><h2 className="text-2xl font-bold text-gray-800">Comunicações</h2><p className="text-gray-500 text-sm">Envie notificações e emails para a organização.</p></div>
+            <div><h2 className="text-2xl font-bold text-gray-800">Communications</h2><p className="text-gray-500 text-sm">Send notifications and emails to the organization.</p></div>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                    <h3 className="font-bold text-gray-800 mb-6 flex items-center gap-2"><Send className="w-4 h-4 text-[#009CDE]" /> Nova Mensagem</h3>
+                    <h3 className="font-bold text-gray-800 mb-6 flex items-center gap-2"><Send className="w-4 h-4 text-[#009CDE]" /> New Message</h3>
                     <div className="space-y-4">
-                        <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Título</label><input type="text" className="w-full p-3 bg-gray-50 rounded-lg border border-gray-200 focus:ring-2 focus:ring-[#009CDE] outline-none" value={newMessage.title} onChange={e => setNewMessage({ ...newMessage, title: e.target.value })} /></div>
-                        <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Mensagem</label><textarea className="w-full p-3 bg-gray-50 rounded-lg border border-gray-200 focus:ring-2 focus:ring-[#009CDE] outline-none h-32" value={newMessage.message} onChange={e => setNewMessage({ ...newMessage, message: e.target.value })} /></div>
-                        <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Tipo</label><select className="w-full p-3 bg-gray-50 rounded-lg border border-gray-200 outline-none" value={newMessage.type} onChange={e => setNewMessage({ ...newMessage, type: e.target.value as any })}><option value="info">Informação</option><option value="warning">Aviso Importante</option><option value="success">Sucesso / Parabéns</option></select></div>
-                        <button onClick={handleSend} className="w-full py-3 bg-[#002D72] text-white rounded-xl font-bold hover:bg-blue-900 transition flex items-center justify-center gap-2"><Send className="w-4 h-4" /> Enviar Notificação</button>
+                        <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Title</label><input type="text" className="w-full p-3 bg-gray-50 rounded-lg border border-gray-200 focus:ring-2 focus:ring-[#009CDE] outline-none" value={newMessage.title} onChange={e => setNewMessage({ ...newMessage, title: e.target.value })} /></div>
+                        <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Message</label><textarea className="w-full p-3 bg-gray-50 rounded-lg border border-gray-200 focus:ring-2 focus:ring-[#009CDE] outline-none h-32" value={newMessage.message} onChange={e => setNewMessage({ ...newMessage, message: e.target.value })} /></div>
+                        <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Type</label><select className="w-full p-3 bg-gray-50 rounded-lg border border-gray-200 outline-none" value={newMessage.type} onChange={e => setNewMessage({ ...newMessage, type: e.target.value as any })}><option value="info">Information</option><option value="warning">Important Warning</option><option value="success">Success / Congratulations</option></select></div>
+                        <button onClick={handleSend} className="w-full py-3 bg-[#002D72] text-white rounded-xl font-bold hover:bg-blue-900 transition flex items-center justify-center gap-2"><Send className="w-4 h-4" /> Send Notification</button>
                     </div>
                 </div>
                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col">
-                    <h3 className="font-bold text-gray-800 mb-6 flex items-center gap-2"><Clock className="w-4 h-4 text-[#009CDE]" /> Histórico Recente</h3>
+                    <h3 className="font-bold text-gray-800 mb-6 flex items-center gap-2"><Clock className="w-4 h-4 text-[#009CDE]" /> Recent History</h3>
                     <div className="flex-1 overflow-y-auto space-y-4 max-h-[400px]">
                         {(notifications || []).map((msg) => (
                             <div key={msg.id} className="p-4 bg-gray-50 rounded-xl border border-gray-100">
@@ -665,7 +665,7 @@ const SupportView = () => {
     const totalPages = Math.ceil(totalCount / 20);
 
     const handleResolve = async (id: string) => {
-        if (confirm("Marcar como resolvido?")) {
+        if (confirm("Mark as resolved?")) {
             await updateTicket.mutateAsync({ id, status: 'resolved' });
         }
     };
@@ -674,20 +674,20 @@ const SupportView = () => {
         <div className="p-8 animate-fade-in h-full flex flex-col gap-8">
             <div className="flex justify-between items-center">
                 <div>
-                    <h2 className="text-2xl font-bold text-gray-800">Suporte & Helpdesk</h2>
-                    <p className="text-gray-500 text-sm">Gerir pedidos de suporte.</p>
+                    <h2 className="text-2xl font-bold text-gray-800">Support & Helpdesk</h2>
+                    <p className="text-gray-500 text-sm">Manage support requests.</p>
                 </div>
                 <span className="bg-red-50 text-red-600 px-4 py-2 rounded-lg font-bold text-sm">
-                    {stats?.open || 0} Tickets Abertos
+                    {stats?.open || 0} Open Tickets
                 </span>
             </div>
 
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden text-sm flex flex-col h-full max-h-[calc(100vh-250px)]">
                 <div className="p-4 border-b border-gray-50 flex justify-between items-center bg-gray-50/50">
                     <div className="flex gap-4">
-                        <button onClick={() => setFilter('all')} className={`px-4 py-2 rounded-lg font-bold transition ${filter === 'all' ? 'bg-[#002D72] text-white shadow-lg' : 'text-gray-500 hover:bg-gray-200'}`}>Todos</button>
-                        <button onClick={() => setFilter('open')} className={`px-4 py-2 rounded-lg font-bold transition ${filter === 'open' ? 'bg-[#002D72] text-white shadow-lg' : 'text-gray-500 hover:bg-gray-200'}`}>Abertos</button>
-                        <button onClick={() => setFilter('resolved')} className={`px-4 py-2 rounded-lg font-bold transition ${filter === 'resolved' ? 'bg-[#002D72] text-white shadow-lg' : 'text-gray-500 hover:bg-gray-200'}`}>Resolvidos</button>
+                        <button onClick={() => setFilter('all')} className={`px-4 py-2 rounded-lg font-bold transition ${filter === 'all' ? 'bg-[#002D72] text-white shadow-lg' : 'text-gray-500 hover:bg-gray-200'}`}>All</button>
+                        <button onClick={() => setFilter('open')} className={`px-4 py-2 rounded-lg font-bold transition ${filter === 'open' ? 'bg-[#002D72] text-white shadow-lg' : 'text-gray-500 hover:bg-gray-200'}`}>Open</button>
+                        <button onClick={() => setFilter('resolved')} className={`px-4 py-2 rounded-lg font-bold transition ${filter === 'resolved' ? 'bg-[#002D72] text-white shadow-lg' : 'text-gray-500 hover:bg-gray-200'}`}>Resolved</button>
                     </div>
 
                     <div className="flex items-center gap-4 text-gray-500">
@@ -716,18 +716,18 @@ const SupportView = () => {
 
                 <div className="flex-1 overflow-auto">
                     {isLoading && tickets.length === 0 ? (
-                        <div className="p-8 text-center text-gray-400">Carregando tickets...</div>
+                        <div className="p-8 text-center text-gray-400">Loading tickets...</div>
                     ) : (
                         <div className="w-full">
                             {/* Desktop Table */}
                             <table className="w-full text-left relative hidden md:table">
                                 <thead className="bg-gray-50 border-b border-gray-100 sticky top-0">
                                     <tr>
-                                        <th className="px-6 py-4 font-bold text-gray-500 uppercase">Utilizador</th>
-                                        <th className="px-6 py-4 font-bold text-gray-500 uppercase">Assunto</th>
-                                        <th className="px-6 py-4 font-bold text-gray-500 uppercase">Prioridade</th>
-                                        <th className="px-6 py-4 font-bold text-gray-500 uppercase">Estado</th>
-                                        <th className="px-6 py-4 font-bold text-gray-500 uppercase text-right">Ação</th>
+                                        <th className="px-6 py-4 font-bold text-gray-500 uppercase">User</th>
+                                        <th className="px-6 py-4 font-bold text-gray-500 uppercase">Subject</th>
+                                        <th className="px-6 py-4 font-bold text-gray-500 uppercase">Priority</th>
+                                        <th className="px-6 py-4 font-bold text-gray-500 uppercase">Status</th>
+                                        <th className="px-6 py-4 font-bold text-gray-500 uppercase text-right">Action</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-50">
@@ -739,7 +739,7 @@ const SupportView = () => {
                                             <td className="px-6 py-4"><span className={`px-2 py-1 rounded text-xs font-bold ${t.status === 'resolved' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>{t.status}</span></td>
                                             <td className="px-6 py-4 text-right">
                                                 {t.status === 'open' && (
-                                                    <button onClick={() => handleResolve(t.id)} className="text-[#009CDE] font-bold hover:underline">Resolver</button>
+                                                    <button onClick={() => handleResolve(t.id)} className="text-[#009CDE] font-bold hover:underline">Resolve</button>
                                                 )}
                                             </td>
                                         </tr>
@@ -756,13 +756,13 @@ const SupportView = () => {
                                             <span className={`px-2 py-1 rounded text-[10px] uppercase font-bold ${t.status === 'resolved' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>{t.status}</span>
                                         </div>
                                         <div>
-                                            <div className="text-xs font-bold text-gray-400 uppercase">Assunto</div>
+                                            <div className="text-xs font-bold text-gray-400 uppercase">Subject</div>
                                             <div className="text-gray-700">{t.subject}</div>
                                         </div>
                                         <div className="flex justify-between items-center pt-2 border-t border-gray-50">
                                             <span className="bg-gray-100 px-2 py-1 rounded text-xs font-bold text-gray-600 uppercase">{t.priority}</span>
                                             {t.status === 'open' && (
-                                                <button onClick={() => handleResolve(t.id)} className="text-[#009CDE] font-bold text-sm bg-blue-50 px-3 py-1 rounded-lg">Resolver</button>
+                                                <button onClick={() => handleResolve(t.id)} className="text-[#009CDE] font-bold text-sm bg-blue-50 px-3 py-1 rounded-lg">Resolve</button>
                                             )}
                                         </div>
                                     </div>
@@ -772,7 +772,7 @@ const SupportView = () => {
                     )}
                     {!isLoading && tickets.length === 0 && (
                         <div className="p-8 text-center">
-                            <p className="text-gray-500">Não há tickets para mostrar.</p>
+                            <p className="text-gray-500">No tickets to show.</p>
                         </div>
                     )}
                 </div>
@@ -793,9 +793,9 @@ const MenuManagerView = () => {
     }, [menuItems]);
 
     const handleSave = async () => {
-        if (confirm("Isto irá atualizar o menu da App para todos os utilizadores. Continuar?")) {
+        if (confirm("This will update the App menu for all users. Continue?")) {
             await updateMenu.mutateAsync(localMenu);
-            alert("Menu atualizado com sucesso!");
+            alert("Menu updated successfully!");
         }
     };
 
@@ -996,16 +996,96 @@ const CMSView = () => {
     );
 };
 
-const SettingsView = () => (
-    <div className="p-8 animate-fade-in">
-        <h2 className="text-2xl font-bold text-gray-800 mb-6">Definições Globais</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100"><h3 className="font-bold text-[#002D72] mb-6 flex items-center gap-2"><Zap className="w-5 h-5 text-yellow-500" /> Regras de Gamificação</h3><div className="space-y-6"><div><label className="flex justify-between text-sm font-bold text-gray-700 mb-2">Pontos por Km (Corrida) <span className="text-[#009CDE]">10 pts</span></label><input type="range" className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer" /></div><div><label className="flex justify-between text-sm font-bold text-gray-700 mb-2">Pontos por 1000 Passos <span className="text-[#009CDE]">5 pts</span></label><input type="range" className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer" /></div><div><label className="flex justify-between text-sm font-bold text-gray-700 mb-2">Bónus de Check-in Evento <span className="text-[#009CDE]">50 pts</span></label><input type="range" className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer" /></div></div></div>
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100"><h3 className="font-bold text-[#002D72] mb-6 flex items-center gap-2"><Target className="w-5 h-5 text-red-500" /> Metas da Empresa</h3><div className="space-y-4"><div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Objetivo Mensal Global (Pontos)</label><input type="number" className="w-full p-3 bg-gray-50 rounded-lg border border-gray-200" defaultValue="40000" /></div><div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Prémio Batalha Escritórios</label><input type="text" className="w-full p-3 bg-gray-50 rounded-lg border border-gray-200" defaultValue="Almoço de Equipa" /></div><div className="flex items-center gap-2 mt-2"><input type="checkbox" checked className="w-4 h-4 text-blue-600 rounded" /><span className="text-sm text-gray-600">Reiniciar Ranking automaticamente ao dia 1</span></div></div></div>
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 md:col-span-2"><h3 className="font-bold text-[#002D72] mb-6 flex items-center gap-2"><Activity className="w-5 h-5 text-orange-500" /> Integrações API</h3><div className="flex items-center justify-between p-4 border border-gray-100 rounded-xl bg-gray-50"><div className="flex items-center gap-4"><div className="bg-[#FC4C02] p-2 rounded-lg"><Activity className="w-6 h-6 text-white" /></div><div><h4 className="font-bold text-gray-800">Strava API</h4><p className="text-xs text-gray-500">Sincronização de atividades</p></div></div><div className="flex items-center gap-4"><span className="text-xs font-bold text-green-600 bg-green-100 px-2 py-1 rounded">Operacional</span><button className="text-gray-400 hover:text-gray-600"><Settings className="w-5 h-5" /></button></div></div></div>
+const SettingsView = () => {
+    const [stravaConnected, setStravaConnected] = useState(false);
+    const [checkingStrava, setCheckingStrava] = useState(true);
+    const [connectingStrava, setConnectingStrava] = useState(false);
+
+    // Check if current admin has Strava connected
+    useEffect(() => {
+        const checkStravaConnection = async () => {
+            try {
+                const { supabase } = await import('../lib/supabase');
+                const { data: { user } } = await supabase.auth.getUser();
+                if (user) {
+                    const { data } = await supabase.from('strava_tokens').select('id').eq('user_id', user.id).single();
+                    setStravaConnected(!!data);
+                }
+            } catch (e) {
+                console.log('Strava check error:', e);
+            } finally {
+                setCheckingStrava(false);
+            }
+        };
+        checkStravaConnection();
+    }, []);
+
+    const handleConnectStrava = async () => {
+        setConnectingStrava(true);
+        try {
+            // Save return URL so callback knows where to send us back
+            localStorage.setItem('strava_return_url', '/admin');
+            console.log('✅ Admin: Set return URL to /admin');
+            console.log('📦 localStorage check:', localStorage.getItem('strava_return_url'));
+
+            const { getStravaAuthUrl } = await import('../features/strava/services/strava');
+            window.location.href = await getStravaAuthUrl();
+        } catch (e) {
+            alert('Error connecting to Strava');
+            setConnectingStrava(false);
+            localStorage.removeItem('strava_return_url');
+        }
+    };
+
+    return (
+        <div className="p-8 animate-fade-in">
+            <h2 className="text-2xl font-bold text-gray-800 mb-6">Definições Globais</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100"><h3 className="font-bold text-[#002D72] mb-6 flex items-center gap-2"><Zap className="w-5 h-5 text-yellow-500" /> Regras de Gamificação</h3><div className="space-y-6"><div><label className="flex justify-between text-sm font-bold text-gray-700 mb-2">Pontos por Km (Corrida) <span className="text-[#009CDE]">10 pts</span></label><input type="range" className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer" /></div><div><label className="flex justify-between text-sm font-bold text-gray-700 mb-2">Pontos por 1000 Passos <span className="text-[#009CDE]">5 pts</span></label><input type="range" className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer" /></div><div><label className="flex justify-between text-sm font-bold text-gray-700 mb-2">Bónus de Check-in Evento <span className="text-[#009CDE]">50 pts</span></label><input type="range" className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer" /></div></div></div>
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100"><h3 className="font-bold text-[#002D72] mb-6 flex items-center gap-2"><Target className="w-5 h-5 text-red-500" /> Metas da Empresa</h3><div className="space-y-4"><div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Objetivo Mensal Global (Pontos)</label><input type="number" className="w-full p-3 bg-gray-50 rounded-lg border border-gray-200" defaultValue="40000" /></div><div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Prémio Batalha Escritórios</label><input type="text" className="w-full p-3 bg-gray-50 rounded-lg border border-gray-200" defaultValue="Almoço de Equipa" /></div><div className="flex items-center gap-2 mt-2"><input type="checkbox" checked className="w-4 h-4 text-blue-600 rounded" /><span className="text-sm text-gray-600">Reiniciar Ranking automaticamente ao dia 1</span></div></div></div>
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 md:col-span-2">
+                    <h3 className="font-bold text-[#002D72] mb-6 flex items-center gap-2"><Activity className="w-5 h-5 text-orange-500" /> Integrações API</h3>
+                    <div className="flex items-center justify-between p-4 border border-gray-100 rounded-xl bg-gray-50">
+                        <div className="flex items-center gap-4">
+                            <div className="bg-[#FC4C02] p-2 rounded-lg"><Activity className="w-6 h-6 text-white" /></div>
+                            <div>
+                                <h4 className="font-bold text-gray-800">Strava API</h4>
+                                <p className="text-xs text-gray-500">Sincronização de atividades e segmentos KOM</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            {checkingStrava ? (
+                                <span className="text-xs text-gray-400">A verificar...</span>
+                            ) : stravaConnected ? (
+                                <span className="text-xs font-bold text-green-600 bg-green-100 px-3 py-1.5 rounded-lg flex items-center gap-1">
+                                    <CheckCircle2 className="w-3 h-3" /> Conectado
+                                </span>
+                            ) : (
+                                <button
+                                    onClick={handleConnectStrava}
+                                    disabled={connectingStrava}
+                                    className="bg-[#FC4C02] hover:bg-[#e04402] text-white text-xs font-bold px-4 py-2 rounded-lg flex items-center gap-2 transition shadow-md disabled:opacity-50"
+                                >
+                                    {connectingStrava ? (
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                    ) : (
+                                        <Activity className="w-4 h-4" />
+                                    )}
+                                    Connect Strava
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                    {!stravaConnected && !checkingStrava && (
+                        <p className="text-xs text-orange-600 mt-3 bg-orange-50 p-3 rounded-lg">
+                            ⚠️ Conecte o Strava para usar o auto-preenchimento de segmentos KOM e sincronização de resultados.
+                        </p>
+                    )}
+                </div>
+            </div>
         </div>
-    </div>
-);
+    );
+};
 
 // --- MAIN LAYOUT ---
 

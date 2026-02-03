@@ -32,18 +32,18 @@ const Navigation: React.FC = () => {
 
     // Default fallback while loading or if empty
     const tabs = menuItems || [
-        { id: 'home', label: 'Início', path: '/app/home', icon: 'Home' },
-        { id: 'events', label: 'Eventos', path: '/app/events', icon: 'Calendar' },
-        { id: 'store', label: 'Loja', path: '/app/store', icon: 'ShoppingBag' },
+        { id: 'home', label: 'Home', path: '/app/home', icon: 'Home' },
+        { id: 'events', label: 'Events', path: '/app/events', icon: 'Calendar' },
+        { id: 'store', label: 'Store', path: '/app/store', icon: 'ShoppingBag' },
         { id: 'social', label: 'Social', path: '/app/social', icon: 'Users' },
-        { id: 'profile', label: 'Perfil', path: '/app/profile', icon: 'User' },
+        { id: 'profile', label: 'Profile', path: '/app/profile', icon: 'User' },
     ];
 
     return (
         <nav
             className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-4 py-3 flex justify-between items-center z-50 md:max-w-2xl lg:max-w-4xl md:mx-auto"
             role="navigation"
-            aria-label="Navegação principal"
+            aria-label="Main navigation"
         >
             {tabs.map((tab) => {
                 const Icon = ICON_MAP[tab.icon] || Home; // Fallback icon

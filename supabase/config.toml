@@ -337,6 +337,15 @@ deno_version = 2
 # [edge_runtime.secrets]
 # secret_key = "env(SECRET_VALUE)"
 
+# Configure edge functions individually
+[functions.fetch-strava-segment]
+# Disable JWT verification - we handle it manually in the function
+verify_jwt = false
+
+[functions.strava-process-stage]
+# Disable JWT verification for this function too
+verify_jwt = false
+
 [analytics]
 enabled = true
 port = 54327

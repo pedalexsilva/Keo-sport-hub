@@ -74,14 +74,14 @@ export default function OnboardingPage() {
                 {step === 1 ? (
                     <div className="animate-fade-in space-y-6">
                         <div className="text-center text-white mb-8">
-                            <h1 className="text-2xl font-bold mb-2">Bem-vindo à KEO!</h1>
-                            <p className="text-white/70">Vamos configurar o teu perfil de atleta.</p>
+                            <h1 className="text-2xl font-bold mb-2">Welcome to KEO!</h1>
+                            <p className="text-white/70">Let's set up your athlete profile.</p>
                         </div>
 
                         <form onSubmit={handleSubmit} className="space-y-4">
                             <div className="space-y-1">
                                 <label className="text-xs font-bold text-white/70 uppercase tracking-wider ml-1">
-                                    Como te chamas?
+                                    What is your name?
                                 </label>
                                 <div className="relative">
                                     <User className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40 w-5 h-5" />
@@ -90,7 +90,7 @@ export default function OnboardingPage() {
                                         required
                                         value={formData.name}
                                         onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                                        placeholder="O teu nome"
+                                        placeholder="Your name"
                                         className="w-full bg-white/10 border border-white/20 rounded-xl py-3.5 pl-12 pr-4 text-white placeholder-white/40 focus:outline-none focus:border-[#009CDE] transition-colors"
                                     />
                                 </div>
@@ -98,7 +98,7 @@ export default function OnboardingPage() {
 
                             <div className="space-y-1">
                                 <label className="text-xs font-bold text-white/70 uppercase tracking-wider ml-1">
-                                    Qual o teu cargo?
+                                    What is your role?
                                 </label>
                                 <div className="relative">
                                     <Briefcase className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40 w-5 h-5" />
@@ -107,7 +107,7 @@ export default function OnboardingPage() {
                                         required
                                         value={formData.role}
                                         onChange={(e) => setFormData(prev => ({ ...prev, role: e.target.value }))}
-                                        placeholder="Ex: Engenheiro Civil"
+                                        placeholder="Ex: Civil Engineer"
                                         className="w-full bg-white/10 border border-white/20 rounded-xl py-3.5 pl-12 pr-4 text-white placeholder-white/40 focus:outline-none focus:border-[#009CDE] transition-colors"
                                     />
                                 </div>
@@ -115,7 +115,7 @@ export default function OnboardingPage() {
 
                             <div className="space-y-1">
                                 <label className="text-xs font-bold text-white/70 uppercase tracking-wider ml-1">
-                                    Onde trabalhas?
+                                    Where do you work?
                                 </label>
                                 <div className="relative">
                                     <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40 w-5 h-5" />
@@ -125,7 +125,7 @@ export default function OnboardingPage() {
                                         onChange={(e) => setFormData(prev => ({ ...prev, office: e.target.value }))}
                                         className="w-full bg-white/10 border border-white/20 rounded-xl py-3.5 pl-12 pr-4 text-white placeholder-white/40 focus:outline-none focus:border-[#009CDE] transition-colors appearance-none [&>option]:text-gray-900"
                                     >
-                                        <option value="" disabled>Seleciona o teu escritório</option>
+                                        <option value="" disabled>Select your office</option>
                                         {OFFICES.map(office => (
                                             <option key={office} value={office}>{office}</option>
                                         ))}
@@ -143,7 +143,7 @@ export default function OnboardingPage() {
                                     <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                                 ) : (
                                     <>
-                                        Continuar <ChevronRight className="w-5 h-5" />
+                                        Continue <ChevronRight className="w-5 h-5" />
                                     </>
                                 )}
                             </button>
@@ -158,9 +158,9 @@ export default function OnboardingPage() {
                         </div>
 
                         <div className="text-white mb-8">
-                            <h1 className="text-3xl font-bold mb-2">Tudo pronto!</h1>
+                            <h1 className="text-3xl font-bold mb-2">All set!</h1>
                             <p className="text-white/70">
-                                O teu perfil foi criado. Estás pronto para começar a somar pontos.
+                                Your profile has been created. You are ready to start earning points.
                             </p>
                         </div>
 
@@ -180,7 +180,7 @@ export default function OnboardingPage() {
                             onClick={handleFinish}
                             className="w-full bg-[#009CDE] hover:bg-[#008bc5] text-white font-bold py-4 rounded-xl shadow-lg shadow-[#009CDE]/20 flex items-center justify-center gap-2 mt-8 transition-all active:scale-[0.98]"
                         >
-                            Começar Agora <ChevronRight className="w-5 h-5" />
+                            Start Now <ChevronRight className="w-5 h-5" />
                         </button>
                     </div>
                 )}
