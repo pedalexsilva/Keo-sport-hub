@@ -9,8 +9,14 @@ interface DashboardProps {
   user: User;
 }
 
+
+import { useEvents } from '../hooks/useEvents';
+
 const Dashboard: React.FC<DashboardProps> = ({ user }) => {
+  const { data: events } = useEvents();
   const [isConnecting, setIsConnecting] = useState(false);
+  const activeEventsCount = events?.filter(e => e.status !== 'closed').length || 0;
+
 
 
   const handleConnectStrava = () => {
@@ -79,7 +85,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
           { label: 'Total Points', value: user.totalPoints, icon: Award, color: 'text-yellow-600', bg: 'bg-yellow-50' },
           { label: 'Activities', value: user.activities.length, icon: Activity, color: 'text-blue-600', bg: 'bg-blue-50' },
           { label: 'Ranking', value: `#${user.rank}`, icon: TrendingUp, color: 'text-green-600', bg: 'bg-green-50' },
-          { label: 'Active Events', value: '2', icon: CalendarIcon, color: 'text-purple-600', bg: 'bg-purple-50' },
+          { label: 'Active Events', value: activeEventsCount, icon: CalendarIcon, color: 'text-purple-600', bg: 'bg-purple-50' },
         ].map((stat, index) => (
           <div key={index} className="flex items-center rounded-xl bg-white p-4 shadow-sm border border-gray-100">
             <div className={`mr-4 flex h-12 w-12 items-center justify-center rounded-lg ${stat.bg}`}>

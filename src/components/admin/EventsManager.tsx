@@ -360,13 +360,32 @@ export const EventsManager = () => {
 
                                 <div>
                                     <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Date and Time</label>
-                                    <input
-                                        type="datetime-local"
-                                        required
-                                        className="w-full p-3 bg-gray-50 rounded-lg border border-gray-200 outline-none"
-                                        value={currentEvent.date ? currentEvent.date.toString().substring(0, 16) : ''}
-                                        onChange={e => setCurrentEvent({ ...currentEvent, date: e.target.value })}
-                                    />
+                                    <div className="flex gap-2">
+                                        <div className="flex-1">
+                                            <input
+                                                type="date"
+                                                required
+                                                className="w-full p-3 bg-gray-50 rounded-lg border border-gray-200 outline-none"
+                                                value={currentEvent.date ? currentEvent.date.split('T')[0] : ''}
+                                                onChange={e => {
+                                                    const time = currentEvent.date && currentEvent.date.includes('T') ? currentEvent.date.split('T')[1] : '09:00';
+                                                    setCurrentEvent({ ...currentEvent, date: `${e.target.value}T${time}` });
+                                                }}
+                                            />
+                                        </div>
+                                        <div className="w-32">
+                                            <input
+                                                type="time"
+                                                required
+                                                className="w-full p-3 bg-gray-50 rounded-lg border border-gray-200 outline-none"
+                                                value={currentEvent.date && currentEvent.date.includes('T') ? currentEvent.date.split('T')[1] : '09:00'}
+                                                onChange={e => {
+                                                    const date = currentEvent.date && currentEvent.date.includes('T') ? currentEvent.date.split('T')[0] : new Date().toISOString().split('T')[0];
+                                                    setCurrentEvent({ ...currentEvent, date: `${date}T${e.target.value}` });
+                                                }}
+                                            />
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <div>

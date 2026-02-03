@@ -53,7 +53,9 @@ export function useEvents() {
                     endDate = lastStage.date;
                 }
 
-                const isPast = new Date(endDate) < new Date();
+                const end = new Date(endDate);
+                end.setHours(23, 59, 59, 999);
+                const isPast = end < new Date();
 
                 return {
                     id: e.id,

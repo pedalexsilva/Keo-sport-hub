@@ -304,6 +304,44 @@ serve(async (req) => {
             log(`-> Updated ${segResults?.length || 0} positions for ${segment.name}`)
         }
 
+        // J. Aggregate points to stage_results (Fix for Custom Segments)
+        log(`Aggregating segment points to stage results...`)
+        
+        // Fetch all segment results for this stage
+        const { data: allSegResults, error: allSegResultsError } = await supabase
+            .from('segment_results')
+            .select('user_id, points_earned')
+            .eq('stage_id', stage_id)
+        
+        if (!allSegResultsError && allSegResults) {
+            // Sum points per user
+            const userPointsMap = new Map<string, number>()
+            
+            allSegResults.forEach((r: any) => {
+                const current = userPointsMap.get(r.user_id) || 0
+                userPointsMap.set(r.user_id, current + (r.points_earned || 0))
+            })
+            
+            // Update stage_results
+            for (const [userId, points] of userPointsMap.entries()) {
+                // If legacy points exist (from mountain_points), we should ideally replace or merge. 
+                // The new system intends to replace legacy fixed points with calculated ones.
+                // We will OVERWRITE mountain_points with the sum of segment points.
+                
+                await supabase
+                    .from('stage_results')
+                    .update({ 
+                        mountain_points: points,
+                        updated_at: new Date().toISOString()
+                     })
+                    .eq('stage_id', stage_id)
+                    .eq('user_id', userId)
+            }
+            log(`-> Updated mountain points for ${userPointsMap.size} users.`)
+        } else {
+             log(`-> Error fetching total segment results: ${allSegResultsError?.message}`)
+        }
+
         return new Response(JSON.stringify({ 
             success: true, 
             processed: results.length,

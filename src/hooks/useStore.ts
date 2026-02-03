@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
 
 export interface Product {
@@ -70,4 +71,31 @@ export const useStore = () => {
         purchaseItem,
         refresh: fetchProducts
     };
-};
+
+export function useUserInventory(userId?: string) {
+    return useQuery({
+        queryKey: ['user-inventory', userId],
+        enabled: !!userId,
+        queryFn: async () => {
+            const { data, error } = await supabase
+                .from('orders')
+                .select(`
+                    id,
+                    created_at,
+                    product:products(*)
+                `)
+                .eq('user_id', userId)
+                .order('created_at', { ascending: false });
+
+            if (error) throw error;
+
+            // Map to flat inventory items for easier display
+            return data.map((order: any) => ({
+                ...order.product,
+                purchase_date: order.created_at,
+                order_id: order.id
+            }));
+        }
+    });
+}
+

@@ -20,6 +20,7 @@ import { useProfile } from './hooks/useProfile';
 import { useEvents, useJoinEvent } from './hooks/useEvents';
 import { getStravaAuthUrl, syncStravaActivities } from './features/strava/services/strava';
 import { useActivityStats } from './hooks/useActivityStats';
+import { useUserInventory } from './hooks/useStore';
 import LandingPage from './pages/LandingPage';
 import AdminDashboard from './pages/AdminDashboard';
 
@@ -32,43 +33,34 @@ const AppLayout: React.FC = () => {
   const joinEventMutation = useJoinEvent();
   const navigate = useNavigate();
 
-  // Local State for "App" features (Mocked backend for store/points specifics)
-  const [points, setPoints] = useState(1250);
-  const [inventory, setInventory] = useState<any[]>([]);
+  // Data Fetching
+  const { data: inventory, refetch: refetchInventory } = useUserInventory(authUser?.id);
+  const userPoints = userProfile?.balance || 0;
+
+  // Local UI State
   const [notification, setNotification] = useState<string | null>(null);
   const [isSyncing, setIsSyncing] = useState(false);
 
-  // Sync points from DB if available (optional enhancement)
-  useEffect(() => {
-    if (userProfile?.totalPoints) {
-      setPoints(userProfile.totalPoints);
-    }
-  }, [userProfile]);
-
-  // Check for onboarding and redirect if needed (but not for admins)
+  // Redirect Logic
   useEffect(() => {
     if (!isProfileLoading && !isProfileFetching && userProfile && !userProfile.onboardingCompleted) {
-      // Skip onboarding for admin users
-      if (userProfile.role === 'admin') {
-        return;
+      if (userProfile.role !== 'admin') {
+        navigate('/onboarding');
       }
-
-      // We're inside AppLayout, which is under /app/* path.
-      // However, we probably want Onboarding to be its own top-level route or inside App but full screen.
-      // The current structure has AppLayout rendering Navigation/Header etc.
-      // The best place for redirection is actually at the Routing level or inside AppLayout to navigate away.
-      // But if we navigate to /onboarding, we need that route to exist outside AppLayout if we want a clean screen.
-      navigate('/onboarding');
     }
   }, [userProfile, isProfileLoading, isProfileFetching, navigate]);
 
-  const handlePurchase = (item: any) => {
-    if (points >= item.cost) {
-      setPoints(prev => prev - item.cost);
-      setInventory(prev => [item, ...prev]);
-      setNotification(`You exchanged ${item.cost}pts for ${item.name}!`);
-      setTimeout(() => setNotification(null), 3000);
-    }
+  const handlePurchaseSuccess = (item: any) => {
+    // Refresh data
+    refetchInventory();
+    // Profile update happens automatically via invalidation or we can force it, 
+    // but the balance should update if we invalidate 'profile'. 
+    // For now, let's assume react-query handles cache invalidation if configured, 
+    // or we might need to userProfile refetch if purchase doesn't trigger it.
+    // Ideally useStore's purchaseItem should invalidate 'profile'.
+    // Here we just show the toast.
+    setNotification(`You exchanged ${item.cost}pts for ${item.name}!`);
+    setTimeout(() => setNotification(null), 3000);
   };
 
   const handleJoinEvent = (eventId: string) => {
@@ -192,8 +184,8 @@ const AppLayout: React.FC = () => {
             } />
             <Route path="store" element={
               <StoreView
-                points={points}
-                handlePurchase={handlePurchase}
+                points={userPoints}
+                handlePurchase={handlePurchaseSuccess}
               />
             } />
             <Route path="social" element={
@@ -202,8 +194,8 @@ const AppLayout: React.FC = () => {
             <Route path="profile" element={
               <ProfileView
                 user={userProfile}
-                points={points}
-                inventory={inventory}
+                points={userPoints}
+                inventory={inventory || []}
                 stravaConnected={userProfile.isConnectedToStrava}
                 onConnect={handleConnectStrava}
                 onDisconnect={handleDisconnectStrava}

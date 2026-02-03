@@ -31,8 +31,8 @@ const Events: React.FC<EventsProps> = ({ user }) => {
 
   const events = eventsData || [];
   const now = new Date();
-  const upcomingEvents = events.filter(e => new Date(e.date) >= now).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-  const pastEvents = events.filter(e => new Date(e.date) < now).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  const upcomingEvents = events.filter(e => e.status !== 'closed').sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  const pastEvents = events.filter(e => e.status === 'closed').sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   const displayedEvents = activeTab === 'upcoming' ? upcomingEvents : pastEvents;
 
@@ -172,13 +172,32 @@ const Events: React.FC<EventsProps> = ({ user }) => {
                 </div>
                 <div>
                   <label className="mb-1 block text-sm font-medium text-gray-700">Data e Hora</label>
-                  <input
-                    required
-                    type="datetime-local"
-                    className="w-full rounded-lg border border-gray-300 p-2.5 focus:border-blue-500 focus:ring-blue-500"
-                    value={newEvent.date}
-                    onChange={e => setNewEvent({ ...newEvent, date: e.target.value })}
-                  />
+                  <div className="flex gap-2">
+                    <div className="flex-1">
+                      <input
+                        required
+                        type="date"
+                        className="w-full rounded-lg border border-gray-300 p-2.5 focus:border-blue-500 focus:ring-blue-500"
+                        value={newEvent.date ? newEvent.date.split('T')[0] : ''}
+                        onChange={e => {
+                          const time = newEvent.date && newEvent.date.includes('T') ? newEvent.date.split('T')[1] : '09:00';
+                          setNewEvent({ ...newEvent, date: `${e.target.value}T${time}` });
+                        }}
+                      />
+                    </div>
+                    <div className="w-32">
+                      <input
+                        required
+                        type="time"
+                        className="w-full rounded-lg border border-gray-300 p-2.5 focus:border-blue-500 focus:ring-blue-500"
+                        value={newEvent.date && newEvent.date.includes('T') ? newEvent.date.split('T')[1] : '09:00'}
+                        onChange={e => {
+                          const date = newEvent.date && newEvent.date.includes('T') ? newEvent.date.split('T')[0] : new Date().toISOString().split('T')[0];
+                          setNewEvent({ ...newEvent, date: `${date}T${e.target.value}` });
+                        }}
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
 
