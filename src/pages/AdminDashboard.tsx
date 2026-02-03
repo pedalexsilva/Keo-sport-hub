@@ -32,6 +32,7 @@ import {
     Target,
     Zap,
     Activity,
+    AlertCircle,
     ShoppingBag,
     Package,
     Truck,
@@ -1041,42 +1042,82 @@ const SettingsView = () => {
                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100"><h3 className="font-bold text-[#002D72] mb-6 flex items-center gap-2"><Target className="w-5 h-5 text-red-500" /> Metas da Empresa</h3><div className="space-y-4"><div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Objetivo Mensal Global (Pontos)</label><input type="number" className="w-full p-3 bg-gray-50 rounded-lg border border-gray-200" defaultValue="40000" /></div><div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Prémio Batalha Escritórios</label><input type="text" className="w-full p-3 bg-gray-50 rounded-lg border border-gray-200" defaultValue="Almoço de Equipa" /></div><div className="flex items-center gap-2 mt-2"><input type="checkbox" checked className="w-4 h-4 text-blue-600 rounded" /><span className="text-sm text-gray-600">Reiniciar Ranking automaticamente ao dia 1</span></div></div></div>
                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 md:col-span-2">
                     <h3 className="font-bold text-[#002D72] mb-6 flex items-center gap-2"><Activity className="w-5 h-5 text-orange-500" /> Integrações API</h3>
-                    <div className="flex items-center justify-between p-4 border border-gray-100 rounded-xl bg-gray-50">
-                        <div className="flex items-center gap-4">
-                            <div className="bg-[#FC4C02] p-2 rounded-lg"><Activity className="w-6 h-6 text-white" /></div>
-                            <div>
-                                <h4 className="font-bold text-gray-800">Strava API</h4>
-                                <p className="text-xs text-gray-500">Sincronização de atividades e segmentos KOM</p>
+
+                    <div className="border-2 rounded-xl overflow-hidden" style={{
+                        borderColor: stravaConnected ? '#10b981' : '#f97316'
+                    }}>
+                        {/* Header with Status */}
+                        <div className="flex items-center justify-between p-6" style={{
+                            backgroundColor: stravaConnected ? '#ecfdf5' : '#fff7ed'
+                        }}>
+                            <div className="flex items-center gap-5">
+                                <div className="bg-[#FC4C02] p-3 rounded-xl shadow-md flex items-center justify-center">
+                                    <Activity className="w-7 h-7 text-white" />
+                                </div>
+                                <div className="flex flex-col justify-center">
+                                    <h4 className="font-bold text-gray-900 text-base leading-tight mb-1">Strava API</h4>
+                                    <p className="text-sm text-gray-600 leading-tight">Sincronização de atividades e segmentos KOM</p>
+                                </div>
+                            </div>
+
+                            <div className="flex items-center">
+                                {checkingStrava ? (
+                                    <div className="flex items-center gap-2 bg-gray-100 px-4 py-2.5 rounded-lg">
+                                        <Loader2 className="w-4 h-4 animate-spin text-gray-500" />
+                                        <span className="text-sm font-medium text-gray-600">A verificar...</span>
+                                    </div>
+                                ) : stravaConnected ? (
+                                    <div className="flex items-center gap-2 bg-green-500 px-6 py-3 rounded-xl shadow-md">
+                                        <CheckCircle2 className="w-5 h-5 text-white" />
+                                        <span className="text-sm font-bold text-white uppercase tracking-wide">Conectado</span>
+                                    </div>
+                                ) : (
+                                    <button
+                                        onClick={handleConnectStrava}
+                                        disabled={connectingStrava}
+                                        className="bg-[#FC4C02] hover:bg-[#e04402] text-white font-bold px-6 py-3 rounded-xl flex items-center gap-2.5 transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        {connectingStrava ? (
+                                            <>
+                                                <Loader2 className="w-5 h-5 animate-spin" />
+                                                <span className="text-sm">A conectar...</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Activity className="w-5 h-5" />
+                                                <span className="text-sm">Conectar Strava</span>
+                                            </>
+                                        )}
+                                    </button>
+                                )}
                             </div>
                         </div>
-                        <div className="flex items-center gap-3">
-                            {checkingStrava ? (
-                                <span className="text-xs text-gray-400">A verificar...</span>
-                            ) : stravaConnected ? (
-                                <span className="text-xs font-bold text-green-600 bg-green-100 px-3 py-1.5 rounded-lg flex items-center gap-1">
-                                    <CheckCircle2 className="w-3 h-3" /> Conectado
-                                </span>
-                            ) : (
-                                <button
-                                    onClick={handleConnectStrava}
-                                    disabled={connectingStrava}
-                                    className="bg-[#FC4C02] hover:bg-[#e04402] text-white text-xs font-bold px-4 py-2 rounded-lg flex items-center gap-2 transition shadow-md disabled:opacity-50"
-                                >
-                                    {connectingStrava ? (
-                                        <Loader2 className="w-4 h-4 animate-spin" />
-                                    ) : (
-                                        <Activity className="w-4 h-4" />
-                                    )}
-                                    Connect Strava
-                                </button>
+
+                        {/* Info/Warning Section */}
+                        <div className="px-6 pb-6">
+                            {stravaConnected ? (
+                                <div className="bg-green-50 border border-green-200 rounded-xl p-4 flex items-start gap-3">
+                                    <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                                    <div className="flex-1">
+                                        <p className="text-sm font-semibold text-green-900 mb-1.5 leading-tight">Conta Strava Conectada</p>
+                                        <p className="text-xs text-green-700 leading-relaxed">
+                                            Pode agora usar o auto-preenchimento de segmentos KOM e sincronizar resultados de atividades automaticamente.
+                                        </p>
+                                    </div>
+                                </div>
+                            ) : !checkingStrava && (
+                                <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 flex items-start gap-3">
+                                    <AlertCircle className="w-5 h-5 text-orange-600 flex-shrink-0 mt-0.5" />
+                                    <div className="flex-1">
+                                        <p className="text-sm font-semibold text-orange-900 mb-1.5 leading-tight">Strava Não Conectado</p>
+                                        <p className="text-xs text-orange-700 leading-relaxed">
+                                            Conecte a sua conta Strava para usar o auto-preenchimento de segmentos KOM e sincronização automática de resultados.
+                                        </p>
+                                    </div>
+                                </div>
                             )}
                         </div>
                     </div>
-                    {!stravaConnected && !checkingStrava && (
-                        <p className="text-xs text-orange-600 mt-3 bg-orange-50 p-3 rounded-lg">
-                            ⚠️ Conecte o Strava para usar o auto-preenchimento de segmentos KOM e sincronização de resultados.
-                        </p>
-                    )}
                 </div>
             </div>
         </div>
