@@ -112,24 +112,32 @@ export const ResultsEditor = ({ stageId, onClose }: ResultsEditorProps) => {
     if (isLoading) return <div className="p-12 text-center"><Loader2 className="w-8 h-8 animate-spin mx-auto" /></div>;
 
     return (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in">
-            <div className="bg-white rounded-2xl w-full max-w-6xl shadow-2xl flex flex-col max-h-[90vh]">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-md p-4 animate-in fade-in duration-300">
+            <div className="bg-white rounded-3xl w-full max-w-6xl shadow-2xl flex flex-col max-h-[92vh] overflow-hidden">
 
-                <div className="p-4 md:p-6 border-b border-gray-100 flex justify-between items-center bg-white rounded-t-2xl sticky top-0 z-20">
-                    <div>
-                        <h3 className="text-lg md:text-xl font-bold flex items-center gap-2">
-                            <Save className="w-5 h-5 text-blue-600" />
-                            <span className="hidden md:inline">Results Editor</span>
-                            <span className="md:hidden">Results</span>
-                        </h3>
-                        <p className="text-gray-500 text-xs md:text-sm hidden md:block">Validate times and publish official classification.</p>
+                <div className="p-6 md:p-8 bg-gradient-to-r from-[#002D72] via-[#003580] to-[#002D72] text-white flex justify-between items-center rounded-t-3xl border-b border-[#002D72]">
+                    <div className="flex items-center gap-4">
+                        <div className="p-3 bg-white/10 rounded-xl backdrop-blur-sm">
+                            <Save className="w-6 h-6 text-white" />
+                        </div>
+                        <div>
+                            <h3 className="text-xl md:text-2xl font-bold tracking-tight">
+                                Results Editor
+                            </h3>
+                            <p className="text-blue-100 text-sm font-medium hidden md:block">Validate times and publish official classification</p>
+                        </div>
                     </div>
-                    <div className="flex gap-2">
-                        <button onClick={onClose} className="px-3 py-2 text-gray-500 hover:bg-gray-100 rounded-lg font-bold text-sm">Cancel</button>
+                    <div className="flex gap-3">
+                        <button
+                            onClick={onClose}
+                            className="px-4 py-2.5 text-white/80 hover:text-white hover:bg-white/10 rounded-xl font-bold text-sm transition-all"
+                        >
+                            Cancel
+                        </button>
                         <button
                             onClick={handlePublish}
                             disabled={isSaving}
-                            className="px-4 py-2 bg-green-600 text-white rounded-lg font-bold hover:bg-green-700 shadow-md flex items-center gap-2 disabled:opacity-50 text-sm"
+                            className="px-5 py-2.5 bg-[#009CDE] text-white rounded-xl font-bold hover:bg-[#008bc7] hover:shadow-lg shadow-md flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all transform active:scale-95"
                         >
                             {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                             <span className="hidden md:inline">Publish Results</span>
