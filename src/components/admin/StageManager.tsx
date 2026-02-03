@@ -5,6 +5,8 @@ import { uploadEventMedia } from '../../hooks/useEvents';
 import { Calendar, Plus, Trash2, RefreshCw, Loader2, MapPin, ImageIcon, Pencil, Copy, AlertCircle, CheckCircle } from 'lucide-react';
 import { formatDate } from '../../utils/dateUtils';
 
+import { ResultsEditor } from './ResultsEditor';
+
 interface StageManagerProps {
     eventId: string;
     onClose: () => void;
@@ -29,6 +31,8 @@ export const StageManager = ({ eventId, onClose }: StageManagerProps) => {
     const [imageFile, setImageFile] = useState<File | null>(null);
     const [editingStageId, setEditingStageId] = useState<string | null>(null);
     const [processingId, setProcessingId] = useState<string | null>(null);
+    const [selectedStageForResults, setSelectedStageForResults] = useState<string | null>(null);
+
 
     const handleCreate = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -78,10 +82,7 @@ export const StageManager = ({ eventId, onClose }: StageManagerProps) => {
         }
     };
 
-    const copyToClipboard = (text: string) => {
-        navigator.clipboard.writeText(text);
-        alert("ID copiado! Cole na célula B1 do Google Sheet.");
-    };
+
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
@@ -130,15 +131,7 @@ export const StageManager = ({ eventId, onClose }: StageManagerProps) => {
                                                 <span className="flex items-center gap-1.5"><MapPin className="w-4 h-4 text-[#009CDE]" /> {stage.mountain_segment_ids?.length || 0} Segmentos</span>
                                             </div>
 
-                                            <div className="mt-4 pt-4 border-t border-gray-50 flex items-center gap-3">
-                                                <span className="text-xs text-gray-400 font-mono bg-gray-100 px-2 py-1 rounded select-all">{stage.id.substring(0, 8)}...</span>
-                                                <button
-                                                    onClick={() => copyToClipboard(stage.id)}
-                                                    className="text-xs font-bold text-[#002D72] flex items-center gap-1 hover:underline decoration-blue-200 underline-offset-2"
-                                                >
-                                                    <Copy className="w-3 h-3" /> Copiar ID para Excel
-                                                </button>
-                                            </div>
+
                                         </div>
 
                                         {/* Stats & Actions Section */}
@@ -156,14 +149,24 @@ export const StageManager = ({ eventId, onClose }: StageManagerProps) => {
                                             </div>
 
                                             {/* Action Button */}
-                                            <button
-                                                onClick={() => handleProcess(stage.id)}
-                                                disabled={!!processingId}
-                                                className="w-full py-3 bg-white border border-[#002D72] text-[#002D72] rounded-xl font-bold hover:bg-blue-50 transition shadow-sm flex items-center justify-center gap-2 group"
-                                            >
-                                                {processingId === stage.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4 group-hover:rotate-180 transition-transform duration-500" />}
-                                                Sincronizar Strava
-                                            </button>
+                                            <div className="flex flex-col gap-2">
+                                                <button
+                                                    onClick={() => setSelectedStageForResults(stage.id)}
+                                                    className="w-full py-2 bg-[#002D72] text-white rounded-xl font-bold hover:bg-blue-900 transition shadow-md flex items-center justify-center gap-2"
+                                                >
+                                                    <CheckCircle className="w-4 h-4" />
+                                                    Gerir Resultados
+                                                </button>
+
+                                                <button
+                                                    onClick={() => handleProcess(stage.id)}
+                                                    disabled={!!processingId}
+                                                    className="w-full py-2 bg-white border border-[#002D72] text-[#002D72] rounded-xl font-bold hover:bg-blue-50 transition shadow-sm flex items-center justify-center gap-2 group text-sm"
+                                                >
+                                                    {processingId === stage.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4 group-hover:rotate-180 transition-transform duration-500" />}
+                                                    Sync Strava
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 );
@@ -217,6 +220,12 @@ export const StageManager = ({ eventId, onClose }: StageManagerProps) => {
                     )}
                 </div>
             </div>
+            {selectedStageForResults && (
+                <ResultsEditor
+                    stageId={selectedStageForResults}
+                    onClose={() => setSelectedStageForResults(null)}
+                />
+            )}
         </div>
     );
 };

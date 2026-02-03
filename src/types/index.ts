@@ -41,6 +41,7 @@ export interface Event {
   title: string;
   description: string;
   date: string;
+  endDate?: string;
   location: string;
   type: ActivityType;
   mode: 'social' | 'competitive';
@@ -70,4 +71,13 @@ export interface Notification {
   read: boolean;
   metadata?: any;
   created_at: string;
+}
+
+export interface Profile {
+  id: string;
+  username: string;
+  full_name: string;
+  avatar_url: string;
+  office: string;
+  email?: string;
 }

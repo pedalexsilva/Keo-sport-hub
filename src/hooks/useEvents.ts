@@ -12,6 +12,9 @@ export function useEvents() {
           *,
           event_participants (
             user_id
+          ),
+          event_stages (
+            date
           )
         `)
                 .order('date', { ascending: true });
@@ -38,27 +41,44 @@ export function useEvents() {
                 profilesMap = new Map(profiles?.map(p => [p.id, p]));
             }
 
-            return data.map((e: any) => ({
-                id: e.id,
-                title: e.title,
-                description: e.description,
-                date: e.date,
-                location: e.location,
-                type: e.type as ActivityType,
-                image: e.image_url || `https://placehold.co/600x400/e2e8f0/1e293b?text=${encodeURIComponent(e.title || 'Event')}`,
-                creatorId: e.creator_id,
-                participants: e.event_participants.map((p: any) => {
-                    const profile = profilesMap.get(p.user_id);
-                    return {
-                        id: p.user_id,
-                        name: profile?.full_name || profile?.username || 'Utilizador',
-                        office: profile?.office || 'KEO',
-                        avatar: profile?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile?.full_name || profile?.username || 'User')}&background=random`
-                    };
-                }),
-                maxParticipants: e.max_participants,
-                status: (new Date(e.date) < new Date() && e.status === 'open') ? 'closed' : e.status
-            }));
+            return data.map((e: any) => {
+                const stages = e.event_stages || [];
+                let endDate = e.date;
+
+                if (stages.length > 0) {
+                    // Find the latest stage date
+                    const lastStage = stages.reduce((latest: any, current: any) => {
+                        return new Date(current.date) > new Date(latest.date) ? current : latest;
+                    }, stages[0]);
+                    endDate = lastStage.date;
+                }
+
+                const isPast = new Date(endDate) < new Date();
+
+                return {
+                    id: e.id,
+                    title: e.title,
+                    description: e.description,
+                    date: e.date,
+                    endDate: endDate,
+                    location: e.location,
+                    type: e.type as ActivityType,
+                    image: e.image_url || `https://placehold.co/600x400/e2e8f0/1e293b?text=${encodeURIComponent(e.title || 'Event')}`,
+                    creatorId: e.creator_id,
+                    participants: e.event_participants.map((p: any) => {
+                        const profile = profilesMap.get(p.user_id);
+                        return {
+                            id: p.user_id,
+                            name: profile?.full_name || profile?.username || 'Utilizador',
+                            office: profile?.office || 'KEO',
+                            avatar: profile?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile?.full_name || profile?.username || 'User')}&background=random`
+                        };
+                    }),
+                    maxParticipants: e.max_participants,
+                    status: (isPast && e.status === 'open') ? 'closed' : e.status,
+                    mode: e.mode || 'social'
+                };
+            });
         }
     });
 }
@@ -82,6 +102,7 @@ export function useCreateEvent() {
                     image_url: newEvent.image,
                     max_participants: newEvent.maxParticipants,
                     status: newEvent.status || 'open',
+                    mode: newEvent.mode || 'social',
                     creator_id: user.id
                 })
                 .select()
@@ -114,7 +135,8 @@ export function useUpdateEvent() {
                     type: event.type,
                     image_url: event.image,
                     max_participants: event.maxParticipants,
-                    status: event.status
+                    status: event.status,
+                    mode: event.mode
                 })
                 .eq('id', event.id);
 

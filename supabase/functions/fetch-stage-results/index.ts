@@ -62,51 +62,7 @@ serve(async (req) => {
 
     if (resultsError) throw resultsError
 
-    // SMART FETCH: If no results found, try to process them automatically
-    let processLogs = undefined;
-    
-    if (!rawResults || rawResults.length === 0) {
-        console.log('[Info] No results found. Triggering auto-process via strava-process-stage...')
-        
-        const functionsUrl = `${supabaseUrl}/functions/v1/strava-process-stage`
-        const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? supabaseAnonKey
 
-        try {
-            const processRes = await fetch(functionsUrl, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${serviceRoleKey}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ stage_id: stageId })
-            })
-
-            const processData = await processRes.json().catch(() => ({}))
-            
-            // Capture logs if available
-            if (processData.logs) {
-                processLogs = processData.logs
-            }
-
-            if (!processRes.ok) {
-                console.error('[Error] Auto-process failed:', await processRes.text())
-            } else {
-                console.log('[Info] Auto-process success. Re-fetching results...')
-                // Re-fetch after processing
-                const { data: refreshedResults, error: refreshError } = await supabase
-                    .from('stage_results')
-                    .select('*')
-                    .eq('stage_id', stageId)
-                    .order('elapsed_time_seconds', { ascending: true })
-                
-                if (!refreshError && refreshedResults) {
-                    rawResults = refreshedResults
-                }
-            }
-        } catch (err) {
-            console.error('[Error] Failed to call strava-process-stage:', err)
-        }
-    }
 
     // 3. Manually fetch profiles for these results
     const userIds = rawResults.map(r => r.user_id)
@@ -135,7 +91,7 @@ serve(async (req) => {
         },
         results: results,
         debug_info: {
-            process_logs: processLogs
+
         }
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

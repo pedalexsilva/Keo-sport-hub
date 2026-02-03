@@ -19,6 +19,7 @@ export const useAdminStore = () => {
             const { data: prodData } = await supabase
                 .from('products')
                 .select('*')
+                .eq('active', true)
                 .order('created_at', { ascending: false });
             setProducts(prodData || []);
 

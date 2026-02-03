@@ -1,12 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { useTickets, useUpdateTicket, useAdminTickets, useTicketStats } from '../hooks/useTickets';
-import { useUsers, useUserStats } from '../hooks/useUsers';
+import { useUsers, useUserStats, useDepartmentRanking } from '../hooks/useUsers';
 import { useLogout } from '../hooks/useLogout';
+import { useEvents } from '../hooks/useEvents';
+import { useAdminStore } from '../hooks/useAdminStore';
+import { useGlobalStats } from '../hooks/useAnalytics';
+import { useDashboardFeed } from '../hooks/useDashboardFeed';
 import {
     LayoutDashboard,
     Calendar,
     Image,
     Users,
+    LogOut,
     Settings,
     Plus,
     Search,
@@ -41,7 +46,8 @@ import {
     CheckSquare,   // New for Resolving Tickets
     Filter,
     Menu,           // New for Menu Management
-    Medal
+    Medal,
+    X
 } from 'lucide-react';
 import { formatDate } from '../utils/dateUtils';
 import { supabase } from '../lib/supabase';
@@ -51,7 +57,7 @@ import { supabase } from '../lib/supabase';
 
 // --- COMPONENTS ---
 
-const Sidebar = ({ activeTab, setActiveTab }: { activeTab: string, setActiveTab: (tab: string) => void }) => {
+const Sidebar = ({ activeTab, setActiveTab, isOpen, onClose }: { activeTab: string, setActiveTab: (tab: string) => void, isOpen: boolean, onClose: () => void }) => {
     // Grouped Menu Structure
     const menuGroups = [
         {
@@ -87,50 +93,82 @@ const Sidebar = ({ activeTab, setActiveTab }: { activeTab: string, setActiveTab:
         }
     ];
 
+    const logout = useLogout();
+
     return (
-        <div className="w-64 bg-[#002D72] text-white min-h-screen flex flex-col fixed left-0 top-0 z-20 shadow-xl overflow-y-auto no-scrollbar">
-            <div className="p-6">
-                <h1 className="text-2xl font-bold tracking-widest">KEO <span className="text-[#009CDE] font-light">ADMIN</span></h1>
-            </div>
+        <>
+            {/* Overlay for mobile */}
+            {isOpen && (
+                <div
+                    className="fixed inset-0 bg-black/50 z-20 md:hidden backdrop-blur-sm animate-fade-in"
+                    onClick={onClose}
+                />
+            )}
 
-            <nav className="flex-1 px-4 pb-6 space-y-6">
-                {menuGroups.map((group, idx) => (
-                    <div key={idx}>
-                        <h3 className="text-xs font-bold text-blue-300 uppercase tracking-wider mb-2 px-4">
-                            {group.title}
-                        </h3>
-                        <div className="space-y-1">
-                            {group.items.map((item) => {
-                                const Icon = item.icon;
-                                return (
-                                    <button
-                                        key={item.id}
-                                        onClick={() => setActiveTab(item.id)}
-                                        className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all text-sm ${activeTab === item.id
-                                            ? 'bg-[#009CDE] text-white shadow-lg font-bold'
-                                            : 'text-blue-100 hover:bg-white/10 hover:text-white font-medium'
-                                            }`}
-                                    >
-                                        <Icon className="w-4 h-4 opacity-70" />
-                                        {item.label}
-                                    </button>
-                                );
-                            })}
+            <div className={`
+                fixed left-0 top-0 bottom-0 z-30 
+                w-64 bg-[#002D72] text-white shadow-xl overflow-y-auto no-scrollbar
+                transition-transform duration-300 ease-in-out
+                ${isOpen ? 'translate-x-0' : '-translate-x-full'}
+                md:translate-x-0
+            `}>
+                <div className="p-6 flex justify-between items-center">
+                    <h1 className="text-2xl font-bold tracking-widest">KEO <span className="text-[#009CDE] font-light">ADMIN</span></h1>
+                    <button onClick={onClose} className="md:hidden text-white/70 hover:text-white p-1">
+                        <X className="w-6 h-6" />
+                    </button>
+                </div>
+
+                <nav className="flex-1 px-4 pb-6 space-y-6">
+                    {menuGroups.map((group, idx) => (
+                        <div key={idx}>
+                            <h3 className="text-xs font-bold text-blue-300 uppercase tracking-wider mb-2 px-4">
+                                {group.title}
+                            </h3>
+                            <div className="space-y-1">
+                                {group.items.map((item) => {
+                                    const Icon = item.icon;
+                                    return (
+                                        <button
+                                            key={item.id}
+                                            onClick={() => {
+                                                setActiveTab(item.id);
+                                                if (window.innerWidth < 768) onClose();
+                                            }}
+                                            className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all text-sm ${activeTab === item.id
+                                                ? 'bg-[#009CDE] text-white shadow-lg font-bold'
+                                                : 'text-blue-100 hover:bg-white/10 hover:text-white font-medium'
+                                                }`}
+                                        >
+                                            <Icon className="w-4 h-4 opacity-70" />
+                                            {item.label}
+                                        </button>
+                                    );
+                                })}
+                            </div>
                         </div>
-                    </div>
-                ))}
-            </nav>
+                    ))}
+                </nav>
 
-            <div className="p-6 border-t border-blue-900 mt-auto">
-                <div className="flex items-center gap-3">
-                    <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Admin" className="w-10 h-10 rounded-full bg-white" />
-                    <div>
-                        <p className="text-sm font-bold">Admin User</p>
-                        <p className="text-xs text-blue-300">Super Admin</p>
+                <div className="p-6 border-t border-blue-900 mt-auto">
+                    <button
+                        onClick={logout}
+                        className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-red-300 hover:bg-white/10 hover:text-red-200 transition-all text-sm font-medium mb-4"
+                    >
+                        <LogOut className="w-4 h-4" />
+                        Terminar Sessão
+                    </button>
+
+                    <div className="flex items-center gap-3">
+                        <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Admin" className="w-10 h-10 rounded-full bg-white" />
+                        <div>
+                            <p className="text-sm font-bold">Admin User</p>
+                            <p className="text-xs text-blue-300">Super Admin</p>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
+        </>
     );
 };
 
@@ -139,59 +177,82 @@ const Sidebar = ({ activeTab, setActiveTab }: { activeTab: string, setActiveTab:
 
 // --- EXISTING VIEWS (Retained for context) ---
 
-const AnalyticsView = () => (
-    <div className="p-8 animate-fade-in">
-        <div className="flex justify-between items-center mb-8">
-            <div>
-                <h2 className="text-2xl font-bold text-gray-800">Analytics & Saúde</h2>
-                <p className="text-gray-500 text-sm">Monitorização do impacto na saúde dos colaboradores e ROI.</p>
-            </div>
-            <button className="bg-white text-gray-600 border border-gray-200 px-4 py-2 rounded-xl font-bold flex items-center gap-2 hover:bg-gray-50 transition">
-                <Download className="w-4 h-4" /> Relatório PDF
-            </button>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div className="bg-gradient-to-br from-[#002D72] to-blue-900 p-6 rounded-2xl text-white shadow-lg relative overflow-hidden">
-                <div className="relative z-10"><div className="flex items-center gap-2 mb-2 text-blue-200 text-sm font-bold uppercase tracking-wider"><TrendingUp className="w-4 h-4" /> Distância Total</div><div className="text-4xl font-bold mb-1">0 <span className="text-lg font-normal text-blue-300">km</span></div><p className="text-xs text-blue-200">Total acumulado</p></div><MapPin className="absolute -bottom-4 -right-4 w-32 h-32 text-white opacity-5" />
-            </div>
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 relative overflow-hidden"><div className="flex items-center gap-2 mb-2 text-green-600 text-sm font-bold uppercase tracking-wider"><Leaf className="w-4 h-4" /> Sustentabilidade</div><div className="text-4xl font-bold mb-1 text-gray-800">0 <span className="text-lg font-normal text-gray-400">kg CO2</span></div><p className="text-xs text-gray-500">Poupados este mês</p></div>
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 relative overflow-hidden"><div className="flex items-center gap-2 mb-2 text-orange-500 text-sm font-bold uppercase tracking-wider"><Activity className="w-4 h-4" /> Calorias Queimadas</div><div className="text-4xl font-bold mb-1 text-gray-800">0 <span className="text-lg font-normal text-gray-400">kcal</span></div><p className="text-xs text-gray-500">Total acumulado</p></div>
-        </div>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div className="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                <h3 className="font-bold text-gray-800 mb-6">Atividade Semanal (Colaboradores Ativos)</h3>
-                <div className="h-64 flex items-end justify-between gap-4">
-                    {[0, 0, 0, 0, 0, 0, 0].map((val, i) => (
-                        <div key={i} className="w-full bg-blue-50 rounded-t-xl relative group hover:bg-blue-100 transition-all cursor-pointer">
-                            <div className="absolute bottom-0 w-full bg-[#009CDE] rounded-t-xl transition-all duration-700" style={{ height: `${val}%` }}></div>
-                            <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity">{val} Ativos</div>
-                            <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 text-xs text-gray-400 font-bold">{['D', 'S', 'T', 'Q', 'Q', 'S', 'S'][i]}</div>
-                        </div>
-                    ))}
+const AnalyticsView = () => {
+    const { data: stats } = useGlobalStats();
+    const { data: ranking } = useDepartmentRanking();
+
+    return (
+        <div className="p-8 animate-fade-in">
+            <div className="flex justify-between items-center mb-8">
+                <div>
+                    <h2 className="text-2xl font-bold text-gray-800">Analytics & Saúde</h2>
+                    <p className="text-gray-500 text-sm">Monitorização do impacto na saúde dos colaboradores e ROI global.</p>
                 </div>
-                <div className="mt-8 pt-4 border-t border-gray-50 flex justify-between text-sm text-gray-500"><span>Média Diária: <strong>0 Ativos</strong></span><span>Dados insuficientes</span></div>
+                {/* PDF Report button placeholder */}
             </div>
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                <h3 className="font-bold text-gray-800 mb-6">Ranking por Departamento</h3>
-                <div className="space-y-5">
-                    <p className="text-sm text-gray-500 text-center py-4">Sem dados disponíveis</p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div className="bg-gradient-to-br from-[#002D72] to-blue-900 p-6 rounded-2xl text-white shadow-lg relative overflow-hidden">
+                    <div className="relative z-10"><div className="flex items-center gap-2 mb-2 text-blue-200 text-sm font-bold uppercase tracking-wider"><TrendingUp className="w-4 h-4" /> Distância Total</div><div className="text-4xl font-bold mb-1">{stats?.totalDistance?.toLocaleString() || 0} <span className="text-lg font-normal text-blue-300">km</span></div><p className="text-xs text-blue-200">Total acumulado</p></div><MapPin className="absolute -bottom-4 -right-4 w-32 h-32 text-white opacity-5" />
                 </div>
-                <div className="mt-6 p-4 bg-gray-50 rounded-xl text-center"><p className="text-xs text-gray-500 mb-2">Departamento vencedor ganha:</p><p className="text-sm font-bold text-[#002D72] flex items-center justify-center gap-1"><Trophy className="w-4 h-4 text-yellow-500" /> Pequeno-almoço Equipa</p></div>
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 relative overflow-hidden"><div className="flex items-center gap-2 mb-2 text-green-600 text-sm font-bold uppercase tracking-wider"><Leaf className="w-4 h-4" /> Sustentabilidade</div><div className="text-4xl font-bold mb-1 text-gray-800">{stats?.totalCo2?.toLocaleString() || 0} <span className="text-lg font-normal text-gray-400">kg CO2</span></div><p className="text-xs text-gray-500">Poupados este mês</p></div>
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 relative overflow-hidden"><div className="flex items-center gap-2 mb-2 text-orange-500 text-sm font-bold uppercase tracking-wider"><Activity className="w-4 h-4" /> Calorias Queimadas</div><div className="text-4xl font-bold mb-1 text-gray-800">{stats?.totalCalories?.toLocaleString() || 0} <span className="text-lg font-normal text-gray-400">kcal</span></div><p className="text-xs text-gray-500">Total acumulado</p></div>
+            </div>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div className="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                    <h3 className="font-bold text-gray-800 mb-6">Atividade Semanal (Ativos)</h3>
+                    <div className="h-64 flex items-end justify-between gap-4">
+                        {(stats?.weeklyActivity || [0, 0, 0, 0, 0, 0, 0]).map((val, i) => (
+                            <div key={i} className="w-full bg-blue-50 rounded-t-xl relative group hover:bg-blue-100 transition-all cursor-pointer">
+                                <div className="absolute bottom-0 w-full bg-[#009CDE] rounded-t-xl transition-all duration-700" style={{ height: `${Math.min(100, val * 10)}%` }}></div>
+                                <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity">{val}</div>
+                                <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 text-xs text-gray-400 font-bold">{['D', 'S', 'T', 'Q', 'Q', 'S', 'S'][i]}</div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                    <h3 className="font-bold text-gray-800 mb-6">Ranking por Departamento</h3>
+                    <div className="space-y-4 max-h-[300px] overflow-y-auto">
+                        {(ranking || []).map((dept, idx) => (
+                            <div key={dept.office} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
+                                <div className="flex items-center gap-3">
+                                    <span className={`w-6 h-6 flex items-center justify-center rounded-full text-xs font-bold ${idx === 0 ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-200 text-gray-600'}`}>{idx + 1}</span>
+                                    <div>
+                                        <div className="font-bold text-gray-800 text-sm">{dept.office}</div>
+                                        <div className="text-xs text-gray-500">{dept.userCount} Membros</div>
+                                    </div>
+                                </div>
+                                <span className="font-bold text-[#009CDE] text-sm">{dept.totalPoints.toLocaleString()} pts</span>
+                            </div>
+                        ))}
+                        {(!ranking || ranking.length === 0) && <p className="text-sm text-gray-500 text-center py-4">Sem dados disponíveis</p>}
+                    </div>
+                    <div className="mt-6 p-4 bg-gray-50 rounded-xl text-center"><p className="text-xs text-gray-500 mb-2">Departamento vencedor ganha:</p><p className="text-sm font-bold text-[#002D72] flex items-center justify-center gap-1"><Trophy className="w-4 h-4 text-yellow-500" /> Pequeno-almoço Equipa</p></div>
+                </div>
             </div>
         </div>
-    </div>
-);
+    );
+};
 
 
 const DashboardView = () => {
-    // Placeholder stats - eventually fetch from DB
     const { data: totalUsers } = useUserStats();
+    const { data: events } = useEvents();
+    const { orders } = useAdminStore();
+    const { data: globalStats } = useGlobalStats();
+    const { data: feed } = useDashboardFeed();
+
+    const activeEvents = events?.filter(e => e.status === 'open').length || 0;
+    const pendingOrders = orders?.filter(o => o.status === 'pending').length || 0;
+
+    // Convert meters to KM for display if needed, but globalStats.totalDistance is already in KM
+    const totalDistance = globalStats?.totalDistance || 0;
 
     const stats = [
-        { label: "Utilizadores Totais", value: totalUsers?.toString() || "0", change: "0%", icon: Users, color: "bg-blue-500" },
-        { label: "Eventos Ativos", value: "0", change: "0", icon: Calendar, color: "bg-[#009CDE]" },
-        { label: "Trocas na Loja", value: "0", change: "0%", icon: ShoppingBag, color: "bg-purple-500" },
-        { label: "Kms Percorridos (Mês)", value: "0", change: "0%", icon: MapPin, color: "bg-orange-500" },
+        { label: "Utilizadores Totais", value: totalUsers?.toString() || "0", change: "+2%", icon: Users, color: "bg-blue-500" },
+        { label: "Eventos Ativos", value: activeEvents.toString(), change: "Agora", icon: Calendar, color: "bg-[#009CDE]" },
+        { label: "Trocas Pendentes", value: pendingOrders.toString(), change: "Ação", icon: ShoppingBag, color: "bg-purple-500" },
+        { label: "Kms Totais", value: totalDistance.toLocaleString(), change: "Global", icon: MapPin, color: "bg-orange-500" },
     ];
 
     return (
@@ -209,9 +270,21 @@ const DashboardView = () => {
             </div>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <div className="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                    <div className="flex justify-between items-center mb-6"><h3 className="font-bold text-lg text-gray-800">Atividade Recente</h3><button className="text-sm text-[#009CDE] font-bold">Ver relatório</button></div>
+                    <div className="flex justify-between items-center mb-6"><h3 className="font-bold text-lg text-gray-800">Atividade Recente</h3><button className="text-sm text-[#009CDE] font-bold">Ver tudo</button></div>
                     <div className="space-y-4">
-                        <p className="text-sm text-gray-500 text-center py-8">Sem atividade recente para mostrar.</p>
+                        {(feed || []).map(item => (
+                            <div key={item.id} className="flex items-center gap-4 p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition">
+                                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${item.type === 'order' ? 'bg-purple-100 text-purple-600' : 'bg-blue-100 text-blue-600'}`}>
+                                    {item.type === 'order' ? <ShoppingBag className="w-5 h-5" /> : <Calendar className="w-5 h-5" />}
+                                </div>
+                                <div className="flex-1">
+                                    <div className="font-bold text-gray-800 text-sm">{item.title}</div>
+                                    <div className="text-xs text-gray-500">{item.subtitle} • {item.date}</div>
+                                </div>
+                                {item.status && <span className="text-[10px] font-bold uppercase bg-white px-2 py-1 rounded border border-gray-200">{item.status}</span>}
+                            </div>
+                        ))}
+                        {(!feed || feed.length === 0) && <p className="text-sm text-gray-500 text-center py-8">Sem atividade recente para mostrar.</p>}
                     </div>
                 </div>
                 <div className="bg-[#002D72] text-white p-6 rounded-2xl shadow-lg relative overflow-hidden">
@@ -227,12 +300,11 @@ const DashboardView = () => {
 };
 
 // Imported hooks
-import { useEvents, useCreateEvent, useDeleteEvent } from '../hooks/useEvents';
+import { useCreateEvent, useDeleteEvent } from '../hooks/useEvents';
 import { ActivityType } from '../types';
 
 import { EventsManager } from '../components/admin/EventsManager';
 
-import { useAdminStore } from '../hooks/useAdminStore';
 import { ResultsManager } from '../components/admin/ResultsManager';
 
 const StoreManagerView = () => {
@@ -303,7 +375,8 @@ const StoreManagerView = () => {
                         <h3 className="font-bold text-gray-800 flex items-center gap-2"><Truck className="w-4 h-4 text-[#009CDE]" /> Pedidos de Troca Recentes</h3>
                         <span className="text-xs bg-orange-100 text-orange-600 font-bold px-2 py-1 rounded-full">{orders.filter(o => o.status === "pending").length} Pendentes</span>
                     </div>
-                    <table className="w-full text-left">
+                    {/* Desktop Table */}
+                    <table className="w-full text-left hidden md:table">
                         <thead className="bg-gray-50 border-b border-gray-100"><tr><th className="px-6 py-3 text-xs font-bold text-gray-500 uppercase">Colaborador</th><th className="px-6 py-3 text-xs font-bold text-gray-500 uppercase">Item</th><th className="px-6 py-3 text-xs font-bold text-gray-500 uppercase">Estado</th><th className="px-6 py-3 text-xs font-bold text-gray-500 uppercase text-right">Ação</th></tr></thead>
                         <tbody className="divide-y divide-gray-50">
                             {orders.map((order) => (
@@ -321,13 +394,44 @@ const StoreManagerView = () => {
                             ))}
                         </tbody>
                     </table>
+
+                    {/* Mobile Cards */}
+                    <div className="md:hidden space-y-3 p-4 bg-gray-50">
+                        {orders.map((order) => (
+                            <div key={order.id} className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
+                                <div className="flex justify-between items-start mb-2">
+                                    <div>
+                                        <div className="font-bold text-sm text-gray-900">{order.user_email}</div>
+                                        <div className="text-xs text-gray-400">{formatDate(order.created_at)}</div>
+                                    </div>
+                                    <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase ${order.status === 'completed' ? 'bg-green-100 text-green-700' : order.status === 'pending' ? 'bg-orange-100 text-orange-700' : 'bg-red-100 text-red-700'}`}>{order.status}</span>
+                                </div>
+                                <div className="text-sm text-gray-700 mb-3 bg-gray-50 p-2 rounded">
+                                    <span className="text-xs font-bold text-gray-400 block uppercase">Item</span>
+                                    {order.product?.name}
+                                </div>
+                                {order.status === 'pending' && (
+                                    <div className="flex gap-2">
+                                        <button onClick={() => updateOrderStatus(order.id, 'completed')} className="flex-1 bg-green-50 text-green-600 py-2 rounded-lg font-bold text-xs flex items-center justify-center gap-1 hover:bg-green-100"><CheckCircle2 className="w-3 h-3" /> Aprovar</button>
+                                        <button onClick={() => updateOrderStatus(order.id, 'rejected')} className="flex-1 bg-red-50 text-red-600 py-2 rounded-lg font-bold text-xs flex items-center justify-center gap-1 hover:bg-red-100"><XCircle className="w-3 h-3" /> Rejeitar</button>
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+                    </div>
                 </div>
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col">
                     <div className="p-4 border-b border-gray-50 bg-gray-50/50"><h3 className="font-bold text-gray-800 flex items-center gap-2"><Package className="w-4 h-4 text-[#009CDE]" /> Catálogo Atual</h3></div>
                     <div className="flex-1 overflow-y-auto p-4 space-y-4">
                         {products.map(prod => (
                             <div key={prod.id} className="flex gap-3 items-center p-3 border border-gray-100 rounded-xl hover:shadow-md transition bg-white">
-                                <img src={prod.image_url} className="w-12 h-12 rounded-lg object-cover bg-gray-100" />
+                                {prod.image_url ? (
+                                    <img src={prod.image_url} className="w-12 h-12 rounded-lg object-cover bg-gray-100" />
+                                ) : (
+                                    <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center">
+                                        <Image className="w-6 h-6 text-gray-300" />
+                                    </div>
+                                )}
                                 <div className="flex-1">
                                     <p className="font-bold text-sm text-gray-800 flex items-center gap-2">
                                         {prod.name}
@@ -437,20 +541,57 @@ const UsersView = () => {
                 {isLoading ? (
                     <div className="p-8 text-center text-gray-500">A carregar utilizadores...</div>
                 ) : (
-                    <table className="w-full text-left">
-                        <thead className="bg-gray-50 border-b border-gray-100"><tr><th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase">Colaborador</th><th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase">Cargo & Escritório</th><th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase">Pontos (Saldo)</th><th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase">Estado</th><th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase text-right">Ações</th></tr></thead>
-                        <tbody className="divide-y divide-gray-50">
+                    <>
+                        {/* Desktop Table */}
+                        <table className="w-full text-left hidden md:table">
+                            <thead className="bg-gray-50 border-b border-gray-100"><tr><th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase">Colaborador</th><th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase">Cargo & Escritório</th><th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase">Pontos (Saldo)</th><th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase">Estado</th><th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase text-right">Ações</th></tr></thead>
+                            <tbody className="divide-y divide-gray-50">
+                                {users.map((user) => (
+                                    <tr key={user.id} className="hover:bg-blue-50/50 transition">
+                                        <td className="px-6 py-4"><div className="flex items-center gap-3"><img src={user.avatar} className="w-8 h-8 rounded-full bg-gray-200" /><div><div className="font-bold text-gray-900">{user.name}</div><div className="text-xs text-gray-500">{user.email}</div></div></div></td>
+                                        <td className="px-6 py-4"><div className="text-sm text-gray-900">{user.role}</div><div className="text-xs text-[#009CDE] font-medium">{user.office}</div></td>
+                                        <td className="px-6 py-4"><div className="font-bold text-gray-700">{user.points.toLocaleString()} pts</div></td>
+                                        <td className="px-6 py-4"><span className={`px-2 py-1 rounded text-xs font-bold ${user.status === 'Ativo' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>{user.status}</span></td>
+                                        <td className="px-6 py-4 text-right flex justify-end gap-2"><button onClick={() => handleBonus(user.id)} title="Bónus" className="bg-yellow-100 text-yellow-600 p-2 rounded-lg hover:bg-yellow-200 transition"><Gift className="w-4 h-4" /></button><button title="Editar" className="bg-gray-100 text-gray-600 p-2 rounded-lg hover:bg-gray-200 transition"><Edit2 className="w-4 h-4" /></button><button title="Bloquear" className="bg-red-50 text-red-500 p-2 rounded-lg hover:bg-red-100 transition"><Ban className="w-4 h-4" /></button></td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+
+                        {/* Mobile Cards */}
+                        <div className="md:hidden space-y-4 p-4 bg-gray-50">
                             {users.map((user) => (
-                                <tr key={user.id} className="hover:bg-blue-50/50 transition">
-                                    <td className="px-6 py-4"><div className="flex items-center gap-3"><img src={user.avatar} className="w-8 h-8 rounded-full bg-gray-200" /><div><div className="font-bold text-gray-900">{user.name}</div><div className="text-xs text-gray-500">{user.email}</div></div></div></td>
-                                    <td className="px-6 py-4"><div className="text-sm text-gray-900">{user.role}</div><div className="text-xs text-[#009CDE] font-medium">{user.office}</div></td>
-                                    <td className="px-6 py-4"><div className="font-bold text-gray-700">{user.points.toLocaleString()} pts</div></td>
-                                    <td className="px-6 py-4"><span className={`px-2 py-1 rounded text-xs font-bold ${user.status === 'Ativo' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>{user.status}</span></td>
-                                    <td className="px-6 py-4 text-right flex justify-end gap-2"><button onClick={() => handleBonus(user.id)} title="Bónus" className="bg-yellow-100 text-yellow-600 p-2 rounded-lg hover:bg-yellow-200 transition"><Gift className="w-4 h-4" /></button><button title="Editar" className="bg-gray-100 text-gray-600 p-2 rounded-lg hover:bg-gray-200 transition"><Edit2 className="w-4 h-4" /></button><button title="Bloquear" className="bg-red-50 text-red-500 p-2 rounded-lg hover:bg-red-100 transition"><Ban className="w-4 h-4" /></button></td>
-                                </tr>
+                                <div key={user.id} className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
+                                    <div className="flex items-center gap-3 mb-3">
+                                        <img src={user.avatar} className="w-10 h-10 rounded-full bg-gray-200" />
+                                        <div>
+                                            <div className="font-bold text-gray-900">{user.name}</div>
+                                            <div className="text-xs text-gray-500">{user.office}</div>
+                                        </div>
+                                        <div className="ml-auto">
+                                            <span className={`px-2 py-1 rounded text-[10px] font-bold ${user.status === 'Ativo' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>{user.status}</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-2 mb-4">
+                                        <div className="bg-gray-50 p-2 rounded-lg">
+                                            <div className="text-[10px] text-gray-400 font-bold uppercase">Role</div>
+                                            <div className="text-sm">{user.role}</div>
+                                        </div>
+                                        <div className="bg-blue-50 p-2 rounded-lg">
+                                            <div className="text-[10px] text-blue-400 font-bold uppercase">Pontos</div>
+                                            <div className="text-sm font-bold text-blue-800">{user.points.toLocaleString()}</div>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex gap-2">
+                                        <button onClick={() => handleBonus(user.id)} className="flex-1 bg-yellow-100 text-yellow-700 py-2 rounded-lg font-bold text-xs flex items-center justify-center gap-1"><Gift className="w-3 h-3" /> Bónus</button>
+                                        <button className="flex-1 bg-gray-100 text-gray-600 py-2 rounded-lg font-bold text-xs flex items-center justify-center gap-1"><Edit2 className="w-3 h-3" /> Editar</button>
+                                    </div>
+                                </div>
                             ))}
-                        </tbody>
-                    </table>
+                        </div>
+                    </>
                 )}
             </div>
         </div>
@@ -577,32 +718,57 @@ const SupportView = () => {
                     {isLoading && tickets.length === 0 ? (
                         <div className="p-8 text-center text-gray-400">Carregando tickets...</div>
                     ) : (
-                        <table className="w-full text-left relative">
-                            <thead className="bg-gray-50 border-b border-gray-100 sticky top-0">
-                                <tr>
-                                    <th className="px-6 py-4 font-bold text-gray-500 uppercase">Utilizador</th>
-                                    <th className="px-6 py-4 font-bold text-gray-500 uppercase">Assunto</th>
-                                    <th className="px-6 py-4 font-bold text-gray-500 uppercase">Prioridade</th>
-                                    <th className="px-6 py-4 font-bold text-gray-500 uppercase">Estado</th>
-                                    <th className="px-6 py-4 font-bold text-gray-500 uppercase text-right">Ação</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-50">
-                                {tickets.map(t => (
-                                    <tr key={t.id} className="hover:bg-blue-50/50">
-                                        <td className="px-6 py-4 font-bold text-gray-800">{t.user_email}</td>
-                                        <td className="px-6 py-4 text-gray-600">{t.subject}</td>
-                                        <td className="px-6 py-4"><span className="bg-gray-100 px-2 py-1 rounded text-xs font-bold text-gray-600 uppercase">{t.priority}</span></td>
-                                        <td className="px-6 py-4"><span className={`px-2 py-1 rounded text-xs font-bold ${t.status === 'resolved' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>{t.status}</span></td>
-                                        <td className="px-6 py-4 text-right">
-                                            {t.status === 'open' && (
-                                                <button onClick={() => handleResolve(t.id)} className="text-[#009CDE] font-bold hover:underline">Resolver</button>
-                                            )}
-                                        </td>
+                        <div className="w-full">
+                            {/* Desktop Table */}
+                            <table className="w-full text-left relative hidden md:table">
+                                <thead className="bg-gray-50 border-b border-gray-100 sticky top-0">
+                                    <tr>
+                                        <th className="px-6 py-4 font-bold text-gray-500 uppercase">Utilizador</th>
+                                        <th className="px-6 py-4 font-bold text-gray-500 uppercase">Assunto</th>
+                                        <th className="px-6 py-4 font-bold text-gray-500 uppercase">Prioridade</th>
+                                        <th className="px-6 py-4 font-bold text-gray-500 uppercase">Estado</th>
+                                        <th className="px-6 py-4 font-bold text-gray-500 uppercase text-right">Ação</th>
                                     </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-50">
+                                    {tickets.map(t => (
+                                        <tr key={t.id} className="hover:bg-blue-50/50">
+                                            <td className="px-6 py-4 font-bold text-gray-800">{t.user_email}</td>
+                                            <td className="px-6 py-4 text-gray-600">{t.subject}</td>
+                                            <td className="px-6 py-4"><span className="bg-gray-100 px-2 py-1 rounded text-xs font-bold text-gray-600 uppercase">{t.priority}</span></td>
+                                            <td className="px-6 py-4"><span className={`px-2 py-1 rounded text-xs font-bold ${t.status === 'resolved' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>{t.status}</span></td>
+                                            <td className="px-6 py-4 text-right">
+                                                {t.status === 'open' && (
+                                                    <button onClick={() => handleResolve(t.id)} className="text-[#009CDE] font-bold hover:underline">Resolver</button>
+                                                )}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+
+                            {/* Mobile Cards */}
+                            <div className="md:hidden space-y-3 p-4">
+                                {tickets.map(t => (
+                                    <div key={t.id} className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex flex-col gap-3">
+                                        <div className="flex justify-between items-start">
+                                            <div className="font-bold text-gray-900 text-sm">{t.user_email}</div>
+                                            <span className={`px-2 py-1 rounded text-[10px] uppercase font-bold ${t.status === 'resolved' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>{t.status}</span>
+                                        </div>
+                                        <div>
+                                            <div className="text-xs font-bold text-gray-400 uppercase">Assunto</div>
+                                            <div className="text-gray-700">{t.subject}</div>
+                                        </div>
+                                        <div className="flex justify-between items-center pt-2 border-t border-gray-50">
+                                            <span className="bg-gray-100 px-2 py-1 rounded text-xs font-bold text-gray-600 uppercase">{t.priority}</span>
+                                            {t.status === 'open' && (
+                                                <button onClick={() => handleResolve(t.id)} className="text-[#009CDE] font-bold text-sm bg-blue-50 px-3 py-1 rounded-lg">Resolver</button>
+                                            )}
+                                        </div>
+                                    </div>
                                 ))}
-                            </tbody>
-                        </table>
+                            </div>
+                        </div>
                     )}
                     {!isLoading && tickets.length === 0 && (
                         <div className="p-8 text-center">
@@ -845,31 +1011,53 @@ const SettingsView = () => (
 
 export default function AdminDashboard() {
     const [activeTab, setActiveTab] = useState('dashboard');
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const logout = useLogout();
 
+    const renderContent = () => {
+        switch (activeTab) {
+            case 'dashboard': return <DashboardView />;
+            case 'users': return <UsersView />;
+            case 'events': return <EventsManager />;
+            case 'products': return <StoreManagerView />; // Legacy?
+            case 'store': return <StoreManagerView />;
+            case 'support': return <SupportView />;
+            case 'analytics': return <AnalyticsView />;
+            case 'cms': return <CMSView />;
+            case 'communications': return <CommunicationsView />;
+            case 'app_menu': return <MenuManagerView />;
+            case 'results': return <ResultsManager />;
+            case 'settings': return <SettingsView />;
+            default: return <DashboardView />;
+        }
+    };
+
     return (
-        <div className="flex min-h-screen bg-[#F3F4F6] font-sans">
-            <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
-            <main className="flex-1 ml-64 overflow-y-auto">
-                <header className="bg-white shadow-sm py-4 px-8 flex justify-between items-center sticky top-0 z-10">
-                    <div className="flex items-center gap-2 text-gray-500 text-sm"><span>Admin</span><ChevronRight className="w-4 h-4" /><span className="text-[#002D72] font-bold capitalize">{activeTab}</span></div>
-                    <div className="flex items-center gap-4">
-                        <div className="relative"><Bell className="w-5 h-5 text-gray-500 hover:text-[#002D72] cursor-pointer transition" /><span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></span></div>
-                        <div className="h-8 w-[1px] bg-gray-200"></div>
-                        <button onClick={logout} className="text-sm font-bold text-gray-600 hover:text-[#002D72]">Sair</button>
-                    </div>
-                </header>
-                {activeTab === 'dashboard' && <DashboardView />}
-                {activeTab === 'analytics' && <AnalyticsView />}
-                {activeTab === 'events' && <EventsManager />}
-                {activeTab === 'results' && <ResultsManager />}
-                {activeTab === 'store' && <StoreManagerView />}
-                {activeTab === 'communications' && <CommunicationsView />}
-                {activeTab === 'support' && <SupportView />}
-                {activeTab === 'app_menu' && <MenuManagerView />}
-                {activeTab === 'cms' && <CMSView />}
-                {activeTab === 'users' && <UsersView />}
-                {activeTab === 'settings' && <SettingsView />}
+        <div className="min-h-screen bg-gray-50 flex font-sans text-gray-900">
+            <Sidebar
+                activeTab={activeTab}
+                setActiveTab={setActiveTab}
+                isOpen={isSidebarOpen}
+                onClose={() => setIsSidebarOpen(false)}
+            />
+
+            {/* Mobile Header */}
+            <div className="fixed top-0 left-0 right-0 h-16 bg-white shadow-sm z-10 md:hidden flex items-center px-4 justify-between">
+                <button
+                    onClick={() => setIsSidebarOpen(true)}
+                    className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg"
+                >
+                    <Menu className="w-6 h-6" />
+                </button>
+                <div className="flex items-center gap-1.5 select-none">
+                    <div className="bg-[#002D72] text-white px-2 py-1 font-bold tracking-widest text-sm">KEO</div>
+                    <span className="text-[#009CDE] font-light tracking-widest text-sm">ADMIN</span>
+                </div>
+                <div className="w-10" /> {/* Spacer */}
+            </div>
+
+            <main className="flex-1 md:ml-64 pt-16 md:pt-0 transition-all duration-300">
+                {renderContent()}
             </main>
         </div>
     );

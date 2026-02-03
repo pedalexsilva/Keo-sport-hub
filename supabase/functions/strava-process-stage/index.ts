@@ -60,8 +60,12 @@ serve(async (req) => {
 
         const results = []
 
-        // 4. Process Each Participant
-        for (const p of participants || []) {
+        // 4. Process Participants (Parallel with Concurrency Limit)
+        const CONCURRENCY_LIMIT = 5
+        const queue = [...(participants || [])]
+        const activePromises: Promise<void>[] = []
+        
+        const processParticipant = async (p: { user_id: string }) => {
             try {
                 log(`Processing user ${p.user_id}...`)
                 // A. Get Tokens
@@ -71,15 +75,15 @@ serve(async (req) => {
                 })
 
                 if (tokenError || !tokens || tokens.length === 0) {
-                    log(`-> No tokens found (or RPC error: ${tokenError?.message}). Skipping.`)
-                    continue;
+                    log(`-> No tokens for ${p.user_id}. Skipping.`)
+                    return;
                 }
 
                 let { access_token, refresh_token, expires_at } = tokens[0]
 
                 // B. Refresh Token if needed
                 if (new Date(expires_at).getTime() < Date.now()) {
-                    log(`-> Token expired at ${expires_at}. Refreshing...`)
+                    log(`-> Token expired for ${p.user_id}. Refreshing...`)
                     const refreshRes = await fetch('https://www.strava.com/oauth/token', {
                         method: 'POST',
                         body: new URLSearchParams({
@@ -91,8 +95,8 @@ serve(async (req) => {
                     })
                     const refreshData = await refreshRes.json()
                     if (!refreshRes.ok) {
-                        log(`-> Failed to refresh token: ${JSON.stringify(refreshData)}`)
-                        continue;
+                        log(`-> Failed refresh for ${p.user_id}: ${JSON.stringify(refreshData)}`)
+                        return;
                     }
 
                     access_token = refreshData.access_token
@@ -107,64 +111,61 @@ serve(async (req) => {
                         p_expires_at: expires_at,
                         p_encryption_key: STRAVA_ENCRYPTION_KEY
                     })
-                    log(`-> Token refreshed successfully.`)
                 }
 
                 // C. Find Activity on Stage Date
-                // Important: Set time to 00:00:00 and 23:59:59 of the stage date
-                // Note: 'date' in DB is YYYY-MM-DD string. new Date('YYYY-MM-DD') assumes UTC usually.
                 const stageDate = new Date(stage.date)
                 const after = Math.floor(stageDate.setHours(0, 0, 0, 0) / 1000)
                 const before = Math.floor(stageDate.setHours(23, 59, 59, 999) / 1000)
-                
-                log(`-> Fetching activities between ${after} (00:00) and ${before} (23:59)`)
 
                 const activitiesRes = await fetch(`https://www.strava.com/api/v3/athlete/activities?after=${after}&before=${before}`, {
                     headers: { 'Authorization': `Bearer ${access_token}` }
                 })
 
                 if (!activitiesRes.ok) {
-                    log(`-> Strava API error: ${activitiesRes.status} ${await activitiesRes.text()}`)
-                    continue;
+                    log(`-> API error for ${p.user_id}: ${await activitiesRes.text()}`)
+                    return;
                 }
 
                 const activities = await activitiesRes.json()
-                log(`-> Found ${activities.length} activities.`)
                 
                 if (activities.length === 0) {
-                    log(`-> No matching activities found in time window.`)
-                    continue;
+                    log(`-> No activities for ${p.user_id}.`)
+                    return;
                 }
 
-                // Pick the longest activity if multiple? Or match by type?
-                // For now, take the first one.
                 const activitySummary = activities[0]
-                log(`-> Selected activity: ${activitySummary.id} (${activitySummary.name})`)
 
-                // D. Fetch Detailed Activity (for Segments)
+                // D. Fetch Detailed Activity
                 const detailRes = await fetch(`https://www.strava.com/api/v3/activities/${activitySummary.id}?include_all_efforts=true`, {
                     headers: { 'Authorization': `Bearer ${access_token}` }
                 })
                 const detailActivity = await detailRes.json()
 
-                // E. Calculate Metrics
+                // E. Metrics
                 const elapsedTime = detailActivity.elapsed_time
                 let mountainPoints = 0
 
                 if (stage.mountain_segment_ids && stage.mountain_segment_ids.length > 0) {
                     const efforts = detailActivity.segment_efforts || []
                     const targetSegments = new Set(stage.mountain_segment_ids)
-
-                    // Simple logic: 10 points for completing a mountain segment
-                    // TODO: meaningful points based on rank or segment_points_map
                     for (const effort of efforts) {
                         if (targetSegments.has(effort.segment.id.toString())) {
-                            mountainPoints += 10 // Default points
+                            mountainPoints += 10
                         }
                     }
                 }
 
-                // F. Save Stage Result (PENDING)
+                // F. Save Result (UPSERT)
+                // Check if result already exists to preserve 'official' status if it was already set? 
+                // Plan says: "Novos resultados ficarão marcados como 'Pendentes'". 
+                // Existing logic forces 'pending'. We should probably respect existing status IF it exists, 
+                // OR just upsert and let the user re-verify. 
+                // For safety and per "Human-in-the-loop" design, we reset to 'pending' on new sync 
+                // UNLESS we want to keep official ones.
+                // Decision: For now, keep logic as is (force pending) or maybe Check? 
+                // To keep it simple and safe: Reset to pending so admin sees something changed.
+                
                 const { error: upsertError } = await supabase
                     .from('stage_results')
                     .upsert({
@@ -174,29 +175,44 @@ serve(async (req) => {
                         elapsed_time_seconds: elapsedTime,
                         mountain_points: mountainPoints,
                         is_dnf: false,
-                        status: 'pending', // FORCE PENDING for human review
+                        status: 'pending', 
                         updated_at: new Date().toISOString()
                     }, { onConflict: 'stage_id, user_id' })
 
                 if (upsertError) {
-                    log(`-> Error saving result: ${upsertError.message}`)
+                    log(`-> DB Error ${p.user_id}: ${upsertError.message}`)
                 } else {
-                    results.push({ user_id: p.user_id, time: elapsedTime, points: mountainPoints })
-                    log(`-> Result saved successfully.`)
+                    results.push({ user_id: p.user_id, time: elapsedTime })
+                    log(`-> Saved ${p.user_id}: ${formatDuration(elapsedTime)}`)
                 }
 
             } catch (err) {
-                log(`Error processing user ${p.user_id}: ${err.message}`)
+                log(`Error ${p.user_id}: ${err.message}`)
             }
         }
+    
+        // Helper for formatting logs
+        function formatDuration(s: number) { return new Date(s * 1000).toISOString().substr(11, 8) }
 
-        // 5. NO AUTOMATIC LEADERBOARD UPDATE
-        // We now rely on the "Finalize" step in Google Sheets.
+        // Execute Queue
+        while (queue.length > 0) {
+            if (activePromises.length >= CONCURRENCY_LIMIT) {
+                await Promise.race(activePromises)
+            }
+            const p = queue.shift()
+            if (p) {
+                const promise = processParticipant(p).then(() => {
+                    activePromises.splice(activePromises.indexOf(promise), 1)
+                })
+                activePromises.push(promise)
+            }
+        }
+        await Promise.all(activePromises)
 
         return new Response(JSON.stringify({ 
             success: true, 
             processed: results.length,
-            message: "Results synced as 'Pending'. Please review in Google Sheets.",
+            message: `Sync complete. ${results.length} participants processed.`,
             logs: logs 
         }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }

@@ -61,7 +61,8 @@ export const ResultsManager = () => {
                             <h3 className="font-bold text-gray-800">Classificação Geral (GC)</h3>
                         </div>
                         <div className="overflow-x-auto">
-                            <table className="w-full text-left">
+                            {/* Desktop Table */}
+                            <table className="w-full text-left hidden md:table">
                                 <thead className="bg-gray-50 border-b border-gray-100">
                                     <tr>
                                         <th className="px-6 py-3 text-xs font-bold text-gray-500 uppercase">Pos</th>
@@ -96,6 +97,31 @@ export const ResultsManager = () => {
                                     )}
                                 </tbody>
                             </table>
+
+                            {/* Mobile Cards */}
+                            <div className="md:hidden space-y-2 p-4 max-h-[400px] overflow-y-auto">
+                                {isLoadingGC ? <Loader2 className="mx-auto animate-spin" /> :
+                                    gcResults?.map((res, idx) => (
+                                        <div key={res.user_id} className="bg-white p-3 rounded-xl border border-gray-100 text-sm flex items-center justify-between">
+                                            <div className="flex items-center gap-3">
+                                                <div className="font-bold w-6 text-center text-gray-500">
+                                                    {idx === 0 ? <Medal className="w-4 h-4 text-yellow-500 mx-auto" /> : `#${res.rank}`}
+                                                </div>
+                                                <div>
+                                                    <div className="font-bold text-gray-900">{res.profile.name}</div>
+                                                    <div className="text-[10px] font-mono text-gray-500">{formatDuration(res.total_time_seconds)}</div>
+                                                </div>
+                                            </div>
+                                            <div className="text-xs font-mono text-gray-400">
+                                                {res.gap_seconds > 0 ? `+${formatDuration(res.gap_seconds)}` : '-'}
+                                            </div>
+                                        </div>
+                                    ))
+                                }
+                                {!isLoadingGC && gcResults?.length === 0 && (
+                                    <div className="text-center text-gray-400 py-4">Sem resultados.</div>
+                                )}
+                            </div>
                         </div>
                     </div>
 

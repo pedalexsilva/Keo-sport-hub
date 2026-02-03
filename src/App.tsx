@@ -69,7 +69,7 @@ const AppLayout: React.FC = () => {
   const handleJoinEvent = (eventId: string) => {
     if (!userProfile) return;
     const event = eventsData?.find(e => e.id === eventId);
-    const isJoined = event?.participants?.includes(userProfile.id) || false;
+    const isJoined = event?.participants?.some(p => p.id === userProfile.id) || false;
 
     joinEventMutation.mutate({
       eventId,
@@ -83,8 +83,14 @@ const AppLayout: React.FC = () => {
     });
   };
 
-  const handleConnectStrava = () => {
-    window.location.href = getStravaAuthUrl();
+  const handleConnectStrava = async () => {
+    try {
+      const url = await getStravaAuthUrl();
+      window.location.href = url;
+    } catch (e) {
+      console.error(e);
+      setNotification("Erro ao iniciar conexão com Strava.");
+    }
   };
 
   const handleDisconnectStrava = async () => {
