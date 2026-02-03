@@ -12,6 +12,7 @@ interface StageSegment {
     name: string;
     points_scale: number[];
     category: string;
+    segment_order: number;
 }
 
 serve(async (req) => {
@@ -184,39 +185,62 @@ serve(async (req) => {
 
                 const efforts = detailActivity.segment_efforts || []
 
-                // F. Process each configured segment
+                // F. Process each configured segment (with support for multiple passes)
+                // Group segments by strava_segment_id to handle multiple passes
+                const segmentsByStravaId = new Map<string, StageSegment[]>()
                 for (const segment of stageSegments) {
-                    const effort = efforts.find((e: any) => 
-                        e.segment.id.toString() === segment.strava_segment_id
-                    )
-                    
-                    if (effort) {
-                        log(`-> Found segment effort for ${segment.name}: ${effort.elapsed_time}s`)
-                        
-                        // Save to segment_results
-                        const { error: segmentUpsertError } = await supabase
-                            .from('segment_results')
-                            .upsert({
-                                stage_id: stage_id,
-                                segment_id: segment.id,
-                                user_id: p.user_id,
-                                strava_effort_id: effort.id.toString(),
-                                elapsed_time_seconds: effort.elapsed_time,
-                                status: 'pending',
-                                updated_at: new Date().toISOString()
-                            }, { onConflict: 'segment_id, user_id' })
+                    const key = segment.strava_segment_id
+                    if (!segmentsByStravaId.has(key)) {
+                        segmentsByStravaId.set(key, [])
+                    }
+                    segmentsByStravaId.get(key)!.push(segment)
+                }
 
-                        if (segmentUpsertError) {
-                            log(`-> Segment result error: ${segmentUpsertError.message}`)
+                // Process each unique Strava segment
+                for (const [stravaSegmentId, configuredSegments] of segmentsByStravaId.entries()) {
+                    // Sort configured segments by segment_order to match passes correctly
+                    configuredSegments.sort((a, b) => a.segment_order - b.segment_order)
+                    
+                    // Find ALL efforts for this Strava segment (multiple passes)
+                    const matchingEfforts = efforts
+                        .filter((e: any) => e.segment.id.toString() === stravaSegmentId)
+                        .sort((a: any, b: any) => new Date(a.start_date).getTime() - new Date(b.start_date).getTime())
+                    
+                    log(`-> Found ${matchingEfforts.length} passes for segment ${stravaSegmentId} (${configuredSegments.length} configured)`)
+                    
+                    // Match each configured segment to the corresponding pass
+                    for (let i = 0; i < configuredSegments.length; i++) {
+                        const segment = configuredSegments[i]
+                        const effort = matchingEfforts[i] // i-th pass for i-th configured segment
+                        
+                        if (effort) {
+                            log(`-> Pass ${i + 1} for ${segment.name}: ${effort.elapsed_time}s (effort ${effort.id})`)
+                            
+                            // Save to segment_results
+                            const { error: segmentUpsertError } = await supabase
+                                .from('segment_results')
+                                .upsert({
+                                    stage_id: stage_id,
+                                    segment_id: segment.id,
+                                    user_id: p.user_id,
+                                    strava_effort_id: effort.id.toString(),
+                                    elapsed_time_seconds: effort.elapsed_time,
+                                    status: 'pending',
+                                    updated_at: new Date().toISOString()
+                                }, { onConflict: 'segment_id, user_id' })
+
+                            if (segmentUpsertError) {
+                                log(`-> Segment result error: ${segmentUpsertError.message}`)
+                            } else {
+                                segmentResults.push({
+                                    user_id: p.user_id,
+                                    segment_name: segment.name,
+                                    time: effort.elapsed_time
+                                })
+                            }
                         } else {
-                            segmentResults.push({
-                                user_id: p.user_id,
-                                segment_name: segment.name,
-                                time: effort.elapsed_time
-                            })
+                            log(`-> No pass ${i + 1} found for segment ${segment.name}`)
                         }
-                    } else {
-                        log(`-> No effort found for segment ${segment.name}`)
                     }
                 }
 
