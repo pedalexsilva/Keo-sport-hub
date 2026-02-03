@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { CheckCircle2 } from 'lucide-react';
 
+console.log('DEBUG: VITE_SUPABASE_URL', import.meta.env.VITE_SUPABASE_URL); // Removed
+
 // Components
 import Navigation from './components/Navigation';
 import Header from './components/Header';

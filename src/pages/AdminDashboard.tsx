@@ -152,21 +152,21 @@ const Sidebar = ({ activeTab, setActiveTab, isOpen, onClose }: { activeTab: stri
                 </nav>
 
                 <div className="p-6 border-t border-blue-900 mt-auto">
-                    <button
-                        onClick={logout}
-                        className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-red-300 hover:bg-white/10 hover:text-red-200 transition-all text-sm font-medium mb-4"
-                    >
-                        <LogOut className="w-4 h-4" />
-                        Log Out
-                    </button>
-
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 mb-4">
                         <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Admin" className="w-10 h-10 rounded-full bg-white" />
                         <div>
                             <p className="text-sm font-bold">Admin User</p>
                             <p className="text-xs text-blue-300">Super Admin</p>
                         </div>
                     </div>
+
+                    <button
+                        onClick={logout}
+                        className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-red-300 hover:bg-white/10 hover:text-red-200 transition-all text-sm font-medium"
+                    >
+                        <LogOut className="w-4 h-4" />
+                        Log Out
+                    </button>
                 </div>
             </div>
         </>

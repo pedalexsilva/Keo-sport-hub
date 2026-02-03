@@ -35,12 +35,10 @@ export const ResultsEditor = ({ stageId, onClose }: ResultsEditorProps) => {
 
     const loadResults = async () => {
         setIsLoading(true);
+        // 1. Fetch stage results
         const { data, error } = await supabase
             .from('stage_results')
-            .select(`
-                *,
-                profile:profiles!user_id(full_name, email)
-            `)
+            .select('*')
             .eq('stage_id', stageId)
             .order('elapsed_time_seconds', { ascending: true });
 
@@ -48,13 +46,29 @@ export const ResultsEditor = ({ stageId, onClose }: ResultsEditorProps) => {
             console.error(error);
             alert("Error loading results.");
         } else {
-            // Initialize official values with raw values if null
-            const initialized = data.map((r: any) => ({
-                ...r,
-                official_time_seconds: r.official_time_seconds ?? r.elapsed_time_seconds,
-                official_mountain_points: r.official_mountain_points ?? r.mountain_points,
-                status: r.status // Could be null, assume pending? Schema Default is pending.
-            }));
+            // 2. Fetch profiles manually
+            const userIds = Array.from(new Set(data.map((r: any) => r.user_id)));
+            const { data: profiles } = await supabase
+                .from('profiles')
+                .select('id, full_name, email')
+                .in('id', userIds);
+
+            const profileMap = new Map(profiles?.map(p => [p.id, p]));
+
+            // 3. Merge and Initialize
+            const initialized = data.map((r: any) => {
+                const profile = profileMap.get(r.user_id);
+                return {
+                    ...r,
+                    official_time_seconds: r.official_time_seconds ?? r.elapsed_time_seconds,
+                    official_mountain_points: r.official_mountain_points ?? r.mountain_points,
+                    status: r.status,
+                    profile: {
+                        full_name: profile?.full_name || 'Unknown',
+                        email: profile?.email || ''
+                    }
+                };
+            });
             setResults(initialized);
         }
         setIsLoading(false);

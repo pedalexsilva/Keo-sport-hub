@@ -64,7 +64,7 @@ export function useDashboardFeed() {
             // 3. Fetch new users (optional, good for visibility)
             const { data: users } = await supabase
                 .from('profiles')
-                .select('id, full_name, email, created_at') // created_at might not exist on profiles depending on schema, usually updated_at or we rely on auth metadata which we can't easily join here. 
+                .select('id, full_name, email, updated_at') 
                 // Assuming profiles has created_at or we skip.
                 // Checking previous schema analysis, profiles usually has updated_at. Let's skip users for now to avoid errors if column missing.
                 .limit(3); 
