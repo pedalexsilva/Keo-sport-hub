@@ -71,6 +71,7 @@ export const useStore = () => {
         purchaseItem,
         refresh: fetchProducts
     };
+};
 
 export function useUserInventory(userId?: string) {
     return useQuery({
