@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTickets, useUpdateTicket, useAdminTickets, useTicketStats } from '../hooks/useTickets';
-import { useUsers, useUserStats, useDepartmentRanking } from '../hooks/useUsers';
+import { useUsers, useUserStats, useDepartmentRanking, useUpdateUser, useBlockUser, useAddBonusPoints } from '../hooks/useUsers';
 import { useLogout } from '../hooks/useLogout';
 import { useEvents } from '../hooks/useEvents';
 import { useAdminStore } from '../hooks/useAdminStore';
@@ -526,12 +526,51 @@ const StoreManagerView = () => {
 
 const UsersView = () => {
     const { data: usersData, isLoading } = useUsers();
+    const updateUser = useUpdateUser();
+    const blockUser = useBlockUser();
+    const addBonusPoints = useAddBonusPoints();
 
     const users = usersData || [];
 
-    const handleBonus = (id: string) => {
-        // Implement bonus logic here or open a modal
-        alert("Bonus functionality to implement with backend.");
+    // Modal states
+    const [stravaModal, setStravaModal] = useState<typeof users[0] | null>(null);
+    const [editModal, setEditModal] = useState<typeof users[0] | null>(null);
+    const [bonusModal, setBonusModal] = useState<typeof users[0] | null>(null);
+
+    // Edit form state
+    const [editForm, setEditForm] = useState({ full_name: '', role: '', office: '' });
+
+    // Bonus form state
+    const [bonusForm, setBonusForm] = useState({ points: 50, reason: '' });
+
+    const openEditModal = (user: typeof users[0]) => {
+        setEditForm({ full_name: user.name, role: user.role, office: user.office });
+        setEditModal(user);
+    };
+
+    const handleSaveEdit = async () => {
+        if (!editModal) return;
+        await updateUser.mutateAsync({ id: editModal.id, data: editForm });
+        setEditModal(null);
+    };
+
+    const openBonusModal = (user: typeof users[0]) => {
+        setBonusForm({ points: 50, reason: '' });
+        setBonusModal(user);
+    };
+
+    const handleSaveBonus = async () => {
+        if (!bonusModal || !bonusForm.reason) return;
+        await addBonusPoints.mutateAsync({ id: bonusModal.id, points: bonusForm.points, reason: bonusForm.reason });
+        setBonusModal(null);
+    };
+
+    const handleBlockToggle = async (user: typeof users[0]) => {
+        const isBlocking = user.status === 'Ativo';
+        const action = isBlocking ? 'bloquear' : 'desbloquear';
+        if (confirm(`Tem a certeza que quer ${action} ${user.name}?`)) {
+            await blockUser.mutateAsync({ id: user.id, block: isBlocking });
+        }
     };
 
     return (
@@ -552,8 +591,13 @@ const UsersView = () => {
                                         <td className="px-6 py-4"><div className="flex items-center gap-3"><img src={user.avatar} className="w-8 h-8 rounded-full bg-gray-200" /><div><div className="font-bold text-gray-900">{user.name}</div><div className="text-xs text-gray-500">{user.email}</div></div></div></td>
                                         <td className="px-6 py-4"><div className="text-sm text-gray-900">{user.role}</div><div className="text-xs text-[#009CDE] font-medium">{user.office}</div></td>
                                         <td className="px-6 py-4"><div className="font-bold text-gray-700">{user.points.toLocaleString()} pts</div></td>
-                                        <td className="px-6 py-4"><span className={`px-2 py-1 rounded text-xs font-bold ${user.status === 'Ativo' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>{user.status === 'Ativo' ? 'Active' : user.status}</span></td>
-                                        <td className="px-6 py-4 text-right flex justify-end gap-2"><button onClick={() => handleBonus(user.id)} title="Bonus" className="bg-yellow-100 text-yellow-600 p-2 rounded-lg hover:bg-yellow-200 transition"><Gift className="w-4 h-4" /></button><button title="Edit" className="bg-gray-100 text-gray-600 p-2 rounded-lg hover:bg-gray-200 transition"><Edit2 className="w-4 h-4" /></button><button title="Block" className="bg-red-50 text-red-500 p-2 rounded-lg hover:bg-red-100 transition"><Ban className="w-4 h-4" /></button></td>
+                                        <td className="px-6 py-4"><span className={`px-2 py-1 rounded text-xs font-bold ${user.status === 'Ativo' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>{user.status === 'Ativo' ? 'Active' : 'Blocked'}</span></td>
+                                        <td className="px-6 py-4 text-right flex justify-end gap-2">
+                                            <button onClick={() => setStravaModal(user)} title={user.strava_connected ? "Strava Connected" : "Strava Not Connected"} className={`p-2 rounded-lg transition ${user.strava_connected ? 'bg-orange-100 text-[#FC4C02] hover:bg-orange-200' : 'bg-gray-100 text-gray-400 hover:bg-gray-200'}`}><Activity className="w-4 h-4" /></button>
+                                            <button onClick={() => openBonusModal(user)} title="Bonus" className="bg-yellow-100 text-yellow-600 p-2 rounded-lg hover:bg-yellow-200 transition"><Gift className="w-4 h-4" /></button>
+                                            <button onClick={() => openEditModal(user)} title="Edit" className="bg-gray-100 text-gray-600 p-2 rounded-lg hover:bg-gray-200 transition"><Edit2 className="w-4 h-4" /></button>
+                                            <button onClick={() => handleBlockToggle(user)} title={user.status === 'Ativo' ? 'Block' : 'Unblock'} className="bg-red-50 text-red-500 p-2 rounded-lg hover:bg-red-100 transition"><Ban className="w-4 h-4" /></button>
+                                        </td>
                                     </tr>
                                 ))}
                             </tbody>
@@ -565,11 +609,12 @@ const UsersView = () => {
                                 <div key={user.id} className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
                                     <div className="flex items-center gap-3 mb-3">
                                         <img src={user.avatar} className="w-10 h-10 rounded-full bg-gray-200" />
-                                        <div>
+                                        <div className="flex-1">
                                             <div className="font-bold text-gray-900">{user.name}</div>
                                             <div className="text-xs text-gray-500">{user.office}</div>
                                         </div>
-                                        <div className="ml-auto">
+                                        <div className="flex items-center gap-2">
+                                            <span className={`w-2 h-2 rounded-full ${user.strava_connected ? 'bg-[#FC4C02]' : 'bg-gray-300'}`} title={user.strava_connected ? 'Strava Connected' : 'Strava Not Connected'}></span>
                                             <span className={`px-2 py-1 rounded text-[10px] font-bold ${user.status === 'Ativo' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>{user.status}</span>
                                         </div>
                                     </div>
@@ -586,8 +631,9 @@ const UsersView = () => {
                                     </div>
 
                                     <div className="flex gap-2">
-                                        <button onClick={() => handleBonus(user.id)} className="flex-1 bg-yellow-100 text-yellow-700 py-2 rounded-lg font-bold text-xs flex items-center justify-center gap-1"><Gift className="w-3 h-3" /> Bonus</button>
-                                        <button className="flex-1 bg-gray-100 text-gray-600 py-2 rounded-lg font-bold text-xs flex items-center justify-center gap-1"><Edit2 className="w-3 h-3" /> Edit</button>
+                                        <button onClick={() => setStravaModal(user)} className={`p-2 rounded-lg ${user.strava_connected ? 'bg-orange-100 text-[#FC4C02]' : 'bg-gray-100 text-gray-400'}`}><Activity className="w-4 h-4" /></button>
+                                        <button onClick={() => openBonusModal(user)} className="flex-1 bg-yellow-100 text-yellow-700 py-2 rounded-lg font-bold text-xs flex items-center justify-center gap-1"><Gift className="w-3 h-3" /> Bonus</button>
+                                        <button onClick={() => openEditModal(user)} className="flex-1 bg-gray-100 text-gray-600 py-2 rounded-lg font-bold text-xs flex items-center justify-center gap-1"><Edit2 className="w-3 h-3" /> Edit</button>
                                     </div>
                                 </div>
                             ))}
@@ -595,6 +641,121 @@ const UsersView = () => {
                     </>
                 )}
             </div>
+
+            {/* Strava Status Modal */}
+            {stravaModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={() => setStravaModal(null)}>
+                    <div className="bg-white p-6 rounded-2xl w-full max-w-md shadow-2xl mx-4" onClick={e => e.stopPropagation()}>
+                        <div className="flex items-center gap-4 mb-6">
+                            <img src={stravaModal.avatar} className="w-16 h-16 rounded-full bg-gray-200" />
+                            <div>
+                                <h3 className="text-xl font-bold text-gray-900">{stravaModal.name}</h3>
+                                <p className="text-sm text-gray-500">{stravaModal.email}</p>
+                            </div>
+                        </div>
+
+                        <div className={`p-4 rounded-xl border-2 ${stravaModal.strava_connected ? 'border-[#FC4C02] bg-orange-50' : 'border-gray-200 bg-gray-50'}`}>
+                            <div className="flex items-center gap-3 mb-3">
+                                <div className={`p-3 rounded-xl ${stravaModal.strava_connected ? 'bg-[#FC4C02]' : 'bg-gray-300'}`}>
+                                    <Activity className="w-6 h-6 text-white" />
+                                </div>
+                                <div>
+                                    <h4 className="font-bold text-gray-900">Strava</h4>
+                                    <p className={`text-sm font-medium ${stravaModal.strava_connected ? 'text-[#FC4C02]' : 'text-gray-500'}`}>
+                                        {stravaModal.strava_connected ? 'Conectado' : 'Não Conectado'}
+                                    </p>
+                                </div>
+                            </div>
+
+                            {stravaModal.strava_connected ? (
+                                <div className="bg-white p-3 rounded-lg">
+                                    <div className="flex items-center gap-2 text-green-600">
+                                        <CheckCircle2 className="w-4 h-4" />
+                                        <span className="text-sm font-medium">Conta Strava vinculada com sucesso</span>
+                                    </div>
+                                    {stravaModal.strava_athlete_id && (
+                                        <p className="text-xs text-gray-500 mt-1">Athlete ID: {stravaModal.strava_athlete_id}</p>
+                                    )}
+                                </div>
+                            ) : (
+                                <div className="bg-white p-3 rounded-lg">
+                                    <div className="flex items-center gap-2 text-gray-500">
+                                        <AlertCircle className="w-4 h-4" />
+                                        <span className="text-sm">Este utilizador ainda não conectou o Strava</span>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        <button onClick={() => setStravaModal(null)} className="w-full mt-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-bold hover:bg-gray-200 transition">
+                            Fechar
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* Edit User Modal */}
+            {editModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={() => setEditModal(null)}>
+                    <div className="bg-white p-6 rounded-2xl w-full max-w-md shadow-2xl mx-4" onClick={e => e.stopPropagation()}>
+                        <h3 className="text-xl font-bold text-[#002D72] mb-6">Editar Utilizador</h3>
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Nome Completo</label>
+                                <input type="text" className="w-full p-3 bg-gray-50 rounded-lg border border-gray-200" value={editForm.full_name} onChange={e => setEditForm({ ...editForm, full_name: e.target.value })} />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Função / Role</label>
+                                <input type="text" className="w-full p-3 bg-gray-50 rounded-lg border border-gray-200" value={editForm.role} onChange={e => setEditForm({ ...editForm, role: e.target.value })} />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Escritório</label>
+                                <input type="text" className="w-full p-3 bg-gray-50 rounded-lg border border-gray-200" value={editForm.office} onChange={e => setEditForm({ ...editForm, office: e.target.value })} />
+                            </div>
+                            <div className="flex gap-4 mt-6">
+                                <button onClick={() => setEditModal(null)} className="flex-1 py-3 bg-gray-100 text-gray-600 rounded-xl font-bold hover:bg-gray-200">Cancelar</button>
+                                <button onClick={handleSaveEdit} disabled={updateUser.isPending} className="flex-1 py-3 bg-[#002D72] text-white rounded-xl font-bold hover:bg-blue-900 flex items-center justify-center gap-2">
+                                    {updateUser.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
+                                    Guardar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Bonus Points Modal */}
+            {bonusModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={() => setBonusModal(null)}>
+                    <div className="bg-white p-6 rounded-2xl w-full max-w-md shadow-2xl mx-4" onClick={e => e.stopPropagation()}>
+                        <h3 className="text-xl font-bold text-[#002D72] mb-2">Adicionar Bónus</h3>
+                        <p className="text-sm text-gray-500 mb-6">Adicionar pontos bónus a <span className="font-bold text-gray-700">{bonusModal.name}</span></p>
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Pontos a Adicionar</label>
+                                <input type="number" className="w-full p-3 bg-gray-50 rounded-lg border border-gray-200 text-center text-2xl font-bold text-[#002D72]" value={bonusForm.points} onChange={e => setBonusForm({ ...bonusForm, points: parseInt(e.target.value) || 0 })} />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Razão / Motivo</label>
+                                <textarea className="w-full p-3 bg-gray-50 rounded-lg border border-gray-200 h-24" placeholder="Ex: Participação no evento X..." value={bonusForm.reason} onChange={e => setBonusForm({ ...bonusForm, reason: e.target.value })} />
+                            </div>
+                            <div className="bg-yellow-50 p-3 rounded-lg border border-yellow-200">
+                                <p className="text-sm text-yellow-800">
+                                    <span className="font-bold">{bonusModal.name}</span> terá um total de <span className="font-bold">{(bonusModal.points + (bonusForm.points || 0)).toLocaleString()} pts</span> após este bónus.
+                                </p>
+                            </div>
+                            <div className="flex gap-4 mt-6">
+                                <button onClick={() => setBonusModal(null)} className="flex-1 py-3 bg-gray-100 text-gray-600 rounded-xl font-bold hover:bg-gray-200">Cancelar</button>
+                                <button onClick={handleSaveBonus} disabled={addBonusPoints.isPending || !bonusForm.reason} className="flex-1 py-3 bg-yellow-500 text-white rounded-xl font-bold hover:bg-yellow-600 flex items-center justify-center gap-2 disabled:opacity-50">
+                                    {addBonusPoints.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
+                                    <Gift className="w-4 h-4" />
+                                    Atribuir Bónus
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
