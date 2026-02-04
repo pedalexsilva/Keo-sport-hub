@@ -1,5 +1,6 @@
 import React from 'react';
-import { Download, Calendar, ChevronDown } from 'lucide-react';
+import { LogIn, Calendar, ChevronDown } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { useCMS } from '../../hooks/useCMS';
 
 const HeroSection: React.FC = () => {
@@ -45,9 +46,9 @@ const HeroSection: React.FC = () => {
                     </p>
 
                     <div className="flex flex-col sm:flex-row gap-3 md:gap-4">
-                        <a href="#app" className="px-6 py-3 md:px-8 md:py-4 bg-[#009CDE] text-white text-base md:text-lg rounded-full font-bold hover:bg-[#007bb5] transition shadow-lg flex items-center justify-center gap-2 cursor-pointer">
-                            <Download className="w-5 h-5" /> Download App
-                        </a>
+                        <Link to="/login" className="px-6 py-3 md:px-8 md:py-4 bg-[#009CDE] text-white text-base md:text-lg rounded-full font-bold hover:bg-[#007bb5] transition shadow-lg flex items-center justify-center gap-2 cursor-pointer">
+                            <LogIn className="w-5 h-5" /> Sign In
+                        </Link>
                         <a href="#eventos" className="px-6 py-3 md:px-8 md:py-4 bg-white border-2 border-[#002D72] text-[#002D72] text-base md:text-lg rounded-full font-bold hover:bg-gray-50 transition flex items-center justify-center gap-2 cursor-pointer">
                             <Calendar className="w-5 h-5" /> View Events
                         </a>

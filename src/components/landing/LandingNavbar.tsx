@@ -85,7 +85,7 @@ const LandingNavbar: React.FC = () => {
                                     onClick={toggleMenu}
                                     className="block text-center bg-[#002D72] text-white py-4 rounded-xl font-bold uppercase tracking-wide text-base shadow-lg hover:bg-[#001e4d] transition"
                                 >
-                                    Login / Download App
+                                    Sign In
                                 </Link>
                             </div>
                         </div>
