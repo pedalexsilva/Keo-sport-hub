@@ -599,7 +599,7 @@ const UsersView = () => {
     );
 };
 
-import { useCMS, useUpdateCMS, useNotifications, useCreateNotification, uploadCMSMedia } from '../hooks/useCMS';
+import { useCMS, useUpdateCMS, useNotifications, useCreateNotification, uploadCMSMedia, useOfficeLocations, useUpdateOfficeLocations, OfficeLocation } from '../hooks/useCMS';
 import { Loader2 } from 'lucide-react';
 
 const CommunicationsView = () => {
@@ -879,14 +879,44 @@ const CMSView = () => {
     const [localConfig, setLocalConfig] = useState<any>(null);
     const [isUploading, setIsUploading] = useState(false);
 
+    // Office Locations
+    const { data: offices, isLoading: officesLoading } = useOfficeLocations();
+    const updateOffices = useUpdateOfficeLocations();
+    const [localOffices, setLocalOffices] = useState<OfficeLocation[]>([]);
+    const [newOfficeName, setNewOfficeName] = useState('');
+
     // Sync local state when data loads
     useEffect(() => {
         if (config) setLocalConfig(config);
     }, [config]);
 
+    useEffect(() => {
+        if (offices) setLocalOffices(offices);
+    }, [offices]);
+
     const handleSave = async () => {
         await updateCMS.mutateAsync(localConfig);
         alert("Guardado com sucesso!");
+    };
+
+    const handleSaveOffices = async () => {
+        await updateOffices.mutateAsync(localOffices);
+        alert("Escritórios guardados com sucesso!");
+    };
+
+    const handleAddOffice = () => {
+        if (!newOfficeName.trim()) return;
+        const id = newOfficeName.toLowerCase().replace(/\s+/g, '-');
+        setLocalOffices([...localOffices, { id, name: newOfficeName.trim() }]);
+        setNewOfficeName('');
+    };
+
+    const handleRemoveOffice = (id: string) => {
+        setLocalOffices(localOffices.filter(o => o.id !== id));
+    };
+
+    const handleUpdateOfficeName = (id: string, newName: string) => {
+        setLocalOffices(localOffices.map(o => o.id === id ? { ...o, name: newName } : o));
     };
 
     const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -906,12 +936,12 @@ const CMSView = () => {
         }
     };
 
-    if (isLoading || !localConfig) return <div>Carregando CMS...</div>;
+    if (isLoading || !localConfig || officesLoading) return <div>Carregando CMS...</div>;
 
     const isVideo = localConfig.heroImage?.match(/\.(mp4|webm|ogg|mov)$/i);
 
     return (
-        <div className="p-8 animate-fade-in h-full flex flex-col gap-8">
+        <div className="p-8 animate-fade-in h-full flex flex-col gap-8 overflow-y-auto">
             <div className="flex justify-between items-center"><div><h2 className="text-2xl font-bold text-gray-800">Landing Page CMS</h2><p className="text-gray-500 text-sm">Personalize o conteúdo da página inicial (pública).</p></div><button onClick={handleSave} className="bg-green-600 text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 hover:bg-green-700 transition shadow-lg"><Save className="w-5 h-5" /> Guardar Alterações</button></div>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-6">
@@ -991,6 +1021,72 @@ const CMSView = () => {
                             </div>
                         </div>
                     </div>
+                </div>
+            </div>
+
+            {/* Office Locations Section */}
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-6">
+                <div className="flex justify-between items-center border-b border-gray-100 pb-4">
+                    <div>
+                        <h3 className="font-bold text-gray-800 flex items-center gap-2"><MapPin className="w-5 h-5 text-[#009CDE]" /> Office Locations</h3>
+                        <p className="text-xs text-gray-500 mt-1">Localizações disponíveis no Onboarding para os utilizadores escolherem o seu escritório.</p>
+                    </div>
+                    <button onClick={handleSaveOffices} className="bg-green-600 text-white px-4 py-2 rounded-xl font-bold flex items-center gap-2 hover:bg-green-700 transition text-sm">
+                        <Save className="w-4 h-4" /> Guardar Escritórios
+                    </button>
+                </div>
+
+                {/* Add New Office */}
+                <div className="flex gap-3">
+                    <input
+                        type="text"
+                        placeholder="Nome do novo escritório (ex: Singapore)"
+                        className="flex-1 p-3 bg-gray-50 rounded-lg border border-gray-200 outline-none focus:border-[#009CDE]"
+                        value={newOfficeName}
+                        onChange={e => setNewOfficeName(e.target.value)}
+                        onKeyDown={e => e.key === 'Enter' && handleAddOffice()}
+                    />
+                    <button
+                        onClick={handleAddOffice}
+                        className="bg-[#002D72] text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 hover:bg-blue-900 transition"
+                    >
+                        <Plus className="w-5 h-5" /> Adicionar
+                    </button>
+                </div>
+
+                {/* List of Offices */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                    {localOffices.map((office) => (
+                        <div key={office.id} className="flex items-center gap-2 p-3 bg-gray-50 rounded-xl border border-gray-100 group hover:border-[#009CDE] transition">
+                            <MapPin className="w-4 h-4 text-[#009CDE] flex-shrink-0" />
+                            <input
+                                type="text"
+                                className="flex-1 bg-transparent outline-none text-sm font-medium text-gray-800 min-w-0"
+                                value={office.name}
+                                onChange={e => handleUpdateOfficeName(office.id, e.target.value)}
+                            />
+                            <button
+                                onClick={() => handleRemoveOffice(office.id)}
+                                className="text-gray-300 hover:text-red-500 transition opacity-0 group-hover:opacity-100"
+                            >
+                                <Trash2 className="w-4 h-4" />
+                            </button>
+                        </div>
+                    ))}
+                </div>
+
+                {localOffices.length === 0 && (
+                    <div className="text-center py-8 text-gray-400">
+                        <MapPin className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                        <p className="text-sm">Nenhum escritório configurado. Adicione localizações acima.</p>
+                    </div>
+                )}
+
+                <div className="mt-2 p-3 bg-blue-50 rounded-xl border border-blue-100">
+                    <p className="text-xs text-blue-800 flex items-center gap-2">
+                        <Zap className="w-4 h-4" />
+                        <span><strong>Dica:</strong> Estas localizações aparecem no formulário de Onboarding quando novos utilizadores se registam na plataforma.</span>
+                    </p>
                 </div>
             </div>
         </div>

@@ -5,20 +5,13 @@ import { CheckCircle2, ChevronRight, MapPin, Briefcase, User, Building2 } from '
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../features/auth/AuthContext';
 import { useQueryClient } from '@tanstack/react-query';
-
-const OFFICES = [
-    'Porto Office',
-    'Lisboa Office',
-    'Dubai Office',
-    'Madrid Office',
-    'Paris Office',
-    'Berlin Office'
-];
+import { useOfficeLocations } from '../hooks/useCMS';
 
 export default function OnboardingPage() {
     const { user } = useAuth();
     const navigate = useNavigate();
     const queryClient = useQueryClient();
+    const { data: offices, isLoading: officesLoading } = useOfficeLocations();
     const [step, setStep] = useState<1 | 2>(1);
     const [loading, setLoading] = useState(false);
 
@@ -124,10 +117,11 @@ export default function OnboardingPage() {
                                         value={formData.office}
                                         onChange={(e) => setFormData(prev => ({ ...prev, office: e.target.value }))}
                                         className="w-full bg-white/10 border border-white/20 rounded-xl py-3.5 pl-12 pr-4 text-white placeholder-white/40 focus:outline-none focus:border-[#009CDE] transition-colors appearance-none [&>option]:text-gray-900"
+                                        disabled={officesLoading}
                                     >
-                                        <option value="" disabled>Select your office</option>
-                                        {OFFICES.map(office => (
-                                            <option key={office} value={office}>{office}</option>
+                                        <option value="" disabled>{officesLoading ? 'Loading...' : 'Select your office'}</option>
+                                        {(offices || []).map(office => (
+                                            <option key={office.id} value={office.name}>{office.name}</option>
                                         ))}
                                     </select>
                                     <ChevronRight className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 w-5 h-5 rotate-90" />

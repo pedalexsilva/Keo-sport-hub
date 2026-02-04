@@ -23,6 +23,66 @@ export interface Notification {
     created_at: string;
 }
 
+export interface OfficeLocation {
+    id: string;
+    name: string;
+}
+
+const DEFAULT_OFFICES: OfficeLocation[] = [
+    { id: 'dubai', name: 'Dubai' },
+    { id: 'abu-dhabi', name: 'Abu Dhabi' },
+    { id: 'riyadh', name: 'Riyadh' },
+    { id: 'qatar', name: 'Qatar' },
+    { id: 'kuwait', name: 'Kuwait' },
+    { id: 'bahrain', name: 'Bahrain' },
+    { id: 'oman', name: 'Oman' },
+    { id: 'jordan', name: 'Jordan' },
+    { id: 'sri-lanka', name: 'Sri Lanka' },
+    { id: 'lisbon', name: 'Lisbon' },
+    { id: 'porto', name: 'Porto' },
+    { id: 'madrid', name: 'Madrid' },
+    { id: 'london', name: 'London' },
+    { id: 'dublin', name: 'Dublin' },
+];
+
+export function useOfficeLocations() {
+    return useQuery({
+        queryKey: ['office_locations'],
+        queryFn: async (): Promise<OfficeLocation[]> => {
+            const { data, error } = await supabase
+                .from('cms_config')
+                .select('value')
+                .eq('key', 'office_locations')
+                .single();
+
+            if (error) {
+                return DEFAULT_OFFICES;
+            }
+            return data.value;
+        }
+    });
+}
+
+export function useUpdateOfficeLocations() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async (locations: OfficeLocation[]) => {
+            const { error } = await supabase
+                .from('cms_config')
+                .upsert({
+                    key: 'office_locations',
+                    value: locations,
+                    updated_at: new Date().toISOString()
+                });
+            if (error) throw error;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['office_locations'] });
+        }
+    });
+}
+
 export function useCMS() {
     return useQuery({
         queryKey: ['cms'],

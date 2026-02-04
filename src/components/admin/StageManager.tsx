@@ -374,6 +374,50 @@ export const StageManager = ({ eventId, onClose }: StageManagerProps) => {
                                                     />
                                                 </div>
                                             </div>
+                                            <div className="space-y-2 md:col-span-2">
+                                                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Stage Image</label>
+                                                <div className="flex items-center gap-4">
+                                                    {(newStage.image_url || imageFile) && (
+                                                        <img
+                                                            src={imageFile ? URL.createObjectURL(imageFile) : newStage.image_url}
+                                                            className="w-20 h-20 rounded-xl object-cover bg-gray-100 border border-gray-200"
+                                                            alt="Stage preview"
+                                                        />
+                                                    )}
+                                                    <div className="flex-1 space-y-2">
+                                                        <input
+                                                            type="text"
+                                                            className="w-full p-3.5 pl-4 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-[#009CDE]/20 focus:border-[#009CDE] transition-all font-medium text-gray-900 placeholder:text-gray-400"
+                                                            placeholder="Image URL (or upload below)"
+                                                            value={newStage.image_url}
+                                                            onChange={e => setNewStage({ ...newStage, image_url: e.target.value })}
+                                                        />
+                                                        <div className="flex items-center gap-3">
+                                                            <input
+                                                                type="file"
+                                                                id="stage-image-upload"
+                                                                accept="image/*"
+                                                                className="hidden"
+                                                                onChange={e => {
+                                                                    if (e.target.files?.[0]) {
+                                                                        setImageFile(e.target.files[0]);
+                                                                    }
+                                                                }}
+                                                            />
+                                                            <label
+                                                                htmlFor="stage-image-upload"
+                                                                className="flex items-center gap-2 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg cursor-pointer transition-colors"
+                                                            >
+                                                                <ImageIcon className="w-4 h-4" />
+                                                                Upload Image
+                                                            </label>
+                                                            {imageFile && (
+                                                                <span className="text-sm text-gray-500 truncate max-w-[200px]">{imageFile.name}</span>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
 
                                         <div className="flex items-center justify-end gap-4 pt-6 mt-6 border-t border-gray-100">
