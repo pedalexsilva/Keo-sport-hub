@@ -330,8 +330,8 @@ export const ResultsEditor = ({ stageId, onClose }: ResultsEditorProps) => {
                                         <input
                                             type="text"
                                             className="w-full md:w-24 p-2 md:p-1.5 border border-blue-200 rounded text-sm font-mono focus:ring-2 focus:ring-blue-500 outline-none text-center md:text-left bg-white"
-                                            value={formatTime(r.official_time_seconds || 0)}
-                                            onChange={(e) => { }}
+                                            defaultValue={formatTime(r.official_time_seconds || 0)}
+                                            key={r.id}
                                             onBlur={(e) => {
                                                 const val = parseTime(e.target.value);
                                                 if (val > 0) handleUpdate(r.id, 'official_time_seconds', val);
