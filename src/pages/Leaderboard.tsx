@@ -131,8 +131,8 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ currentUser }) => {
         <button
           onClick={() => setViewType('gc')}
           className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-bold whitespace-nowrap transition-all ${viewType === 'gc'
-              ? 'bg-white text-yellow-600 shadow-sm'
-              : 'text-gray-500 hover:text-gray-700 hover:bg-white/50'
+            ? 'bg-white text-yellow-600 shadow-sm'
+            : 'text-gray-500 hover:text-gray-700 hover:bg-white/50'
             }`}
         >
           <Timer className="w-4 h-4" /> GC
@@ -142,8 +142,8 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ currentUser }) => {
         <button
           onClick={() => setViewType('mountain')}
           className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-bold whitespace-nowrap transition-all ${viewType === 'mountain'
-              ? 'bg-white text-red-600 shadow-sm'
-              : 'text-gray-500 hover:text-gray-700 hover:bg-white/50'
+            ? 'bg-white text-red-600 shadow-sm'
+            : 'text-gray-500 hover:text-gray-700 hover:bg-white/50'
             }`}
         >
           <Mountain className="w-4 h-4" /> Mountain
@@ -160,8 +160,8 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ currentUser }) => {
             key={stage.id}
             onClick={() => setViewType(stage.id)}
             className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-bold whitespace-nowrap transition-all ${viewType === stage.id
-                ? 'bg-white text-blue-600 shadow-sm'
-                : 'text-gray-500 hover:text-gray-700 hover:bg-white/50'
+              ? 'bg-white text-blue-600 shadow-sm'
+              : 'text-gray-500 hover:text-gray-700 hover:bg-white/50'
               }`}
           >
             {stage.status === 'official' ? (
@@ -197,7 +197,11 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ currentUser }) => {
             <Trophy className="w-6 h-6 text-yellow-500" />
             <div>
               <h3 className="font-bold text-[#002D72]">General Classification (GC)</h3>
-              <p className="text-sm text-gray-500">Sum of official stage times</p>
+              <p className="text-sm text-gray-500">
+                {officialStages === totalStages && totalStages > 0
+                  ? 'Sum of official stage times'
+                  : 'Sum of stage times (Provisional)'}
+              </p>
             </div>
           </div>
 

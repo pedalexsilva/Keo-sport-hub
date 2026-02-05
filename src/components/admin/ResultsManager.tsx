@@ -165,7 +165,11 @@ export const ResultsManager = () => {
                                 <Trophy className="w-5 h-5 text-yellow-500" />
                                 <div>
                                     <h3 className="font-bold text-gray-800">General Classification (GC)</h3>
-                                    <p className="text-xs text-gray-500">Sum of stage times (Provisional)</p>
+                                    <p className="text-xs text-gray-500">
+                                        {officialStages === totalStages && totalStages > 0
+                                            ? 'Sum of official stage times'
+                                            : 'Sum of stage times (Provisional)'}
+                                    </p>
                                 </div>
                             </div>
                             <div className="overflow-x-auto">

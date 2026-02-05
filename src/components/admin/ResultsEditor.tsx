@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../lib/supabase';
 import { Loader2, Save, Send, AlertTriangle, CheckCircle, Clock, Mountain, ExternalLink, Flag } from 'lucide-react';
 
@@ -25,6 +26,7 @@ interface ResultRow {
 }
 
 export const ResultsEditor = ({ stageId, onClose }: ResultsEditorProps) => {
+    const queryClient = useQueryClient();
     const [results, setResults] = useState<ResultRow[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
@@ -221,6 +223,11 @@ export const ResultsEditor = ({ stageId, onClose }: ResultsEditorProps) => {
             });
 
             if (error) throw error;
+
+            // Invalidate cache to trigger UI refresh
+            queryClient.invalidateQueries({ queryKey: ['event-stages'] });
+            queryClient.invalidateQueries({ queryKey: ['event-stage-breakdown'] });
+            queryClient.invalidateQueries({ queryKey: ['stage-results'] });
 
             alert("Results published successfully! 🏆");
             onClose();
