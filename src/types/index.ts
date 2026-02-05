@@ -50,6 +50,9 @@ export interface Event {
   creatorId: string;
   maxParticipants?: number;
   status: 'open' | 'closed' | 'cancelled' | 'completed';
+  visibility: 'public' | 'department' | 'private';
+  targetOffice?: string;
+  allowedUsers?: string[]; // IDs of users allowed in private events
 }
 
 export interface Challenge {

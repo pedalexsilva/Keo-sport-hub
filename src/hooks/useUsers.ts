@@ -93,25 +93,22 @@ export function useDepartmentRanking() {
     return useQuery({
         queryKey: ['admin_department_ranking'],
         queryFn: async (): Promise<DepartmentStats[]> => {
+            // Fetch directly from the office_leaderboard view which aggregates points from workout_metrics
             const { data, error } = await supabase
-                .from('profiles')
-                .select('office, total_points');
+                .from('office_leaderboard')
+                .select('*');
 
-            if (error) throw error;
+            if (error) {
+                console.error("Error fetching department ranking:", error);
+                return []; 
+            }
 
-            const map = new Map<string, DepartmentStats>();
-
-            data?.forEach((p: any) => {
-                const office = p.office || 'Outros';
-                const current = map.get(office) || { office, totalPoints: 0, userCount: 0 };
-                
-                current.totalPoints += (p.total_points || 0);
-                current.userCount += 1;
-                
-                map.set(office, current);
-            });
-
-            return Array.from(map.values()).sort((a, b) => b.totalPoints - a.totalPoints);
+            // Map the view columns to our interface
+            return (data || []).map((row: any) => ({
+                office: row.office || 'Unknown',
+                totalPoints: row.total_points || 0,
+                userCount: row.member_count || 0
+            }));
         }
     });
 }

@@ -15,6 +15,9 @@ export function useEvents() {
           ),
           event_stages (
             date
+          ),
+          event_access (
+            user_id
           )
         `)
                 .order('date', { ascending: true });
@@ -83,7 +86,10 @@ export function useEvents() {
                     }),
                     maxParticipants: e.max_participants,
                     status: (isPast && e.status === 'open') ? 'closed' : e.status,
-                    mode: e.mode || 'social'
+                    mode: e.mode || 'social',
+                    visibility: e.visibility || 'public',
+                    targetOffice: e.target_office,
+                    allowedUsers: e.event_access?.map((a: any) => a.user_id) || []
                 };
             });
         }
@@ -110,14 +116,28 @@ export function useCreateEvent() {
                     max_participants: newEvent.maxParticipants,
                     status: newEvent.status || 'open',
                     mode: newEvent.mode || 'social',
-                    creator_id: user.id
+                    creator_id: user.id,
+                    visibility: newEvent.visibility || 'public',
+                    target_office: newEvent.targetOffice
                 })
                 .select()
                 .single();
 
             if (error) throw error;
 
-            // Removed auto-join creator logic as per requirement
+            // Handle Private Event Access List
+            if (newEvent.visibility === 'private' && newEvent.allowedUsers && newEvent.allowedUsers.length > 0) {
+                 const accessRows = newEvent.allowedUsers.map(uid => ({
+                     event_id: data.id,
+                     user_id: uid
+                 }));
+                 
+                 const { error: accessError } = await supabase
+                    .from('event_access')
+                    .insert(accessRows);
+                 
+                 if (accessError) throw accessError;
+            }
 
             return data;
         },
@@ -143,11 +163,28 @@ export function useUpdateEvent() {
                     image_url: event.image,
                     max_participants: event.maxParticipants,
                     status: event.status,
-                    mode: event.mode
+                    mode: event.mode,
+                    visibility: event.visibility,
+                    target_office: event.targetOffice
                 })
                 .eq('id', event.id);
 
             if (error) throw error;
+
+            // Update Access List for Private Events
+            if (event.visibility === 'private' && event.allowedUsers) {
+                // First delete existing
+                await supabase.from('event_access').delete().eq('event_id', event.id);
+                
+                // Then insert new (if any)
+                if (event.allowedUsers.length > 0) {
+                     const accessRows = event.allowedUsers.map(uid => ({
+                        event_id: event.id,
+                        user_id: uid
+                    }));
+                    await supabase.from('event_access').insert(accessRows);
+                }
+            }
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['events'] });

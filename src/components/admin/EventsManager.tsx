@@ -1,12 +1,17 @@
-import React, { useState } from 'react';
-import { List, Loader2, Plus, Search, ImageIcon, Calendar, MapPin, Edit2, Trash2, X } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { List, Loader2, Plus, Search, ImageIcon, Calendar, MapPin, Edit2, Trash2, X, Globe, Building, Lock } from 'lucide-react';
 import { useEvents, useCreateEvent, useUpdateEvent, useDeleteEvent, uploadEventMedia } from '../../hooks/useEvents';
+import { useUsers } from '../../hooks/useUsers';
+import { useOfficeLocations } from '../../hooks/useCMS';
 import { ActivityType, Event } from '../../types';
 import { StageManager } from './StageManager';
 import { formatDate } from '../../utils/dateUtils';
 
 export const EventsManager = () => {
     const { data: events, isLoading } = useEvents();
+    const { data: users, isLoading: isLoadingUsers } = useUsers();
+    const { data: officeLocations } = useOfficeLocations();
+
     const createEvent = useCreateEvent();
     const updateEvent = useUpdateEvent();
     const deleteEvent = useDeleteEvent();
@@ -17,6 +22,7 @@ export const EventsManager = () => {
     const [filterStatus, setFilterStatus] = useState('All');
     const [searchText, setSearchText] = useState('');
 
+    // Form state
     const [currentEvent, setCurrentEvent] = useState<Partial<Event>>({
         title: '',
         date: '',
@@ -26,15 +32,36 @@ export const EventsManager = () => {
         image: '',
         maxParticipants: 0,
         mode: 'competitive',
-        status: 'open'
+        status: 'open',
+        visibility: 'public',
+        targetOffice: '',
+        allowedUsers: []
     });
 
     const [imageFile, setImageFile] = useState<File | null>(null);
+    const [userSearchText, setUserSearchText] = useState('');
+
+    // Derived data
+    const uniqueOffices = useMemo(() => {
+        if (!officeLocations) return [];
+        return officeLocations.map(o => o.name).sort();
+    }, [officeLocations]);
+
+    const filteredUsers = useMemo(() => {
+        if (!users) return [];
+        return users.filter(u =>
+            u.name.toLowerCase().includes(userSearchText.toLowerCase()) ||
+            u.email.toLowerCase().includes(userSearchText.toLowerCase())
+        );
+    }, [users, userSearchText]);
 
     const handleEdit = (evt: Event) => {
         setCurrentEvent({
             ...evt,
-            date: evt.date.substring(0, 16) // Format for datetime-local input
+            date: evt.date.substring(0, 16), // Format for datetime-local input
+            visibility: evt.visibility || 'public',
+            targetOffice: evt.targetOffice || '',
+            allowedUsers: evt.allowedUsers || []
         });
         setShowModal(true);
     };
@@ -49,7 +76,10 @@ export const EventsManager = () => {
             image: '',
             maxParticipants: undefined,
             mode: 'competitive',
-            status: 'open'
+            status: 'open',
+            visibility: 'public',
+            targetOffice: '',
+            allowedUsers: []
         });
         setImageFile(null);
         setShowModal(true);
@@ -95,6 +125,15 @@ export const EventsManager = () => {
             alert("Error saving event.");
         } finally {
             setIsSubmitting(false);
+        }
+    };
+
+    const toggleAllowedUser = (userId: string) => {
+        const current = currentEvent.allowedUsers || [];
+        if (current.includes(userId)) {
+            setCurrentEvent({ ...currentEvent, allowedUsers: current.filter(id => id !== userId) });
+        } else {
+            setCurrentEvent({ ...currentEvent, allowedUsers: [...current, userId] });
         }
     };
 
@@ -152,6 +191,7 @@ export const EventsManager = () => {
                     <thead className="bg-gray-50 border-b border-gray-100 sticky top-0 z-10">
                         <tr>
                             <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Event</th>
+                            <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Visibility</th>
                             <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Status</th>
                             <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Date & Location</th>
                             <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Enrolled</th>
@@ -174,6 +214,20 @@ export const EventsManager = () => {
                                             <div className="font-bold text-gray-900 line-clamp-1">{evt.title}</div>
                                             <div className="text-xs text-gray-500">{evt.type}</div>
                                         </div>
+                                    </div>
+                                </td>
+                                <td className="px-6 py-4">
+                                    <div className="flex items-center gap-2">
+                                        {evt.visibility === 'public' && <Globe className="w-4 h-4 text-green-500" />}
+                                        {evt.visibility === 'department' && <Building className="w-4 h-4 text-blue-500" />}
+                                        {evt.visibility === 'private' && <Lock className="w-4 h-4 text-orange-500" />}
+                                        <span className="text-sm text-gray-600 capitalize">{evt.visibility || 'Public'}</span>
+                                        {evt.visibility === 'department' && evt.targetOffice && (
+                                            <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">{evt.targetOffice}</span>
+                                        )}
+                                        {evt.visibility === 'private' && (
+                                            <span className="text-xs bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full">{evt.allowedUsers?.length || 0} users</span>
+                                        )}
                                     </div>
                                 </td>
                                 <td className="px-6 py-4">
@@ -231,7 +285,7 @@ export const EventsManager = () => {
                         ))}
                         {sortedEvents.length === 0 && (
                             <tr>
-                                <td colSpan={5} className="p-8 text-center text-gray-400">
+                                <td colSpan={6} className="p-8 text-center text-gray-400">
                                     No events found.
                                 </td>
                             </tr>
@@ -262,6 +316,14 @@ export const EventsManager = () => {
                                     }`}>
                                     {evt.status}
                                 </span>
+                            </div>
+
+                            {/* Visibility Badge Mobile */}
+                            <div className="flex items-center gap-2">
+                                <span className="text-xs font-bold text-gray-500 uppercase">Visibility:</span>
+                                {evt.visibility === 'public' && <div className="flex items-center gap-1 text-xs text-green-600 font-bold"><Globe className="w-3 h-3" /> Public</div>}
+                                {evt.visibility === 'department' && <div className="flex items-center gap-1 text-xs text-blue-600 font-bold"><Building className="w-3 h-3" /> Dept: {evt.targetOffice}</div>}
+                                {evt.visibility === 'private' && <div className="flex items-center gap-1 text-xs text-orange-600 font-bold"><Lock className="w-3 h-3" /> Private ({evt.allowedUsers?.length || 0})</div>}
                             </div>
 
                             <div className="grid grid-cols-2 gap-2 text-xs text-gray-500">
@@ -309,6 +371,82 @@ export const EventsManager = () => {
                         </div>
 
                         <div className="p-6 overflow-y-auto space-y-4 flex-1">
+                            {/* Visibility Section */}
+                            <div className="col-span-2 bg-gray-50 p-4 rounded-xl border border-gray-200 space-y-4">
+                                <label className="block text-xs font-bold text-gray-500 uppercase">Visibility</label>
+                                <div className="grid grid-cols-3 gap-3">
+                                    <label className={`cursor-pointer p-3 rounded-lg border-2 transition-all flex flex-col items-center gap-2 ${currentEvent.visibility === 'public' ? 'border-[#009CDE] bg-blue-50 text-[#009CDE]' : 'border-gray-200 bg-white text-gray-500 hover:border-gray-300'}`}>
+                                        <input type="radio" className="hidden" name="visibility" value="public" checked={currentEvent.visibility === 'public'} onChange={() => setCurrentEvent({ ...currentEvent, visibility: 'public' })} />
+                                        <Globe className="w-6 h-6" />
+                                        <span className="font-bold text-sm">Public</span>
+                                    </label>
+                                    <label className={`cursor-pointer p-3 rounded-lg border-2 transition-all flex flex-col items-center gap-2 ${currentEvent.visibility === 'department' ? 'border-[#009CDE] bg-blue-50 text-[#009CDE]' : 'border-gray-200 bg-white text-gray-500 hover:border-gray-300'}`}>
+                                        <input type="radio" className="hidden" name="visibility" value="department" checked={currentEvent.visibility === 'department'} onChange={() => setCurrentEvent({ ...currentEvent, visibility: 'department' })} />
+                                        <Building className="w-6 h-6" />
+                                        <span className="font-bold text-sm">Department</span>
+                                    </label>
+                                    <label className={`cursor-pointer p-3 rounded-lg border-2 transition-all flex flex-col items-center gap-2 ${currentEvent.visibility === 'private' ? 'border-[#009CDE] bg-blue-50 text-[#009CDE]' : 'border-gray-200 bg-white text-gray-500 hover:border-gray-300'}`}>
+                                        <input type="radio" className="hidden" name="visibility" value="private" checked={currentEvent.visibility === 'private'} onChange={() => setCurrentEvent({ ...currentEvent, visibility: 'private' })} />
+                                        <Lock className="w-6 h-6" />
+                                        <span className="font-bold text-sm">Private</span>
+                                    </label>
+                                </div>
+
+                                {currentEvent.visibility === 'department' && (
+                                    <div className="animate-in fade-in slide-in-from-top-2">
+                                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Target Department (Office)</label>
+                                        <select
+                                            className="w-full p-3 bg-white rounded-lg border border-gray-200 outline-none"
+                                            value={currentEvent.targetOffice}
+                                            onChange={e => setCurrentEvent({ ...currentEvent, targetOffice: e.target.value })}
+                                            required
+                                        >
+                                            <option value="">-- Select Office --</option>
+                                            {uniqueOffices.map(office => (
+                                                <option key={office} value={office}>{office}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                )}
+
+                                {currentEvent.visibility === 'private' && (
+                                    <div className="animate-in fade-in slide-in-from-top-2">
+                                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Allowed Athletes</label>
+                                        <div className="relative mb-2">
+                                            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                                            <input
+                                                type="text"
+                                                placeholder="Search user..."
+                                                className="w-full pl-9 p-2 bg-white border border-gray-200 rounded-lg text-sm outline-none"
+                                                value={userSearchText}
+                                                onChange={e => setUserSearchText(e.target.value)}
+                                            />
+                                        </div>
+                                        <div className="h-40 overflow-y-auto bg-white border border-gray-200 rounded-lg divide-y divide-gray-50">
+                                            {filteredUsers.map(user => (
+                                                <label key={user.id} className="flex items-center gap-3 p-3 hover:bg-gray-50 cursor-pointer">
+                                                    <input
+                                                        type="checkbox"
+                                                        className="w-4 h-4 text-[#009CDE] rounded outline-none"
+                                                        checked={currentEvent.allowedUsers?.includes(user.id)}
+                                                        onChange={() => toggleAllowedUser(user.id)}
+                                                    />
+                                                    <div className="flex items-center gap-3">
+                                                        <img src={user.avatar} className="w-8 h-8 rounded-full bg-gray-100" />
+                                                        <div>
+                                                            <div className="text-sm font-bold text-gray-900">{user.name}</div>
+                                                            <div className="text-xs text-gray-500">{user.email} • {user.office}</div>
+                                                        </div>
+                                                    </div>
+                                                </label>
+                                            ))}
+                                            {filteredUsers.length === 0 && <p className="p-4 text-center text-sm text-gray-500">No users found.</p>}
+                                        </div>
+                                        <p className="text-xs text-gray-500 mt-1">{currentEvent.allowedUsers?.length || 0} athletes selected.</p>
+                                    </div>
+                                )}
+                            </div>
+
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="col-span-2">
                                     <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Title</label>

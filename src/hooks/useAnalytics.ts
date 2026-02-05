@@ -6,6 +6,7 @@ export interface GlobalStats {
     totalCalories: number; // kcal
     totalCo2: number; // kg
     weeklyActivity: number[]; // 7 days history
+    periodLabel?: string;
 }
 
 export function useGlobalStats() {
@@ -16,37 +17,40 @@ export function useGlobalStats() {
             // Note: In a large scale app we would use a materialized view or RPC
             const { data: metrics, error } = await supabase
                 .from('workout_metrics')
-                .select('distance_meters, calories, start_time');
+                .select('distance_meters, calories, start_time')
+                .order('start_time', { ascending: false });
 
             if (error) throw error;
 
             let totalDistanceMeters = 0;
             let totalCalories = 0;
             
-            // Initialize weekly stats (last 7 days, 0 = today, 6 = 6 days ago)
-            // But UI expects [Sun, Mon, Tue...] or [Day 1, Day 2...]
-            // The UI AdminDashboard expects 7 values. Let's map them to "Last 7 days" or "Current Week"
             const weeklyActivity = [0, 0, 0, 0, 0, 0, 0];
             const now = new Date();
-            const today = now.getDay(); // 0 = Sunday
+            
+            // Calculate start of current week (Monday)
+            const startOfWeek = new Date(now);
+            const day = startOfWeek.getDay() || 7; // Sunday is 7, Monday is 1
+            if (day !== 1) startOfWeek.setHours(-24 * (day - 1));
+            startOfWeek.setHours(0, 0, 0, 0);
 
-            // We want to show activity for the current week (Sun-Sat) or last 7 days? 
-            // The UI labels are ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'] which looks like Dom, Seg, Ter... (Sun, Mon, Tue...)
-            // So we should map to day of week.
+            // Calculate end of week for label
+            const endOfWeek = new Date(startOfWeek);
+            endOfWeek.setDate(endOfWeek.getDate() + 6);
+
+            const formatDate = (d: Date) => d.toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' });
+            const periodLabel = `${formatDate(startOfWeek)} - ${formatDate(endOfWeek)}`;
 
             metrics?.forEach(m => {
                 totalDistanceMeters += m.distance_meters || 0;
                 totalCalories += m.calories || 0;
 
                 const date = new Date(m.start_time);
-                // Check if it's in the current week window (simple approach: match day of week if recent)
-                // Better: Check if within last 7 days
-                const diffTime = Math.abs(now.getTime() - date.getTime());
-                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
                 
-                if (diffDays <= 7) {
-                    const dayIndex = date.getDay(); // 0-6
-                    weeklyActivity[dayIndex] += 1; // Count active users/sessions per day
+                // Check if date is within current week
+                if (date >= startOfWeek) {
+                    const dayIndex = (date.getDay() + 6) % 7; // Mon=0 .. Sun=6
+                    weeklyActivity[dayIndex] += 1;
                 }
             });
 
@@ -57,7 +61,8 @@ export function useGlobalStats() {
                 totalDistance,
                 totalCalories: Math.round(totalCalories),
                 totalCo2,
-                weeklyActivity
+                weeklyActivity,
+                periodLabel
             };
         }
     });

@@ -48,7 +48,9 @@ import {
     Filter,
     Menu,           // New for Menu Management
     Medal,
-    X
+    X,
+    Loader2,
+    RefreshCw
 } from 'lucide-react';
 import { formatDate } from '../utils/dateUtils';
 import { supabase } from '../lib/supabase';
@@ -179,8 +181,40 @@ const Sidebar = ({ activeTab, setActiveTab, isOpen, onClose }: { activeTab: stri
 // --- EXISTING VIEWS (Retained for context) ---
 
 const AnalyticsView = () => {
-    const { data: stats } = useGlobalStats();
-    const { data: ranking } = useDepartmentRanking();
+    const { data: stats, refetch: refetchStats } = useGlobalStats();
+    const { data: ranking, refetch: refetchRanking } = useDepartmentRanking();
+    const [isSyncing, setIsSyncing] = useState(false);
+
+    const handleSync = async () => {
+        setIsSyncing(true);
+        try {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) return;
+
+            const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/strava-sync`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${session.access_token}`
+                }
+            });
+
+            const result = await res.json();
+
+            if (res.ok) {
+                alert(`Sync complete! ${result.message || ''}`);
+                // Refresh data
+                refetchStats();
+                refetchRanking();
+            } else {
+                throw new Error(result.error || 'Sync failed');
+            }
+        } catch (error: any) {
+            console.error("Sync error:", error);
+            alert(`Sync error: ${error.message}`);
+        } finally {
+            setIsSyncing(false);
+        }
+    };
 
     return (
         <div className="p-8 animate-fade-in">
@@ -189,7 +223,14 @@ const AnalyticsView = () => {
                     <h2 className="text-2xl font-bold text-gray-800">Analytics & Health</h2>
                     <p className="text-gray-500 text-sm">Monitoring employee health impact and global ROI.</p>
                 </div>
-                {/* PDF Report button placeholder */}
+                <button
+                    onClick={handleSync}
+                    disabled={isSyncing}
+                    className="flex items-center gap-2 px-4 py-2 bg-[#FC4C02] text-white rounded-lg hover:bg-[#e34402] transition font-bold text-sm disabled:opacity-50"
+                >
+                    {isSyncing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+                    {isSyncing ? 'Syncing...' : 'Sync Strava Data'}
+                </button>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 <div className="bg-gradient-to-br from-[#002D72] to-blue-900 p-6 rounded-2xl text-white shadow-lg relative overflow-hidden">
@@ -200,13 +241,16 @@ const AnalyticsView = () => {
             </div>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <div className="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                    <h3 className="font-bold text-gray-800 mb-6">Weekly Activity (Active)</h3>
+                    <div className="flex justify-between items-center mb-6">
+                        <h3 className="font-bold text-gray-800">Weekly Activity (Active)</h3>
+                        {stats?.periodLabel && <span className="text-xs font-medium text-gray-400 bg-gray-50 px-2 py-1 rounded">{stats.periodLabel}</span>}
+                    </div>
                     <div className="h-64 flex items-end justify-between gap-4">
                         {(stats?.weeklyActivity || [0, 0, 0, 0, 0, 0, 0]).map((val, i) => (
-                            <div key={i} className="w-full bg-blue-50 rounded-t-xl relative group hover:bg-blue-100 transition-all cursor-pointer">
+                            <div key={i} className="w-full h-full bg-blue-50 rounded-t-xl relative group hover:bg-blue-100 transition-all cursor-pointer">
                                 <div className="absolute bottom-0 w-full bg-[#009CDE] rounded-t-xl transition-all duration-700" style={{ height: `${Math.min(100, val * 10)}%` }}></div>
                                 <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity">{val}</div>
-                                <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 text-xs text-gray-400 font-bold">{['D', 'S', 'T', 'Q', 'Q', 'S', 'S'][i]}</div>
+                                <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 text-xs text-gray-400 font-bold">{['M', 'T', 'W', 'T', 'F', 'S', 'S'][i]}</div>
                             </div>
                         ))}
                     </div>
@@ -228,7 +272,7 @@ const AnalyticsView = () => {
                         ))}
                         {(!ranking || ranking.length === 0) && <p className="text-sm text-gray-500 text-center py-4">No data available</p>}
                     </div>
-                    <div className="mt-6 p-4 bg-gray-50 rounded-xl text-center"><p className="text-xs text-gray-500 mb-2">Winning department wins:</p><p className="text-sm font-bold text-[#002D72] flex items-center justify-center gap-1"><Trophy className="w-4 h-4 text-yellow-500" /> Team Breakfast</p></div>
+
                 </div>
             </div>
         </div>
@@ -760,7 +804,7 @@ const UsersView = () => {
 };
 
 import { useCMS, useUpdateCMS, useNotifications, useCreateNotification, uploadCMSMedia, useOfficeLocations, useUpdateOfficeLocations, OfficeLocation } from '../hooks/useCMS';
-import { Loader2 } from 'lucide-react';
+
 
 const CommunicationsView = () => {
     const { data: notifications } = useNotifications();
