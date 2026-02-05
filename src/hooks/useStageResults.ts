@@ -177,45 +177,62 @@ export function useEventStageBreakdown(eventId?: string) {
 
             const stageIds = stages.map(s => s.id);
 
-            // 2. Fetch all results for these stages
+            // 2. Fetch all event participants (to show everyone in GC)
+            const { data: participants, error: partError } = await supabase
+                .from('event_participants')
+                .select('user_id')
+                .eq('event_id', eventId);
+            
+            if (partError) throw partError;
+
+            // 3. Fetch all results for these stages
             const { data: results, error: resultsError } = await supabase
                 .from('stage_results')
                 .select('*')
                 .in('stage_id', stageIds);
 
             if (resultsError) throw resultsError;
-            if (!results?.length) return [];
 
-            // 3. Fetch profiles
-            const userIds = Array.from(new Set(results.map((r: any) => r.user_id)));
+            // 4. Fetch profiles for ALL participants + any results (safety)
+            const allUserIds = Array.from(new Set([
+                ...(participants?.map(p => p.user_id) || []),
+                ...(results?.map(r => r.user_id) || [])
+            ]));
+            
+            if (allUserIds.length === 0) return [];
+
             const { data: profiles } = await supabase
                 .from('profiles')
                 .select('id, full_name, avatar_url')
-                .in('id', userIds);
+                .in('id', allUserIds);
 
             const profileMap = new Map(profiles?.map(p => [p.id, p]));
             const stageMap = new Map(stages.map(s => [s.id, s]));
 
-            // 4. Group by user
+            // 5. Group by user
             const userBreakdown = new Map<string, UserStageBreakdown>();
 
-            results.forEach((r: any) => {
-                if (!userBreakdown.has(r.user_id)) {
-                    const profile = profileMap.get(r.user_id);
-                    userBreakdown.set(r.user_id, {
-                        user_id: r.user_id,
-                        profile: {
-                            full_name: profile?.full_name || 'Unknown',
-                            avatar_url: profile?.avatar_url
-                        },
-                        stages: [],
-                        total_time_seconds: 0,
-                        stages_completed: 0,
-                        stages_official: 0
-                    });
-                }
+            // Initialize for everyone
+            allUserIds.forEach(userId => {
+                const profile = profileMap.get(userId);
+                userBreakdown.set(userId, {
+                    user_id: userId,
+                    profile: {
+                        full_name: profile?.full_name || 'Unknown',
+                        avatar_url: profile?.avatar_url
+                    },
+                    stages: [],
+                    total_time_seconds: 0,
+                    stages_completed: 0,
+                    stages_official: 0
+                });
+            });
 
-                const breakdown = userBreakdown.get(r.user_id)!;
+            // Populate results
+            (results || []).forEach((r: any) => {
+                const breakdown = userBreakdown.get(r.user_id);
+                // Should exist from init above, but safety check
+                if (!breakdown) return;
                 const stage = stageMap.get(r.stage_id);
 
                 if (stage) {
@@ -228,9 +245,12 @@ export function useEventStageBreakdown(eventId?: string) {
                         status: r.status
                     });
 
-                    // Only count official results in total
-                    if (r.status === 'official') {
+                    // Count official and pending results in total (Provisional GC)
+                    if (r.status === 'official' || r.status === 'pending') {
                         breakdown.total_time_seconds += timeToUse;
+                    }
+                    
+                    if (r.status === 'official') {
                         breakdown.stages_official++;
                     }
                     breakdown.stages_completed++;
@@ -242,7 +262,16 @@ export function useEventStageBreakdown(eventId?: string) {
             breakdownArray.forEach(b => {
                 b.stages.sort((a, b) => a.stage_order - b.stage_order);
             });
-            breakdownArray.sort((a, b) => a.total_time_seconds - b.total_time_seconds);
+            
+            // Sort by total time ASC. 
+            // Important: Users with 0 total time (no valid stages) should be at the bottom
+            breakdownArray.sort((a, b) => {
+                if (a.total_time_seconds === 0 && b.total_time_seconds === 0) return 0;
+                if (a.total_time_seconds === 0) return 1; // a goes to bottom
+                if (b.total_time_seconds === 0) return -1; // b goes to bottom
+                
+                return a.total_time_seconds - b.total_time_seconds;
+            });
 
             return breakdownArray;
         },

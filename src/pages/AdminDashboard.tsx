@@ -550,8 +550,14 @@ const UsersView = () => {
 
     const handleSaveEdit = async () => {
         if (!editModal) return;
-        await updateUser.mutateAsync({ id: editModal.id, data: editForm });
-        setEditModal(null);
+        try {
+            await updateUser.mutateAsync({ id: editModal.id, data: editForm });
+            setEditModal(null);
+            alert("Utilizador atualizado com sucesso!");
+        } catch (error) {
+            console.error("Error updating user:", error);
+            alert("Erro ao atualizar utilizador. Verifique as permissões.");
+        }
     };
 
     const openBonusModal = (user: typeof users[0]) => {

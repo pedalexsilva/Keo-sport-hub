@@ -115,8 +115,8 @@ export const ResultsManager = () => {
                         <button
                             onClick={() => setViewType('gc')}
                             className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-bold whitespace-nowrap transition-all ${viewType === 'gc'
-                                    ? 'bg-white text-yellow-600 shadow-sm'
-                                    : 'text-gray-500 hover:text-gray-700 hover:bg-white/50'
+                                ? 'bg-white text-yellow-600 shadow-sm'
+                                : 'text-gray-500 hover:text-gray-700 hover:bg-white/50'
                                 }`}
                         >
                             <Trophy className="w-4 h-4" /> GC
@@ -126,8 +126,8 @@ export const ResultsManager = () => {
                         <button
                             onClick={() => setViewType('mountain')}
                             className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-bold whitespace-nowrap transition-all ${viewType === 'mountain'
-                                    ? 'bg-white text-red-600 shadow-sm'
-                                    : 'text-gray-500 hover:text-gray-700 hover:bg-white/50'
+                                ? 'bg-white text-red-600 shadow-sm'
+                                : 'text-gray-500 hover:text-gray-700 hover:bg-white/50'
                                 }`}
                         >
                             <Mountain className="w-4 h-4" /> Mountain
@@ -144,8 +144,8 @@ export const ResultsManager = () => {
                                 key={stage.id}
                                 onClick={() => setViewType(stage.id)}
                                 className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-bold whitespace-nowrap transition-all ${viewType === stage.id
-                                        ? 'bg-white text-blue-600 shadow-sm'
-                                        : 'text-gray-500 hover:text-gray-700 hover:bg-white/50'
+                                    ? 'bg-white text-blue-600 shadow-sm'
+                                    : 'text-gray-500 hover:text-gray-700 hover:bg-white/50'
                                     }`}
                             >
                                 {stage.status === 'official' ? (
@@ -165,7 +165,7 @@ export const ResultsManager = () => {
                                 <Trophy className="w-5 h-5 text-yellow-500" />
                                 <div>
                                     <h3 className="font-bold text-gray-800">General Classification (GC)</h3>
-                                    <p className="text-xs text-gray-500">Sum of official stage times</p>
+                                    <p className="text-xs text-gray-500">Sum of stage times (Provisional)</p>
                                 </div>
                             </div>
                             <div className="overflow-x-auto">
@@ -259,7 +259,7 @@ export const ResultsManager = () => {
                                                             </span>
                                                         </td>
                                                         <td className="px-4 py-3 text-right font-mono text-xs text-gray-500">
-                                                            {rank === 1 ? '-' : formatGap(gap)}
+                                                            {rank === 1 ? '-' : (user.total_time_seconds > 0 ? formatGap(gap) : '-')}
                                                         </td>
                                                     </tr>
                                                 );
@@ -298,10 +298,10 @@ export const ResultsManager = () => {
                                     </div>
                                 </div>
                                 <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold ${selectedStage.status === 'official'
-                                        ? 'bg-green-100 text-green-700'
-                                        : selectedStage.status === 'mixed'
-                                            ? 'bg-orange-100 text-orange-700'
-                                            : 'bg-yellow-100 text-yellow-700'
+                                    ? 'bg-green-100 text-green-700'
+                                    : selectedStage.status === 'mixed'
+                                        ? 'bg-orange-100 text-orange-700'
+                                        : 'bg-yellow-100 text-yellow-700'
                                     }`}>
                                     {selectedStage.status === 'official' ? (
                                         <><CheckCircle className="w-3.5 h-3.5" /> Official</>

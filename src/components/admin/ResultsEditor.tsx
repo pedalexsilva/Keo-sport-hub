@@ -35,43 +35,108 @@ export const ResultsEditor = ({ stageId, onClose }: ResultsEditorProps) => {
 
     const loadResults = async () => {
         setIsLoading(true);
-        // 1. Fetch stage results
-        const { data, error } = await supabase
-            .from('stage_results')
-            .select('*')
-            .eq('stage_id', stageId)
-            .order('elapsed_time_seconds', { ascending: true });
+        try {
+            // 1. Get Event ID from Stage
+            const { data: stageData, error: stageError } = await supabase
+                .from('event_stages')
+                .select('event_id')
+                .eq('id', stageId)
+                .single();
 
-        if (error) {
-            console.error(error);
-            alert("Error loading results.");
-        } else {
-            // 2. Fetch profiles manually
-            const userIds = Array.from(new Set(data.map((r: any) => r.user_id)));
-            const { data: profiles } = await supabase
+            if (stageError) throw stageError;
+            const eventId = stageData.event_id;
+
+            // 2. Fetch all event participants
+            const { data: participants, error: partError } = await supabase
+                .from('event_participants')
+                .select('user_id')
+                .eq('event_id', eventId);
+
+            if (partError) throw partError;
+
+            // 3. Fetch existing stage results
+            const { data: distinctResults, error: resError } = await supabase
+                .from('stage_results')
+                .select('*')
+                .eq('stage_id', stageId);
+
+            if (resError) throw resError;
+
+            // 4. Fetch profiles for ALL participants
+            const allUserIds = Array.from(new Set([
+                ...(participants?.map(p => p.user_id) || []),
+                ...(distinctResults?.map(r => r.user_id) || [])
+            ]));
+
+            if (allUserIds.length === 0) {
+                setResults([]);
+                setIsLoading(false);
+                return;
+            }
+
+            const { data: profiles, error: profError } = await supabase
                 .from('profiles')
                 .select('id, full_name, email')
-                .in('id', userIds);
+                .in('id', allUserIds);
+
+            if (profError) throw profError;
 
             const profileMap = new Map(profiles?.map(p => [p.id, p]));
+            const resultsMap = new Map(distinctResults?.map(r => [r.user_id, r]));
 
-            // 3. Merge and Initialize
-            const initialized = data.map((r: any) => {
-                const profile = profileMap.get(r.user_id);
-                return {
-                    ...r,
-                    official_time_seconds: r.official_time_seconds ?? r.elapsed_time_seconds,
-                    official_mountain_points: r.official_mountain_points ?? r.mountain_points,
-                    status: r.status,
-                    profile: {
-                        full_name: profile?.full_name || 'Unknown',
-                        email: profile?.email || ''
-                    }
-                };
+            // 5. Merge and Initialize
+            // We iterate over ALL User IDs found
+            const initialized: ResultRow[] = allUserIds.map((userId) => {
+                const existingResult = resultsMap.get(userId);
+                const profile = profileMap.get(userId);
+
+                if (existingResult) {
+                    // Existing result
+                    return {
+                        ...existingResult,
+                        official_time_seconds: existingResult.official_time_seconds ?? existingResult.elapsed_time_seconds,
+                        official_mountain_points: existingResult.official_mountain_points ?? existingResult.mountain_points,
+                        status: existingResult.status,
+                        profile: {
+                            full_name: profile?.full_name || 'Unknown',
+                            email: profile?.email || ''
+                        }
+                    };
+                } else {
+                    // No result yet - Create placeholder
+                    return {
+                        id: `temp_${userId}`, // Temporary ID
+                        user_id: userId,
+                        stage_id: stageId,
+                        elapsed_time_seconds: 0,
+                        mountain_points: 0,
+                        official_time_seconds: 0,
+                        official_mountain_points: 0,
+                        status: 'pending',
+                        strava_activity_id: '',
+                        profile: {
+                            full_name: profile?.full_name || 'Unknown',
+                            email: profile?.email || ''
+                        }
+                    };
+                }
             });
+
+            // Sort: Official ones first, then by time (ignoring 0s usually, but let's just put completed ones on top)
+            initialized.sort((a, b) => {
+                const timeA = a.official_time_seconds || 999999;
+                const timeB = b.official_time_seconds || 999999;
+                return timeA - timeB;
+            });
+
             setResults(initialized);
+
+        } catch (error: any) {
+            console.error(error);
+            alert("Error loading results: " + error.message);
+        } finally {
+            setIsLoading(false);
         }
-        setIsLoading(false);
     };
 
     const handleUpdate = (id: string, field: keyof ResultRow, value: any) => {
@@ -95,15 +160,59 @@ export const ResultsEditor = ({ stageId, onClose }: ResultsEditorProps) => {
 
         setIsSaving(true);
         try {
-            // Prepare payload for finalize function
-            const payload = {
-                stage_id: stageId,
-                results: results.map(r => ({
+            // A. Separate existing vs new results
+            const newResults = results.filter(r => r.id.toString().startsWith('temp_'));
+            const existingResults = results.filter(r => !r.id.toString().startsWith('temp_'));
+
+            let processedNewIds: { result_id: string; official_time_seconds: number | null; mountain_points: number | null; status: string }[] = [];
+
+            // B. Insert new records if any
+            if (newResults.length > 0) {
+                const toInsert = newResults.map(r => ({
+                    stage_id: stageId,
+                    user_id: r.user_id,
+                    elapsed_time_seconds: r.official_time_seconds || 0, // Default for manual
+                    official_time_seconds: r.official_time_seconds,
+                    mountain_points: 0,
+                    official_mountain_points: r.official_mountain_points,
+                    status: 'official', // Create as official directly
+                    strava_activity_id: null
+                }));
+
+                const { data: inserted, error: insertError } = await supabase
+                    .from('stage_results')
+                    .insert(toInsert)
+                    .select();
+
+                if (insertError) throw insertError;
+
+                processedNewIds = inserted.map(r => ({
                     result_id: r.id,
                     official_time_seconds: r.official_time_seconds,
-                    mountain_points: r.official_mountain_points, // Note: payload expects 'mountain_points' mapped to official
-                    status: 'official' // We are forcing official on publish
+                    mountain_points: r.official_mountain_points, // Mapped to official in payload logic below? payload expects 'mountain_points' as property name for official points
+                    status: 'official'
+                }));
+            }
+
+            // C. Prepare payload for finalizer (merging both)
+            const payloadResults = [
+                ...existingResults.map(r => ({
+                    result_id: r.id,
+                    official_time_seconds: r.official_time_seconds,
+                    mountain_points: r.official_mountain_points,
+                    status: 'official'
+                })),
+                ...processedNewIds.map(r => ({
+                    result_id: r.result_id,
+                    official_time_seconds: r.official_time_seconds,
+                    mountain_points: r.mountain_points,
+                    status: 'official'
                 }))
+            ];
+
+            const payload = {
+                stage_id: stageId,
+                results: payloadResults
             };
 
             const { data, error } = await supabase.functions.invoke('finalize-stage-results', {
