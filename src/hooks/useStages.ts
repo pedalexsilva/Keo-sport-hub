@@ -11,6 +11,9 @@ export interface EventStage {
     stage_order: number;
     mountain_segment_ids: string[];
     segment_points_map?: any;
+    // Segment Finish Mode
+    finish_mode: 'activity' | 'segment';
+    finish_segment_id?: string;
 }
 
 export function useStages(eventId?: string) {
@@ -61,7 +64,9 @@ export function useUpdateStage() {
                     date: stage.date,
                     stage_order: stage.stage_order,
                     mountain_segment_ids: stage.mountain_segment_ids,
-                    image_url: stage.image_url
+                    image_url: stage.image_url,
+                    finish_mode: stage.finish_mode,
+                    finish_segment_id: stage.finish_segment_id || null
                 })
                 .eq('id', stage.id)
                 .select()

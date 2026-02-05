@@ -54,6 +54,7 @@ serve(async (req) => {
             throw new Error('Stage not found')
         }
         log(`Found stage: ${stage.name} on ${stage.date}`)
+        log(`Finish mode: ${stage.finish_mode || 'activity'}, Finish segment ID: ${stage.finish_segment_id || 'N/A'}`)
 
         // 3. Fetch Stage Segments (new system)
         const { data: segments, error: segmentsError } = await supabase
@@ -81,6 +82,18 @@ serve(async (req) => {
         }
         
         log(`Total target segments: ${targetSegmentIds.size}`)
+
+        // 3b. Find the finish segment Strava ID if finish_mode is 'segment'
+        let finishSegmentStravaId: string | null = null
+        if (stage.finish_mode === 'segment' && stage.finish_segment_id) {
+            const finishSeg = stageSegments.find(s => s.id === stage.finish_segment_id)
+            if (finishSeg) {
+                finishSegmentStravaId = finishSeg.strava_segment_id
+                log(`Finish segment found: ${finishSeg.name} (Strava ID: ${finishSegmentStravaId})`)
+            } else {
+                log(`WARNING: Finish segment ID ${stage.finish_segment_id} not found in stage segments!`)
+            }
+        }
 
         // 4. Fetch Event Participants
         const { data: participants, error: partError } = await supabase
@@ -179,11 +192,37 @@ serve(async (req) => {
                 })
                 const detailActivity = await detailRes.json()
 
-                // E. Process Activity Time for stage_results (legacy/GC)
-                const elapsedTime = detailActivity.elapsed_time
-                let totalMountainPoints = 0
-
                 const efforts = detailActivity.segment_efforts || []
+
+                // E. Calculate elapsed time based on finish mode
+                let elapsedTime: number | null = detailActivity.elapsed_time
+                let is_dnf = false
+
+                if (stage.finish_mode === 'segment' && finishSegmentStravaId) {
+                    // Find the finish segment effort
+                    const finishEffort = efforts.find(
+                        (e: any) => e.segment.id.toString() === finishSegmentStravaId
+                    )
+
+                    if (finishEffort) {
+                        // Calculate: (segment end time) - (activity start time)
+                        const activityStart = new Date(detailActivity.start_date).getTime()
+                        const effortStart = new Date(finishEffort.start_date).getTime()
+                        const effortDuration = finishEffort.elapsed_time * 1000 // seconds to ms
+                        const segmentEnd = effortStart + effortDuration
+
+                        elapsedTime = Math.floor((segmentEnd - activityStart) / 1000)
+                        log(`-> Segment finish mode: Activity start ${detailActivity.start_date}, Segment end ${new Date(segmentEnd).toISOString()}`)
+                        log(`-> Calculated elapsed time: ${elapsedTime}s (vs activity time: ${detailActivity.elapsed_time}s)`)
+                    } else {
+                        // Athlete didn't pass the finish segment = DNF
+                        log(`-> DNF: Athlete ${p.user_id} did not pass finish segment ${finishSegmentStravaId}`)
+                        is_dnf = true
+                        elapsedTime = null
+                    }
+                }
+
+                let totalMountainPoints = 0
 
                 // F. Process each configured segment (with support for multiple passes)
                 // Group segments by strava_segment_id to handle multiple passes
@@ -253,7 +292,7 @@ serve(async (req) => {
                     }
                 }
 
-                // H. Save Stage Result (for GC - legacy system)
+                // H. Save Stage Result (for GC)
                 const { error: upsertError } = await supabase
                     .from('stage_results')
                     .upsert({
@@ -262,7 +301,7 @@ serve(async (req) => {
                         strava_activity_id: detailActivity.id.toString(),
                         elapsed_time_seconds: elapsedTime,
                         mountain_points: totalMountainPoints,
-                        is_dnf: false,
+                        is_dnf: is_dnf,
                         status: 'pending', 
                         updated_at: new Date().toISOString()
                     }, { onConflict: 'stage_id, user_id' })

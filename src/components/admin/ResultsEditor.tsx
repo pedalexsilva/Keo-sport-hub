@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
-import { Loader2, Save, Send, AlertTriangle, CheckCircle, Clock, Mountain, ExternalLink } from 'lucide-react';
+import { Loader2, Save, Send, AlertTriangle, CheckCircle, Clock, Mountain, ExternalLink, Flag } from 'lucide-react';
 
 interface ResultsEditorProps {
     stageId: string;
@@ -17,6 +17,7 @@ interface ResultRow {
     official_mountain_points: number | null;
     status: 'pending' | 'official' | 'dq';
     strava_activity_id: string;
+    is_dnf?: boolean;
     profile: {
         full_name: string;
         email: string;
@@ -292,7 +293,15 @@ export const ResultsEditor = ({ stageId, onClose }: ResultsEditorProps) => {
                                             {r.profile?.full_name?.charAt(0) || '?'}
                                         </div>
                                         <div>
-                                            <div className="font-bold text-gray-900">{r.profile?.full_name || 'Unknown'}</div>
+                                            <div className="font-bold text-gray-900 flex items-center gap-2">
+                                                {r.profile?.full_name || 'Unknown'}
+                                                {r.is_dnf && (
+                                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-red-100 text-red-700 text-xs font-bold rounded-full">
+                                                        <Flag className="w-3 h-3" />
+                                                        DNF
+                                                    </span>
+                                                )}
+                                            </div>
                                             <div className="text-xs text-gray-400">{r.profile?.email}</div>
                                         </div>
                                     </div>

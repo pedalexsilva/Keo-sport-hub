@@ -481,13 +481,6 @@ const StoreManagerView = () => {
                                     <div className="flex items-center gap-3">
                                         {newProduct.image_url && <img src={newProduct.image_url} className="w-16 h-16 rounded-lg object-cover bg-gray-100 border border-gray-200" />}
                                         <div className="flex-1">
-                                            <input
-                                                type="text"
-                                                className="w-full p-3 bg-gray-50 rounded-lg border border-gray-200 text-sm mb-2"
-                                                placeholder="Or paste a URL..."
-                                                value={newProduct.image_url}
-                                                onChange={e => setNewProduct({ ...newProduct, image_url: e.target.value })}
-                                            />
                                             <div className="relative">
                                                 <input
                                                     type="file"
@@ -1119,13 +1112,6 @@ const CMSView = () => {
                     <div>
                         <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Imagem ou Vídeo de Fundo</label>
                         <div className="flex flex-col gap-3">
-                            <input
-                                type="text"
-                                placeholder="URL (ou faça upload abaixo)"
-                                className="w-full p-3 bg-gray-50 rounded-lg border border-gray-200 outline-none text-sm text-gray-600"
-                                value={localConfig.heroImage}
-                                onChange={e => setLocalConfig({ ...localConfig, heroImage: e.target.value })}
-                            />
                             <div className="relative">
                                 <input
                                     type="file"

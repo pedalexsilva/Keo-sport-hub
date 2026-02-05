@@ -3,7 +3,7 @@ import { useStages, useCreateStage, useDeleteStage, useProcessStage, useUpdateSt
 import { useStageStats } from '../../hooks/useStageStats';
 import { useStageSegments } from '../../hooks/useSegments';
 import { uploadEventMedia } from '../../hooks/useEvents';
-import { Calendar, Plus, Trash2, RefreshCw, Loader2, MapPin, ImageIcon, Pencil, Copy, AlertCircle, CheckCircle, Mountain, Save } from 'lucide-react';
+import { Calendar, Plus, Trash2, RefreshCw, Loader2, MapPin, ImageIcon, Pencil, Copy, AlertCircle, CheckCircle, Mountain, Save, Flag } from 'lucide-react';
 import { formatDate } from '../../utils/dateUtils';
 
 import { ResultsEditor } from './ResultsEditor';
@@ -27,13 +27,18 @@ export const StageManager = ({ eventId, onClose }: StageManagerProps) => {
         name: '',
         date: '',
         stage_order: 1,
-        image_url: ''
+        image_url: '',
+        finish_mode: 'activity' as 'activity' | 'segment',
+        finish_segment_id: '' as string
     });
     const [imageFile, setImageFile] = useState<File | null>(null);
     const [editingStageId, setEditingStageId] = useState<string | null>(null);
     const [processingId, setProcessingId] = useState<string | null>(null);
     const [selectedStageForResults, setSelectedStageForResults] = useState<string | null>(null);
     const [selectedStageForSegments, setSelectedStageForSegments] = useState<{ id: string; name: string } | null>(null);
+
+    // Fetch segments for the stage being edited (for finish segment dropdown)
+    const { data: editingStageSegments } = useStageSegments(editingStageId || undefined);
 
 
     const handleCreate = async (e: React.FormEvent) => {
@@ -56,7 +61,9 @@ export const StageManager = ({ eventId, onClose }: StageManagerProps) => {
             description: '',
             date: newStage.date,
             stage_order: newStage.stage_order,
-            image_url: imageUrl
+            image_url: imageUrl,
+            finish_mode: newStage.finish_mode,
+            finish_segment_id: newStage.finish_mode === 'segment' ? newStage.finish_segment_id : null
         };
 
         if (editingStageId) {
@@ -66,7 +73,7 @@ export const StageManager = ({ eventId, onClose }: StageManagerProps) => {
         }
         setIsCreating(false);
         setEditingStageId(null);
-        setNewStage({ name: '', date: '', stage_order: (stages?.length || 0) + 2, image_url: '' });
+        setNewStage({ name: '', date: '', stage_order: (stages?.length || 0) + 2, image_url: '', finish_mode: 'activity', finish_segment_id: '' });
         setImageFile(null);
     };
 
@@ -160,7 +167,9 @@ export const StageManager = ({ eventId, onClose }: StageManagerProps) => {
                                                                 name: stage.name,
                                                                 date: stage.date,
                                                                 stage_order: stage.stage_order,
-                                                                image_url: stage.image_url || ''
+                                                                image_url: stage.image_url || '',
+                                                                finish_mode: stage.finish_mode || 'activity',
+                                                                finish_segment_id: stage.finish_segment_id || ''
                                                             });
                                                             setIsCreating(true);
                                                         }}
@@ -188,6 +197,12 @@ export const StageManager = ({ eventId, onClose }: StageManagerProps) => {
                                                     <Calendar className="w-4 h-4 text-[#009CDE]" />
                                                     <span className="font-medium">{formatDate(stage.date)}</span>
                                                 </span>
+                                                {stage.finish_mode === 'segment' && (
+                                                    <span className="flex items-center gap-2 text-green-700 bg-green-50 px-3 py-1.5 rounded-lg border border-green-200 font-medium">
+                                                        <Flag className="w-4 h-4" />
+                                                        Segment Finish
+                                                    </span>
+                                                )}
                                                 <button
                                                     onClick={() => setSelectedStageForSegments({ id: stage.id, name: stage.name })}
                                                     className="flex items-center gap-2 text-orange-600 hover:text-orange-700 bg-orange-50 hover:bg-orange-100 px-3 py-1.5 rounded-lg transition-all duration-200 font-medium border border-orange-200"
@@ -296,6 +311,76 @@ export const StageManager = ({ eventId, onClose }: StageManagerProps) => {
                                                     </button>
                                                 </div>
                                             </div>
+
+                                            {/* Finish Mode Configuration - Only show when editing (segments exist) */}
+                                            {editingStageId && (
+                                                <div className="space-y-2 md:col-span-2">
+                                                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1 flex items-center gap-2">
+                                                        <Flag className="w-4 h-4 text-green-600" />
+                                                        Finish Mode
+                                                    </label>
+                                                    <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 space-y-4">
+                                                        <div className="flex gap-6">
+                                                            <label className="flex items-center gap-3 cursor-pointer group">
+                                                                <input
+                                                                    type="radio"
+                                                                    name="finish_mode"
+                                                                    value="activity"
+                                                                    checked={newStage.finish_mode === 'activity'}
+                                                                    onChange={() => setNewStage({ ...newStage, finish_mode: 'activity', finish_segment_id: '' })}
+                                                                    className="w-4 h-4 text-[#009CDE] focus:ring-[#009CDE]"
+                                                                />
+                                                                <div>
+                                                                    <span className="font-medium text-gray-900 group-hover:text-[#009CDE] transition">End of Activity</span>
+                                                                    <p className="text-xs text-gray-500">Stage time = full Strava activity time</p>
+                                                                </div>
+                                                            </label>
+                                                            <label className="flex items-center gap-3 cursor-pointer group">
+                                                                <input
+                                                                    type="radio"
+                                                                    name="finish_mode"
+                                                                    value="segment"
+                                                                    checked={newStage.finish_mode === 'segment'}
+                                                                    onChange={() => setNewStage({ ...newStage, finish_mode: 'segment' })}
+                                                                    className="w-4 h-4 text-[#009CDE] focus:ring-[#009CDE]"
+                                                                />
+                                                                <div>
+                                                                    <span className="font-medium text-gray-900 group-hover:text-[#009CDE] transition">End of Segment</span>
+                                                                    <p className="text-xs text-gray-500">Stage time = activity start → segment finish</p>
+                                                                </div>
+                                                            </label>
+                                                        </div>
+
+                                                        {/* Segment Selection - Only show when segment mode is selected */}
+                                                        {newStage.finish_mode === 'segment' && (
+                                                            <div className="pt-3 border-t border-gray-200">
+                                                                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 block">
+                                                                    Select Finish Segment
+                                                                </label>
+                                                                {(!editingStageSegments || editingStageSegments.length === 0) ? (
+                                                                    <div className="flex items-center gap-2 text-amber-600 bg-amber-50 p-3 rounded-lg text-sm">
+                                                                        <AlertCircle className="w-4 h-4" />
+                                                                        <span>Add segments first using "Manage KOM Segments"</span>
+                                                                    </div>
+                                                                ) : (
+                                                                    <select
+                                                                        value={newStage.finish_segment_id}
+                                                                        onChange={(e) => setNewStage({ ...newStage, finish_segment_id: e.target.value })}
+                                                                        className="w-full p-3 bg-white border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-[#009CDE]/20 focus:border-[#009CDE] transition-all font-medium text-gray-900"
+                                                                    >
+                                                                        <option value="">-- Select a segment --</option>
+                                                                        {editingStageSegments.map(seg => (
+                                                                            <option key={seg.id} value={seg.id}>
+                                                                                🏁 {seg.name} ({seg.distance_meters ? `${(seg.distance_meters / 1000).toFixed(1)}km` : 'N/A'})
+                                                                            </option>
+                                                                        ))}
+                                                                    </select>
+                                                                )}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 );
@@ -384,14 +469,7 @@ export const StageManager = ({ eventId, onClose }: StageManagerProps) => {
                                                             alt="Stage preview"
                                                         />
                                                     )}
-                                                    <div className="flex-1 space-y-2">
-                                                        <input
-                                                            type="text"
-                                                            className="w-full p-3.5 pl-4 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-[#009CDE]/20 focus:border-[#009CDE] transition-all font-medium text-gray-900 placeholder:text-gray-400"
-                                                            placeholder="Image URL (or upload below)"
-                                                            value={newStage.image_url}
-                                                            onChange={e => setNewStage({ ...newStage, image_url: e.target.value })}
-                                                        />
+                                                    <div className="flex-1">
                                                         <div className="flex items-center gap-3">
                                                             <input
                                                                 type="file"
@@ -418,6 +496,76 @@ export const StageManager = ({ eventId, onClose }: StageManagerProps) => {
                                                     </div>
                                                 </div>
                                             </div>
+
+                                            {/* Finish Mode Configuration - Only show when editing */}
+                                            {editingStageId && (
+                                                <div className="space-y-2 md:col-span-2">
+                                                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1 flex items-center gap-2">
+                                                        <Flag className="w-4 h-4 text-green-600" />
+                                                        Finish Mode
+                                                    </label>
+                                                    <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 space-y-4">
+                                                        <div className="flex gap-6">
+                                                            <label className="flex items-center gap-3 cursor-pointer group">
+                                                                <input
+                                                                    type="radio"
+                                                                    name="finish_mode_form"
+                                                                    value="activity"
+                                                                    checked={newStage.finish_mode === 'activity'}
+                                                                    onChange={() => setNewStage({ ...newStage, finish_mode: 'activity', finish_segment_id: '' })}
+                                                                    className="w-4 h-4 text-[#009CDE] focus:ring-[#009CDE]"
+                                                                />
+                                                                <div>
+                                                                    <span className="font-medium text-gray-900 group-hover:text-[#009CDE] transition">End of Activity</span>
+                                                                    <p className="text-xs text-gray-500">Stage time = full Strava activity time</p>
+                                                                </div>
+                                                            </label>
+                                                            <label className="flex items-center gap-3 cursor-pointer group">
+                                                                <input
+                                                                    type="radio"
+                                                                    name="finish_mode_form"
+                                                                    value="segment"
+                                                                    checked={newStage.finish_mode === 'segment'}
+                                                                    onChange={() => setNewStage({ ...newStage, finish_mode: 'segment' })}
+                                                                    className="w-4 h-4 text-[#009CDE] focus:ring-[#009CDE]"
+                                                                />
+                                                                <div>
+                                                                    <span className="font-medium text-gray-900 group-hover:text-[#009CDE] transition">End of Segment</span>
+                                                                    <p className="text-xs text-gray-500">Stage time = activity start → segment finish</p>
+                                                                </div>
+                                                            </label>
+                                                        </div>
+
+                                                        {/* Segment Selection */}
+                                                        {newStage.finish_mode === 'segment' && (
+                                                            <div className="pt-3 border-t border-gray-200">
+                                                                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 block">
+                                                                    Select Finish Segment
+                                                                </label>
+                                                                {(!editingStageSegments || editingStageSegments.length === 0) ? (
+                                                                    <div className="flex items-center gap-2 text-amber-600 bg-amber-50 p-3 rounded-lg text-sm">
+                                                                        <AlertCircle className="w-4 h-4" />
+                                                                        <span>Add segments first using "Manage KOM Segments"</span>
+                                                                    </div>
+                                                                ) : (
+                                                                    <select
+                                                                        value={newStage.finish_segment_id}
+                                                                        onChange={(e) => setNewStage({ ...newStage, finish_segment_id: e.target.value })}
+                                                                        className="w-full p-3 bg-white border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-[#009CDE]/20 focus:border-[#009CDE] transition-all font-medium text-gray-900"
+                                                                    >
+                                                                        <option value="">-- Select a segment --</option>
+                                                                        {editingStageSegments.map(seg => (
+                                                                            <option key={seg.id} value={seg.id}>
+                                                                                🏁 {seg.name} ({seg.distance_meters ? `${(seg.distance_meters / 1000).toFixed(1)}km` : 'N/A'})
+                                                                            </option>
+                                                                        ))}
+                                                                    </select>
+                                                                )}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
 
                                         <div className="flex items-center justify-end gap-4 pt-6 mt-6 border-t border-gray-100">

@@ -37,7 +37,7 @@ const AppLayout: React.FC = () => {
 
   // Data Fetching
   const { data: inventory, refetch: refetchInventory } = useUserInventory(authUser?.id);
-  const userPoints = userProfile?.balance || 0;
+  const userPoints = userProfile?.totalPoints || 0;
 
   // Local UI State
   const [notification, setNotification] = useState<string | null>(null);
