@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useEvents } from '../../hooks/useEvents';
 import { useEventStages, useEventStageBreakdown, useStageResults } from '../../hooks/useStageResults';
+import { useEventSegments } from '../../hooks/useSegments';
 import { Loader2, Trophy, Mountain, Medal, Clock, CheckCircle, RefreshCw, Timer, ExternalLink, AlertCircle } from 'lucide-react';
 import { formatDate } from '../../utils/dateUtils';
+import { KOMLeaderboard } from '../KOMLeaderboard';
 
 export const ResultsManager = () => {
     const { data: events, isLoading: isLoadingEvents } = useEvents();
@@ -24,6 +26,8 @@ export const ResultsManager = () => {
 
     const { data: stages, isLoading: stagesLoading, refetch: refetchStages } = useEventStages(selectedEventId || undefined);
     const { data: stageBreakdown, isLoading: breakdownLoading, refetch: refetchBreakdown } = useEventStageBreakdown(selectedEventId || undefined);
+    const { data: eventSegments } = useEventSegments(selectedEventId || undefined);
+    const selectedEvent = events?.find(e => e.id === selectedEventId);
 
     // For individual stage view
     const selectedStage = stages?.find(s => s.id === viewType);
@@ -277,17 +281,24 @@ export const ResultsManager = () => {
 
                     {/* Mountain Classification */}
                     {viewType === 'mountain' && (
-                        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                            <div className="p-4 border-b border-gray-50 bg-gradient-to-r from-red-50 to-white flex items-center gap-2">
-                                <Mountain className="w-5 h-5 text-red-500" />
-                                <h3 className="font-bold text-gray-800">Mountain Classification</h3>
+                        eventSegments && eventSegments.length > 0 ? (
+                            <KOMLeaderboard
+                                eventId={selectedEventId!}
+                                eventTitle={selectedEvent?.title}
+                            />
+                        ) : (
+                            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                                <div className="p-4 border-b border-gray-50 bg-gradient-to-r from-red-50 to-white flex items-center gap-2">
+                                    <Mountain className="w-5 h-5 text-red-500" />
+                                    <h3 className="font-bold text-gray-800">Mountain Classification</h3>
+                                </div>
+                                <div className="p-12 text-center text-gray-400">
+                                    <Mountain className="w-12 h-12 mx-auto mb-4 opacity-30" />
+                                    <p>Mountain classification uses the KOM system.</p>
+                                    <p className="text-xs mt-2">Go to Stage Manager to configure segments.</p>
+                                </div>
                             </div>
-                            <div className="p-12 text-center text-gray-400">
-                                <Mountain className="w-12 h-12 mx-auto mb-4 opacity-30" />
-                                <p>Mountain classification uses the KOM system.</p>
-                                <p className="text-xs mt-2">Go to Stage Manager to configure segments.</p>
-                            </div>
-                        </div>
+                        )
                     )}
 
                     {/* Individual Stage View */}
