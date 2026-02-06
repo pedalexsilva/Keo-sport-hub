@@ -210,6 +210,22 @@ const EventsView: React.FC<EventsViewProps> = ({ events, onJoin, user }) => {
                             {/* Stages Carousel */}
                             <EventStagesCarousel eventId={selectedEvent.id} />
 
+                            {/* Show Classifications if event has started */}
+                            {(() => {
+                                const startDate = new Date(selectedEvent.date);
+                                startDate.setHours(0, 0, 0, 0);
+                                const hasStarted = startDate <= today;
+
+                                if (hasStarted) {
+                                    return (
+                                        <div className="mt-8">
+                                            <EventClassifications eventId={selectedEvent.id} eventTitle={selectedEvent.title} />
+                                        </div>
+                                    );
+                                }
+                                return null;
+                            })()}
+
                             <h3 className="text-lg font-bold text-[#002D72] mb-4 flex items-center gap-2">
                                 <Users className="w-5 h-5" /> Participants ({selectedEvent.participants.length})
                             </h3>
