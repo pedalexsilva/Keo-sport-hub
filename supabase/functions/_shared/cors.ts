@@ -6,7 +6,7 @@ export const corsHeaders = {
 
 export function getCorsHeaders(req: Request) {
   // Default allowed origins including local development
-  const defaultOrigins = 'https://keo-sports-hub.vercel.app,http://localhost:3000,http://localhost:5173'
+  const defaultOrigins = 'https://keo-sport-hub.vercel.app,http://localhost:3000,http://localhost:5173'
   const allowedOrigins = (Deno.env.get('ALLOWED_ORIGINS') ?? defaultOrigins).split(',')
   const origin = req.headers.get('origin')
   

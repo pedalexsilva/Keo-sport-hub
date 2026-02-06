@@ -178,7 +178,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ currentUser }) => {
             : 'text-gray-500 hover:text-gray-700 hover:bg-white/50'
             }`}
         >
-          <Mountain className="w-4 h-4" /> Mountain
+          <Mountain className="w-4 h-4" /> KOM
         </button>
 
         {/* Divider */}

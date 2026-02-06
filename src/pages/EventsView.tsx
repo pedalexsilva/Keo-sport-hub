@@ -23,53 +23,113 @@ interface EventsViewProps {
 import { useEventLeaderboard } from '../hooks/useEventLeaderboard';
 import { useAuth } from '../features/auth/AuthContext';
 
-const EventResultsSummary = ({ eventId }: { eventId: string }) => {
+import { KOMLeaderboard } from '../components/KOMLeaderboard';
+
+const EventClassifications = ({ eventId, eventTitle }: { eventId: string; eventTitle?: string }) => {
+    const [activeTab, setActiveTab] = useState<'gc' | 'kom'>('gc');
     const { data: leaderboard, isLoading } = useEventLeaderboard(eventId, 'gc');
     const { user } = useAuth();
-
-    if (isLoading) return <div className="text-sm text-gray-500">Loading results...</div>;
-
-    if (!leaderboard || leaderboard.length === 0) {
-        return (
-            <div>
-                <h3 className="text-lg font-bold text-[#002D72] mb-4 flex items-center gap-2">
-                    <Trophy className="w-5 h-5 text-gray-400" /> Leaderboard
-                </h3>
-                <p className="text-gray-500 italic text-sm">Official results are not yet available.</p>
-            </div>
-        );
-    }
 
     return (
         <div className="mb-8">
             <h3 className="text-lg font-bold text-[#002D72] mb-4 flex items-center gap-2">
-                <Trophy className="w-5 h-5 text-yellow-500" /> Official Leaderboard
+                <Trophy className="w-5 h-5 text-yellow-500" /> Event Classifications
             </h3>
 
-            <div className="space-y-3 bg-gray-50 p-4 rounded-xl border border-gray-100">
-                {leaderboard.slice(0, 3).map((result) => (
-                    <div key={result.user_id} className={`flex items-center justify-between ${result.rank === 1 ? 'font-bold text-[#002D72]' : 'text-gray-700'}`}>
-                        <div className="flex items-center gap-3">
-                            <span className={`w-6 h-6 flex items-center justify-center rounded-full text-xs ${result.rank === 1 ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-200 text-gray-600'}`}>
-                                {result.rank}
-                            </span>
-                            <div className="flex items-center gap-2">
-                                <span className="text-sm">{result.user?.full_name || 'Athlete'}</span>
-                                {result.user_id === user?.id && <span className="text-[10px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full">YOU</span>}
-                            </div>
-                        </div>
-                        <span className="font-mono text-sm">
-                            {result.rank === 1 ?
-                                new Date(result.total_time_seconds * 1000).toISOString().substr(11, 8) :
-                                `+ ${new Date(result.gap_seconds! * 1000).toISOString().substr(11, 8)}`
-                            }
-                        </span>
-                    </div>
-                ))}
+            {/* Tab Switcher */}
+            <div className="flex p-1 bg-gray-100 rounded-xl mb-4 w-fit">
+                <button
+                    onClick={() => setActiveTab('gc')}
+                    className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'gc'
+                        ? 'bg-white text-[#002D72] shadow-sm'
+                        : 'text-gray-500 hover:text-gray-700'
+                        }`}
+                >
+                    General Classification
+                </button>
+                <button
+                    onClick={() => setActiveTab('kom')}
+                    className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'kom'
+                        ? 'bg-white text-[#002D72] shadow-sm'
+                        : 'text-gray-500 hover:text-gray-700'
+                        }`}
+                >
+                    KOM / Mountain
+                </button>
             </div>
 
-            <div className="mt-4 text-right">
-                <Link to={`/app/leaderboard/${eventId}`} className="text-sm font-bold text-[#009CDE] hover:underline">View full leaderboard →</Link>
+            {/* Content */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                {activeTab === 'gc' ? (
+                    isLoading ? (
+                        <div className="p-8 text-center text-gray-500">Loading results...</div>
+                    ) : !leaderboard || leaderboard.length === 0 ? (
+                        <div className="p-8 text-center">
+                            <Trophy className="w-12 h-12 mx-auto text-gray-300 mb-3" />
+                            <p className="text-gray-500 font-medium">No official results yet</p>
+                            <p className="text-sm text-gray-400">Results will appear here after stages are finalized.</p>
+                        </div>
+                    ) : (
+                        <div className="divide-y divide-gray-50">
+                            {/* Header */}
+                            <div className="bg-gray-50/50 px-4 py-3 flex items-center gap-4 text-xs font-bold text-gray-400 uppercase tracking-wider">
+                                <div className="w-8 text-center">Rank</div>
+                                <div className="flex-1">Athlete</div>
+                                <div className="text-right">Time / Gap</div>
+                            </div>
+
+                            {/* List */}
+                            {leaderboard.map((result) => (
+                                <div
+                                    key={result.user_id}
+                                    className={`px-4 py-3 flex items-center gap-4 hover:bg-gray-50 transition ${result.user_id === user?.id ? 'bg-blue-50/50' : ''
+                                        }`}
+                                >
+                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${result.rank === 1 ? 'bg-yellow-100 text-yellow-700' :
+                                        result.rank === 2 ? 'bg-gray-200 text-gray-600' :
+                                            result.rank === 3 ? 'bg-orange-100 text-orange-700' :
+                                                'text-gray-500'
+                                        }`}>
+                                        {result.rank}
+                                    </div>
+
+                                    <div className="flex-1 flex items-center gap-3">
+                                        <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden text-xs font-bold text-gray-500">
+                                            {result.user?.avatar_url ? (
+                                                <img src={result.user.avatar_url} alt="" className="w-full h-full object-cover" />
+                                            ) : (
+                                                result.user?.full_name?.substring(0, 2).toUpperCase() || '??'
+                                            )}
+                                        </div>
+                                        <div>
+                                            <div className="font-medium text-gray-900 flex items-center gap-2">
+                                                {result.user?.full_name || 'Unknown Athlete'}
+                                                {result.user_id === user?.id && (
+                                                    <span className="text-[10px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full font-bold">YOU</span>
+                                                )}
+                                            </div>
+                                            <div className="text-xs text-gray-400">{result.user?.office || 'KEO Athlete'}</div>
+                                        </div>
+                                    </div>
+
+                                    <div className="text-right font-mono text-sm">
+                                        {result.rank === 1 ? (
+                                            <span className="font-bold text-[#002D72]">
+                                                {new Date(result.total_time_seconds! * 1000).toISOString().substr(11, 8)}
+                                            </span>
+                                        ) : (
+                                            <span className="text-gray-500">
+                                                + {new Date(result.gap_seconds! * 1000).toISOString().substr(11, 8)}
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )
+                ) : (
+                    <KOMLeaderboard eventId={eventId} eventTitle={eventTitle} />
+                )}
             </div>
         </div>
     );
@@ -139,7 +199,7 @@ const EventsView: React.FC<EventsViewProps> = ({ events, onJoin, user }) => {
                 <div className="px-6 py-6">
                     {isPast ? (
                         <div>
-                            <EventResultsSummary eventId={selectedEvent.id} />
+                            <EventClassifications eventId={selectedEvent.id} eventTitle={selectedEvent.title} />
                         </div>
                     ) : (
                         <div>
