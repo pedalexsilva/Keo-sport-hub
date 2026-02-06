@@ -1,10 +1,4 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-
-const corsHeaders = {
-    'Access-Control-Allow-Origin': Deno.env.get('ALLOWED_ORIGINS') || 'https://keo-sports-hub.vercel.app',
-    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+import { getCorsHeaders } from '../_shared/cors.ts'
 
 serve(async (req) => {
     // 1. GET Request: Subscription Validation (Hub Challenge)
@@ -37,6 +31,7 @@ serve(async (req) => {
 
     // 2. POST Request: Event Handling
     if (req.method === 'POST') {
+        const cors = getCorsHeaders(req)
         try {
             const payload = await req.json()
             console.log("Webhook Event:", payload)
@@ -264,7 +259,7 @@ serve(async (req) => {
             console.error("Webhook Processing Error:", error)
             return new Response(JSON.stringify({ error: error.message }), {
                 status: 400,
-                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+                headers: { ...cors, 'Content-Type': 'application/json' },
             })
         }
     }

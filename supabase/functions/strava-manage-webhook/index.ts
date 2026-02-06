@@ -1,16 +1,12 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-
-const corsHeaders = {
-    'Access-Control-Allow-Origin': Deno.env.get('ALLOWED_ORIGINS') || 'https://keo-sports-hub.vercel.app',
-    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+import { getCorsHeaders } from '../_shared/cors.ts'
 
 serve(async (req) => {
     if (req.method === 'OPTIONS') {
-        return new Response('ok', { headers: corsHeaders })
+        return new Response('ok', { headers: getCorsHeaders(req) })
     }
 
     try {
+        const cors = getCorsHeaders(req)
         // 1. Env Vars
         const STRAVA_CLIENT_ID = Deno.env.get('STRAVA_CLIENT_ID')
         const STRAVA_CLIENT_SECRET = Deno.env.get('STRAVA_CLIENT_SECRET')
@@ -120,13 +116,13 @@ serve(async (req) => {
             },
             current_subscriptions: currentSubs
         }), {
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            headers: { ...cors, 'Content-Type': 'application/json' },
         })
 
     } catch (error) {
         return new Response(JSON.stringify({ error: error.message }), {
             status: 400,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            headers: { ...cors, 'Content-Type': 'application/json' },
         })
     }
 })
