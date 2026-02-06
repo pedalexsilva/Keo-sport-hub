@@ -25,6 +25,15 @@ import { useAuth } from '../features/auth/AuthContext';
 
 import { KOMLeaderboard } from '../components/KOMLeaderboard';
 
+const getRankIcon = (rank: number) => {
+    switch (rank) {
+        case 1: return <Trophy className="h-5 w-5 text-yellow-500" />;
+        case 2: return <Medal className="h-5 w-5 text-gray-400" />;
+        case 3: return <Medal className="h-5 w-5 text-amber-600" />;
+        default: return <span className="text-gray-500 font-bold text-sm">{rank}</span>;
+    }
+};
+
 const EventClassifications = ({ eventId, eventTitle }: { eventId: string; eventTitle?: string }) => {
     const [activeTab, setActiveTab] = useState<'gc' | 'kom'>('gc');
     const { data: leaderboard, isLoading } = useEventLeaderboard(eventId, 'gc');
@@ -70,62 +79,84 @@ const EventClassifications = ({ eventId, eventTitle }: { eventId: string; eventT
                             <p className="text-sm text-gray-400">Results will appear here after stages are finalized.</p>
                         </div>
                     ) : (
-                        <div className="divide-y divide-gray-50">
-                            {/* Header */}
-                            <div className="bg-gray-50/50 px-4 py-3 flex items-center gap-4 text-xs font-bold text-gray-400 uppercase tracking-wider">
-                                <div className="w-8 text-center">Rank</div>
-                                <div className="flex-1">Athlete</div>
-                                <div className="text-right">Time / Gap</div>
-                            </div>
-
-                            {/* List */}
-                            {leaderboard.map((result) => (
-                                <div
-                                    key={result.user_id}
-                                    className={`px-4 py-3 flex items-center gap-4 hover:bg-gray-50 transition ${result.user_id === user?.id ? 'bg-blue-50/50' : ''
-                                        }`}
-                                >
-                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${result.rank === 1 ? 'bg-yellow-100 text-yellow-700' :
-                                        result.rank === 2 ? 'bg-gray-200 text-gray-600' :
-                                            result.rank === 3 ? 'bg-orange-100 text-orange-700' :
-                                                'text-gray-500'
-                                        }`}>
-                                        {result.rank}
-                                    </div>
-
-                                    <div className="flex-1 flex items-center gap-3">
-                                        <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden text-xs font-bold text-gray-500">
-                                            {result.user?.avatar_url ? (
-                                                <img src={result.user.avatar_url} alt="" className="w-full h-full object-cover" />
-                                            ) : (
-                                                result.user?.full_name?.substring(0, 2).toUpperCase() || '??'
-                                            )}
+                        <>
+                            {/* Visual Header - Yellow Jersey Theme */}
+                            <div className="relative bg-gradient-to-r from-gray-50 to-white p-6 border-b border-gray-100">
+                                <div className="absolute inset-0 opacity-10">
+                                    <div className="absolute inset-0" style={{
+                                        backgroundImage: 'radial-gradient(circle, #eab308 2px, transparent 2px)',
+                                        backgroundSize: '16px 16px'
+                                    }} />
+                                </div>
+                                <div className="relative flex items-center justify-between">
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-14 h-14 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center shadow-lg">
+                                            <Trophy className="w-7 h-7 text-white" />
                                         </div>
                                         <div>
-                                            <div className="font-medium text-gray-900 flex items-center gap-2">
-                                                {result.user?.full_name || 'Unknown Athlete'}
-                                                {result.user_id === user?.id && (
-                                                    <span className="text-[10px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full font-bold">YOU</span>
-                                                )}
-                                            </div>
-                                            <div className="text-xs text-gray-400">{result.user?.office || 'KEO Athlete'}</div>
+                                            <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                                                General Classification
+                                                <Trophy className="w-5 h-5 text-yellow-500" />
+                                            </h3>
+                                            <p className="text-sm text-gray-500">{eventTitle || 'Official Results'}</p>
                                         </div>
                                     </div>
-
-                                    <div className="text-right font-mono text-sm">
-                                        {result.rank === 1 ? (
-                                            <span className="font-bold text-[#002D72]">
-                                                {new Date(result.total_time_seconds! * 1000).toISOString().substr(11, 8)}
-                                            </span>
-                                        ) : (
-                                            <span className="text-gray-500">
-                                                + {new Date(result.gap_seconds! * 1000).toISOString().substr(11, 8)}
-                                            </span>
-                                        )}
-                                    </div>
                                 </div>
-                            ))}
-                        </div>
+                            </div>
+
+                            <div className="divide-y divide-gray-50">
+                                {/* Header */}
+                                <div className="bg-gray-50/50 px-4 py-3 flex items-center gap-4 text-xs font-bold text-gray-400 uppercase tracking-wider">
+                                    <div className="w-8 text-center">Rank</div>
+                                    <div className="flex-1">Athlete</div>
+                                    <div className="text-right">Time / Gap</div>
+                                </div>
+
+                                {/* List */}
+                                {leaderboard.map((result) => (
+                                    <div
+                                        key={result.user_id}
+                                        className={`px-4 py-3 flex items-center gap-4 hover:bg-gray-50 transition ${result.user_id === user?.id ? 'bg-blue-50/50' : ''
+                                            }`}
+                                    >
+                                        <div className="w-8 h-8 flex items-center justify-center">
+                                            {getRankIcon(result.rank || 0)}
+                                        </div>
+
+                                        <div className="flex-1 flex items-center gap-3">
+                                            <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden text-xs font-bold text-gray-500">
+                                                {result.user?.avatar_url ? (
+                                                    <img src={result.user.avatar_url} alt="" className="w-full h-full object-cover" />
+                                                ) : (
+                                                    result.user?.full_name?.substring(0, 2).toUpperCase() || '??'
+                                                )}
+                                            </div>
+                                            <div>
+                                                <div className="font-medium text-gray-900 flex items-center gap-2">
+                                                    {result.user?.full_name || 'Unknown Athlete'}
+                                                    {result.user_id === user?.id && (
+                                                        <span className="text-[10px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full font-bold">YOU</span>
+                                                    )}
+                                                </div>
+                                                <div className="text-xs text-gray-400">{result.user?.office || 'KEO Athlete'}</div>
+                                            </div>
+                                        </div>
+
+                                        <div className="text-right font-mono text-sm">
+                                            {result.rank === 1 ? (
+                                                <span className="font-bold text-[#002D72]">
+                                                    {new Date(result.total_time_seconds! * 1000).toISOString().substr(11, 8)}
+                                                </span>
+                                            ) : (
+                                                <span className="text-gray-500">
+                                                    + {new Date(result.gap_seconds! * 1000).toISOString().substr(11, 8)}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </>
                     )
                 ) : (
                     <KOMLeaderboard eventId={eventId} eventTitle={eventTitle} />
