@@ -1,12 +1,14 @@
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { getCorsHeaders } from '../_shared/cors.ts'
 
-serve(async (req) => {
+Deno.serve(async (req) => {
+  const cors = getCorsHeaders(req)
+
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: getCorsHeaders(req) })
+    return new Response('ok', { headers: cors })
   }
 
   try {
-    const cors = getCorsHeaders(req)
     const { stage_id, results } = await req.json()
 
     if (!stage_id || !results || !Array.isArray(results)) {
@@ -99,7 +101,7 @@ serve(async (req) => {
     }
 
     return new Response(JSON.stringify({ success: true }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: { ...cors, 'Content-Type': 'application/json' },
       status: 200,
     })
 

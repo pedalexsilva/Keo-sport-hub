@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import {
     ArrowLeft,
     Calendar,
@@ -68,7 +69,7 @@ const EventResultsSummary = ({ eventId }: { eventId: string }) => {
             </div>
 
             <div className="mt-4 text-right">
-                <a href="/leaderboard" className="text-sm font-bold text-[#009CDE] hover:underline">View full leaderboard →</a>
+                <Link to={`/app/leaderboard/${eventId}`} className="text-sm font-bold text-[#009CDE] hover:underline">View full leaderboard →</Link>
             </div>
         </div>
     );

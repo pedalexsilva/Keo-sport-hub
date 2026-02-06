@@ -143,7 +143,7 @@ serve(async (req) => {
             error: (error as Error).message 
         }), {
             status: 400,
-            headers: { ...cors, 'Content-Type': 'application/json' },,
+            headers: { ...cors, 'Content-Type': 'application/json' },
         })
     }
 })

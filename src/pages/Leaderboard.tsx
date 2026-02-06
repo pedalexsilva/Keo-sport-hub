@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { User } from '../types';
 import { Medal, Trophy, Mountain, Timer, AlertCircle, CheckCircle, Clock, RefreshCw, ChevronDown, ChevronUp } from 'lucide-react';
 import { useEventLeaderboard } from '../hooks/useEventLeaderboard';
@@ -27,18 +28,44 @@ const formatGap = (seconds?: number) => {
 type ViewType = 'gc' | 'mountain' | string; // string for stage IDs
 
 const Leaderboard: React.FC<LeaderboardProps> = ({ currentUser }) => {
+  const { eventId } = useParams<{ eventId: string }>();
+  const navigate = useNavigate();
   const { data: events, isLoading: eventsLoading } = useEvents();
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [viewType, setViewType] = useState<ViewType>('gc');
   const [expandedUser, setExpandedUser] = useState<string | null>(null);
 
-  // Auto-select most relevant event
+  // Handle URL param and Auto-select logic
   useEffect(() => {
-    if (events && events.length > 0 && !selectedEventId) {
-      const active = events.find(e => e.status === 'open' && e.mode === 'competitive') || events[0];
-      setSelectedEventId(active.id);
+    if (events && events.length > 0) {
+      if (eventId) {
+        // Validate access: Check if the requested eventId is in our accessible list
+        const requestedEvent = events.find(e => e.id === eventId);
+
+        if (requestedEvent) {
+          setSelectedEventId(requestedEvent.id);
+        } else {
+          // Access Denied or Invalid ID
+          console.warn(`Access denied or invalid event ID: ${eventId}`);
+          // Fallback to default
+          const active = events.find(e => e.status === 'open' && e.mode === 'competitive') || events[0];
+          setSelectedEventId(active.id);
+          // Update URL to remove invalid ID
+          navigate('/app/leaderboard', { replace: true });
+        }
+      } else if (!selectedEventId) {
+        // Initial load without URL param
+        const active = events.find(e => e.status === 'open' && e.mode === 'competitive') || events[0];
+        setSelectedEventId(active.id);
+      }
     }
-  }, [events]);
+  }, [events, eventId, navigate]);
+
+  // Sync URL when selection changes (optional, but good for UX)
+  const handleEventChange = (newId: string) => {
+    setSelectedEventId(newId);
+    navigate(`/app/leaderboard/${newId}`);
+  };
 
   // Reset view when event changes
   useEffect(() => {
@@ -88,11 +115,16 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ currentUser }) => {
           <select
             className="flex-1 md:flex-none p-2.5 border rounded-lg text-sm bg-gray-50 min-w-[200px]"
             value={selectedEventId}
-            onChange={(e) => setSelectedEventId(e.target.value)}
+            onChange={(e) => handleEventChange(e.target.value)}
           >
-            {events?.filter(e => e.mode === 'competitive').map(e => (
-              <option key={e.id} value={e.id}>{e.title} ({new Date(e.date).toLocaleDateString('pt-PT')})</option>
-            ))}
+            {events?.map(e => {
+              const isJoined = e.participants.some(p => p.id === currentUser.id);
+              return (
+                <option key={e.id} value={e.id}>
+                  {isJoined ? '✅ ' : ''}{e.title} ({new Date(e.date).toLocaleDateString('pt-PT')})
+                </option>
+              );
+            })}
           </select>
           <button
             onClick={handleRefresh}

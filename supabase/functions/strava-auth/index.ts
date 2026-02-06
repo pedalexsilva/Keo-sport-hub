@@ -1,8 +1,8 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+// Using native Deno.serve() for Deno v2.x compatibility
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { getCorsHeaders } from '../_shared/cors.ts'
 
-serve(async (req) => {
+Deno.serve(async (req) => {
     // 1. Handle CORS
     if (req.method === 'OPTIONS') {
         return new Response('ok', { headers: getCorsHeaders(req) })
@@ -82,7 +82,7 @@ serve(async (req) => {
             console.log('Generated Auth URL with redirect:', redirectUri) // Debug log
             console.log('State contains return_url:', return_url) // Debug log
 
-            return new Response(JSON.stringify({ url }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+            return new Response(JSON.stringify({ url }), { headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' } })
         }
 
 
@@ -147,7 +147,7 @@ serve(async (req) => {
             }
 
             return new Response(JSON.stringify({ success: true, athlete: tokenData.athlete }), {
-                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+                headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' },
             })
         }
 
@@ -156,7 +156,7 @@ serve(async (req) => {
     } catch (error) {
         return new Response(JSON.stringify({ error: error.message }), {
             status: 400,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' },
         })
     }
 })

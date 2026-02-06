@@ -12,6 +12,7 @@ import EventsView from './pages/EventsView';
 import StoreView from './pages/StoreView';
 import SocialView from './pages/SocialView';
 import ProfileView from './pages/ProfileView';
+import Leaderboard from './pages/Leaderboard';
 
 // Old Auth & Logic
 import LoginPage from './features/auth/LoginPage';
@@ -204,6 +205,8 @@ const AppLayout: React.FC = () => {
                 onDisconnect={handleDisconnectStrava}
               />
             } />
+            <Route path="leaderboard" element={<Leaderboard currentUser={userProfile} />} />
+            <Route path="leaderboard/:eventId" element={<Leaderboard currentUser={userProfile} />} />
             <Route path="*" element={<Navigate to="home" replace />} />
           </Routes>
         </main>
