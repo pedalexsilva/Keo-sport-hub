@@ -184,7 +184,14 @@ serve(async (req) => {
                     return;
                 }
 
-                const activitySummary = activities[0]
+                // Select the activity with the longest duration (moving_time or elapsed_time)
+                const activitySummary = activities.reduce((longest: any, current: any) => {
+                    const longestDuration = longest.moving_time || longest.elapsed_time || 0
+                    const currentDuration = current.moving_time || current.elapsed_time || 0
+                    return currentDuration > longestDuration ? current : longest
+                }, activities[0])
+
+                log(`-> Found ${activities.length} activities. Selected longest: ${activitySummary.name} (${activitySummary.moving_time || activitySummary.elapsed_time}s)`)
 
                 // D. Fetch Detailed Activity (with segment efforts)
                 const detailRes = await fetch(`https://www.strava.com/api/v3/activities/${activitySummary.id}?include_all_efforts=true`, {
