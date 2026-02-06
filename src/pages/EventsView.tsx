@@ -279,7 +279,7 @@ const EventsView: React.FC<EventsViewProps> = ({ events, onJoin, user }) => {
                                 ))}
                             </div>
 
-                            <div className="fixed bottom-24 left-6 right-6 md:absolute md:bottom-6 md:w-auto flex flex-col gap-3">
+                            <div className="mt-8 flex flex-col gap-3">
                                 {joined ? (
                                     <>
                                         <button
@@ -297,12 +297,40 @@ const EventsView: React.FC<EventsViewProps> = ({ events, onJoin, user }) => {
                                         </button>
                                     </>
                                 ) : (
-                                    <button
-                                        onClick={() => onJoin(selectedEvent.id)}
-                                        className="w-full py-4 rounded-2xl text-lg font-bold shadow-xl transition-transform active:scale-95 flex items-center justify-center gap-2 cursor-pointer bg-[#002D72] text-white hover:bg-[#002359]"
-                                    >
-                                        Register for Event
-                                    </button>
+                                    (() => {
+                                        const now = new Date();
+                                        const startDate = new Date(selectedEvent.date);
+                                        // Reset time part for strict date comparison if needed, 
+                                        // or keep it to allow same-day registration until exact time.
+                                        // Usually for events, once the day comes, it's safer to close or check status.
+                                        // Here we'll start with checking if start date has passed.
+                                        startDate.setHours(0, 0, 0, 0);
+                                        const today = new Date();
+                                        today.setHours(0, 0, 0, 0);
+
+                                        const hasStarted = startDate <= today;
+                                        const isClosedStatus = ['closed', 'cancelled', 'completed'].includes(selectedEvent.status);
+
+                                        if (isClosedStatus || hasStarted) {
+                                            return (
+                                                <button
+                                                    disabled
+                                                    className="w-full py-4 rounded-2xl text-lg font-bold bg-gray-100 text-gray-400 flex items-center justify-center gap-2 cursor-not-allowed border border-gray-200"
+                                                >
+                                                    Registration Closed
+                                                </button>
+                                            );
+                                        }
+
+                                        return (
+                                            <button
+                                                onClick={() => onJoin(selectedEvent.id)}
+                                                className="w-full py-4 rounded-2xl text-lg font-bold shadow-xl transition-transform active:scale-95 flex items-center justify-center gap-2 cursor-pointer bg-[#002D72] text-white hover:bg-[#002359]"
+                                            >
+                                                Register for Event
+                                            </button>
+                                        );
+                                    })()
                                 )}
                             </div>
                         </div>

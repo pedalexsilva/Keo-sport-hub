@@ -9,6 +9,7 @@ interface EventStagesCarouselProps {
 
 export const EventStagesCarousel: React.FC<EventStagesCarouselProps> = ({ eventId }) => {
     const { data: stages, isLoading } = useStages(eventId);
+    const [selectedImage, setSelectedImage] = React.useState<string | null>(null);
 
     if (isLoading) return <div className="h-24 flex items-center justify-center text-xs text-gray-400">A carregar etapas...</div>;
 
@@ -27,7 +28,10 @@ export const EventStagesCarousel: React.FC<EventStagesCarouselProps> = ({ eventI
                         key={stage.id}
                         className="flex-shrink-0 w-64 bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md transition snap-center group"
                     >
-                        <div className="h-32 w-full bg-gray-100 relative overflow-hidden">
+                        <div
+                            className="h-32 w-full bg-gray-100 relative overflow-hidden cursor-zoom-in"
+                            onClick={() => stage.image_url && setSelectedImage(stage.image_url)}
+                        >
                             {stage.image_url ? (
                                 <img
                                     src={stage.image_url}
@@ -35,7 +39,7 @@ export const EventStagesCarousel: React.FC<EventStagesCarouselProps> = ({ eventI
                                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                                 />
                             ) : (
-                                <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
+                                <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 cursor-default">
                                     <Flag className="w-8 h-8 text-gray-300" />
                                 </div>
                             )}
@@ -62,6 +66,31 @@ export const EventStagesCarousel: React.FC<EventStagesCarouselProps> = ({ eventI
                     </div>
                 ))}
             </div>
+
+            {/* Lightbox Overlay */}
+            {selectedImage && (
+                <div
+                    className="fixed inset-0 z[9999] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200"
+                    style={{ zIndex: 9999 }}
+                    onClick={() => setSelectedImage(null)}
+                >
+                    <button
+                        className="absolute top-4 right-4 p-2 bg-white/10 rounded-full text-white hover:bg-white/20 transition-colors"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedImage(null);
+                        }}
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
+                    <img
+                        src={selectedImage}
+                        alt="Stage Full View"
+                        className="max-h-screen max-w-full rounded-lg shadow-2xl object-contain animate-in zoom-in-95 duration-300"
+                        onClick={(e) => e.stopPropagation()}
+                    />
+                </div>
+            )}
         </div>
     );
 };
