@@ -16,6 +16,7 @@ import ProfileView from './pages/ProfileView';
 // Old Auth & Logic
 import LoginPage from './features/auth/LoginPage';
 import { RequireAuth } from './features/auth/RequireAuth';
+import { RequireAdmin } from './features/auth/RequireAdmin';
 import StravaCallback from './pages/StravaCallback';
 import { useAuth } from './features/auth/AuthContext';
 import { useProfile } from './hooks/useProfile';
@@ -249,9 +250,9 @@ const App: React.FC = () => {
 
         {/* Admin Route */}
         <Route path="/admin" element={
-          <RequireAuth>
+          <RequireAdmin>
             <AdminDashboard />
-          </RequireAuth>
+          </RequireAdmin>
         } />
       </Routes>
     </Router>

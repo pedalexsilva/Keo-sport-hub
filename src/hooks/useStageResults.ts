@@ -245,12 +245,9 @@ export function useEventStageBreakdown(eventId?: string) {
                         status: r.status
                     });
 
-                    // Count official and pending results in total (Provisional GC)
-                    if (r.status === 'official' || r.status === 'pending') {
-                        breakdown.total_time_seconds += timeToUse;
-                    }
-                    
+                    // Only count OFFICIAL results in total (Official GC only)
                     if (r.status === 'official') {
+                        breakdown.total_time_seconds += timeToUse;
                         breakdown.stages_official++;
                     }
                     breakdown.stages_completed++;

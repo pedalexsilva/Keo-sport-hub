@@ -319,7 +319,7 @@ export interface KOMClassificationEntry {
 }
 
 /**
- * Fetch KOM classification for an event (sum of all segment points)
+ * Fetch KOM classification for an event (sum of all mountain points from stage_results)
  */
 export function useKOMClassification(eventId?: string) {
     return useQuery({
@@ -327,41 +327,63 @@ export function useKOMClassification(eventId?: string) {
         queryFn: async () => {
             if (!eventId) return [];
             
-            // Get all official segment results for this event
-            const { data, error } = await supabase
-                .from('segment_results')
-                .select(`
-                    user_id,
-                    points_earned,
-                    segment:stage_segments!inner(
-                        stage:event_stages!inner(event_id)
-                    ),
-                    profile:profiles!user_id(full_name, avatar_url)
-                `)
-                .eq('segment.stage.event_id', eventId)
+            // 1. Get all stages for this event
+            const { data: stages, error: stagesError } = await supabase
+                .from('event_stages')
+                .select('id')
+                .eq('event_id', eventId);
+            
+            if (stagesError) throw stagesError;
+            if (!stages?.length) return [];
+            
+            const stageIds = stages.map(s => s.id);
+            
+            // 2. Get all official stage results with mountain points
+            const { data: results, error: resultsError } = await supabase
+                .from('stage_results')
+                .select('user_id, mountain_points, official_mountain_points, status')
+                .in('stage_id', stageIds)
                 .eq('status', 'official');
             
-            if (error) throw error;
+            if (resultsError) throw resultsError;
+            if (!results?.length) return [];
             
-            // Aggregate points by user
+            // 3. Get profiles for all users
+            const userIds = [...new Set(results.map(r => r.user_id))];
+            const { data: profiles } = await supabase
+                .from('profiles')
+                .select('id, full_name, avatar_url')
+                .in('id', userIds);
+            
+            const profileMap = new Map(profiles?.map(p => [p.id, p]));
+            
+            // 4. Aggregate points by user
             const userPoints = new Map<string, KOMClassificationEntry>();
             
-            for (const result of data || []) {
+            for (const result of results) {
+                // Use official_mountain_points if available, otherwise mountain_points
+                const points = result.official_mountain_points ?? result.mountain_points ?? 0;
+                if (points === 0) continue; // Skip if no mountain points
+                
                 const existing = userPoints.get(result.user_id);
                 if (existing) {
-                    existing.total_points += result.points_earned || 0;
+                    existing.total_points += points;
                     existing.segments_completed += 1;
                 } else {
+                    const profile = profileMap.get(result.user_id);
                     userPoints.set(result.user_id, {
                         user_id: result.user_id,
-                        total_points: result.points_earned || 0,
-                        segments_completed: 1,
-                        profile: result.profile as any
+                        total_points: points,
+                        segments_completed: 1, // Using this as "stages with mountain points"
+                        profile: {
+                            full_name: profile?.full_name || 'Unknown',
+                            avatar_url: profile?.avatar_url
+                        }
                     });
                 }
             }
             
-            // Sort by points descending
+            // 5. Sort by points descending
             return Array.from(userPoints.values())
                 .sort((a, b) => b.total_points - a.total_points);
         },

@@ -215,6 +215,19 @@ export function useJoinEvent() {
     return useMutation({
         mutationFn: async ({ eventId, userId, isJoining }: { eventId: string, userId: string, isJoining: boolean }) => {
             if (isJoining) {
+                // Check if event is still open for new participants
+                const { data: event, error: eventError } = await supabase
+                    .from('events')
+                    .select('status')
+                    .eq('id', eventId)
+                    .single();
+                
+                if (eventError) throw eventError;
+                
+                if (event.status === 'completed' || event.status === 'closed') {
+                    throw new Error('As inscrições para este evento estão encerradas.');
+                }
+                
                 const { error } = await supabase
                     .from('event_participants')
                     .insert({ event_id: eventId, user_id: userId });

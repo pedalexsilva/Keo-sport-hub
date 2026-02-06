@@ -58,7 +58,8 @@ const Events: React.FC<EventsProps> = ({ user }) => {
       type: newEvent.type || ActivityType.RUN,
       image: '',
       status: 'open',
-      mode: 'social'
+      mode: 'social',
+      visibility: 'public'
     }, {
       onSuccess: () => {
         setShowModal(false);

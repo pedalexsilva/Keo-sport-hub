@@ -75,13 +75,13 @@ const EventResultsSummary = ({ eventId }: { eventId: string }) => {
 };
 
 // Helper to determine if an event is in the past
-// Helper to determine if an event is in the past
-const isPastEvent = (date: string) => {
+// Uses endDate if available, otherwise falls back to date
+const isPastEvent = (date: string, endDate?: string) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const eventDate = new Date(date);
-    eventDate.setHours(0, 0, 0, 0);
-    return eventDate < today;
+    const eventEndDate = new Date(endDate || date);
+    eventEndDate.setHours(0, 0, 0, 0);
+    return eventEndDate < today;
 };
 
 const EventsView: React.FC<EventsViewProps> = ({ events, onJoin, user }) => {
@@ -95,22 +95,23 @@ const EventsView: React.FC<EventsViewProps> = ({ events, onJoin, user }) => {
     today.setHours(0, 0, 0, 0);
 
     // Normalize event dates to midnight for comparison
+    // Use endDate if available to determine if event is still ongoing
     const upcomingEvents = events.filter(e => {
-        const d = new Date(e.date);
-        d.setHours(0, 0, 0, 0);
-        return d >= today;
+        const eventEndDate = new Date(e.endDate || e.date);
+        eventEndDate.setHours(0, 0, 0, 0);
+        return eventEndDate >= today;
     }).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
     const pastEvents = events.filter(e => {
-        const d = new Date(e.date);
-        d.setHours(0, 0, 0, 0);
-        return d < today;
+        const eventEndDate = new Date(e.endDate || e.date);
+        eventEndDate.setHours(0, 0, 0, 0);
+        return eventEndDate < today;
     }).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
     const displayedEvents = tab === 'upcoming' ? upcomingEvents : pastEvents;
 
     if (selectedEvent) {
-        const isPast = isPastEvent(selectedEvent.date);
+        const isPast = isPastEvent(selectedEvent.date, selectedEvent.endDate);
         const joined = selectedEvent.participants.some(p => p.id === user.id);
 
         return (

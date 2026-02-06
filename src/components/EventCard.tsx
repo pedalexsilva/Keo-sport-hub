@@ -145,7 +145,7 @@ export const EventCard: React.FC<EventCardProps> = ({ evt, user, isExpanded, tog
                 )}
 
                 <div className="mt-4 flex gap-2">
-                    {!isPast && (
+                    {!isPast && evt.status !== 'completed' && evt.status !== 'closed' && (
                         <Button
                             variant={isParticipant ? "outline" : "primary"}
                             className="flex-1"
@@ -158,6 +158,12 @@ export const EventCard: React.FC<EventCardProps> = ({ evt, user, isExpanded, tog
                         <Button variant="secondary" className="flex-1 cursor-default" disabled>
                             <Trophy className="w-4 h-4 mr-2" />
                             Evento Concluído
+                        </Button>
+                    )}
+                    {!isPast && (evt.status === 'completed' || evt.status === 'closed') && (
+                        <Button variant="secondary" className="flex-1 cursor-default" disabled>
+                            <Users className="w-4 h-4 mr-2" />
+                            Inscrições Encerradas
                         </Button>
                     )}
                     <button

@@ -29,7 +29,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setLoading(false);
         });
 
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+            if (event === 'TOKEN_REFRESHED' && !session) {
+                // Token refresh failed, sign out to clear stale tokens
+                console.warn('Session expired, signing out...');
+                supabase.auth.signOut();
+                return;
+            }
             setSession(session);
             setUser(session?.user ?? null);
             setLoading(false);
